@@ -13,6 +13,7 @@ import {
 import { Plus, Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
+import { DataPagination } from "@/components/ui/data-pagination"
 
 const PAGE_SIZE = 20
 
@@ -107,15 +108,8 @@ export function BlogsPage() {
             ))}
           </TableBody>
         </Table>
-        {!isLoading && total > 0 && (
-          <div className="flex items-center justify-between border-t px-4 py-3 text-sm text-muted-foreground">
-            <span>{total} blog{total !== 1 ? "s" : ""}</span>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 0}>Previous</Button>
-              <span>Page {page + 1} of {totalPages}</span>
-              <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page >= totalPages - 1}>Next</Button>
-            </div>
-          </div>
+        {!isLoading && (
+          <DataPagination page={page} totalPages={totalPages} total={total} label="blog" onPageChange={setPage} />
         )}
       </div>
     </div>

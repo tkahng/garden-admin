@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select"
 import { Plus, Search, Trash2 } from "lucide-react"
 import { toast } from "sonner"
+import { DataPagination } from "@/components/ui/data-pagination"
 
 type Discount = components["schemas"]["DiscountResponse"]
 type CreateDiscount = components["schemas"]["CreateDiscountRequest"]
@@ -212,29 +213,8 @@ export function DiscountsPage() {
             ))}
           </TableBody>
         </Table>
-        {!isLoading && total > 0 && (
-          <div className="flex items-center justify-between border-t px-4 py-3 text-sm text-muted-foreground">
-            <span>{total} discount{total !== 1 ? "s" : ""}</span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(page - 1)}
-                disabled={page === 0}
-              >
-                Previous
-              </Button>
-              <span>Page {page + 1} of {totalPages}</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(page + 1)}
-                disabled={page >= totalPages - 1}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+        {!isLoading && (
+          <DataPagination page={page} totalPages={totalPages} total={total} label="discount" onPageChange={setPage} />
         )}
       </div>
 
