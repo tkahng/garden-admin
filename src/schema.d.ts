@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users/{id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateTags"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users/{id}/suspend": {
         parameters: {
             query?: never;
@@ -116,7 +132,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/quotes/{id}/notes": {
+    "/api/v1/admin/users/{id}/notes": {
         parameters: {
             query?: never;
             header?: never;
@@ -125,6 +141,54 @@ export interface paths {
         };
         get?: never;
         put: operations["updateNotes"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shipping/zones/{zoneId}/rates/{rateId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRate"];
+        put: operations["updateRate"];
+        post?: never;
+        delete: operations["deleteRate"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shipping/zones/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getZone"];
+        put: operations["updateZone"];
+        post?: never;
+        delete: operations["deleteZone"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/quotes/{id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateNotes_1"];
         post?: never;
         delete?: never;
         options?: never;
@@ -164,6 +228,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/orders/{orderId}/fulfillments/{fulfillmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getById"];
+        put: operations["update_2"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrder"];
+        put: operations["updateOrder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/orders/{id}/cancel": {
         parameters: {
             query?: never;
@@ -191,6 +287,54 @@ export interface paths {
         put: operations["updateRole"];
         post?: never;
         delete: operations["deleteRole"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/gift-cards/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getById_1"];
+        put: operations["update_3"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/gift-cards/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["deactivate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/discounts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getById_2"];
+        put: operations["update_4"];
+        post?: never;
+        delete: operations["delete_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -580,6 +724,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/shipping/zones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listZones"];
+        put?: never;
+        post: operations["createZone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/shipping/zones/{zoneId}/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listRates"];
+        put?: never;
+        post: operations["createRate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/quotes/{id}/send": {
         parameters: {
             query?: never;
@@ -724,7 +900,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/locations": {
+    "/api/v1/admin/orders/{orderId}/fulfillments": {
         parameters: {
             query?: never;
             header?: never;
@@ -734,6 +910,54 @@ export interface paths {
         get: operations["list_4"];
         put?: never;
         post: operations["create_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_5"];
+        put?: never;
+        post: operations["addNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refundOrder_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_6"];
+        put?: never;
+        post: operations["create_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -820,6 +1044,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/gift-cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_7"];
+        put?: never;
+        post: operations["create_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/gift-cards/{id}/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listTransactions"];
+        put?: never;
+        post: operations["addTransaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/discounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_8"];
+        put?: never;
+        post: operations["create_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/collections": {
         parameters: {
             query?: never;
@@ -827,9 +1099,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_9"];
         put?: never;
-        post: operations["create_4"];
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -923,10 +1195,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["list_10"];
         put?: never;
         post: operations["upload"];
-        delete?: never;
+        delete: operations["bulkDelete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -958,10 +1230,10 @@ export interface paths {
         get: operations["get_2"];
         put?: never;
         post?: never;
-        delete: operations["delete_1"];
+        delete: operations["delete_2"];
         options?: never;
         head?: never;
-        patch: operations["update_2"];
+        patch: operations["update_5"];
         trace?: never;
     };
     "/api/v1/admin/products/{id}/variants/{vId}": {
@@ -1070,10 +1342,10 @@ export interface paths {
         get: operations["get_3"];
         put?: never;
         post?: never;
-        delete: operations["deactivate"];
+        delete: operations["deactivate_1"];
         options?: never;
         head?: never;
-        patch: operations["update_3"];
+        patch: operations["update_6"];
         trace?: never;
     };
     "/api/v1/admin/inventory/{itemId}": {
@@ -1089,7 +1361,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_4"];
+        patch: operations["update_7"];
         trace?: never;
     };
     "/api/v1/admin/inventory/variants/{variantId}/fulfillment": {
@@ -1118,10 +1390,10 @@ export interface paths {
         get: operations["get_4"];
         put?: never;
         post?: never;
-        delete: operations["delete_2"];
+        delete: operations["delete_3"];
         options?: never;
         head?: never;
-        patch: operations["update_5"];
+        patch: operations["update_8"];
         trace?: never;
     };
     "/api/v1/admin/collections/{id}/status": {
@@ -1188,6 +1460,38 @@ export interface paths {
         patch: operations["reorderImages_1"];
         trace?: never;
     };
+    "/api/v1/admin/blobs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getById_3"];
+        put?: never;
+        post?: never;
+        delete: operations["delete_4"];
+        options?: never;
+        head?: never;
+        patch: operations["update_9"];
+        trace?: never;
+    };
+    "/api/v1/storefront/shipping/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/storefront/orders": {
         parameters: {
             query?: never;
@@ -1211,7 +1515,39 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getOrder"];
+        get: operations["getOrder_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/storefront/gift-cards/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["validate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/storefront/discounts/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["validate_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1275,7 +1611,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1307,7 +1643,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1339,7 +1675,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_8"];
+        get: operations["list_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1508,6 +1844,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/quotes": {
         parameters: {
             query?: never;
@@ -1515,7 +1867,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_9"];
+        get: operations["list_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1572,22 +1924,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/orders/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getOrder_1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/admin/inventory/variants/{variantId}/transactions": {
         parameters: {
             query?: never;
@@ -1595,7 +1931,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listTransactions"];
+        get: operations["listTransactions_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1628,6 +1964,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["listPermissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/blobs/{id}/usages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUsages"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1748,22 +2100,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/blobs/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["delete_3"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1805,6 +2141,8 @@ export interface components {
             status?: "UNVERIFIED" | "ACTIVE" | "SUSPENDED";
             /** Format: date-time */
             emailVerifiedAt?: string;
+            adminNotes?: string;
+            tags?: string[];
             roles?: components["schemas"]["Role"][];
         };
         ApiResponseOrderResponse: {
@@ -1834,10 +2172,18 @@ export interface components {
             /** Format: uuid */
             userId?: string;
             /** @enum {string} */
-            status?: "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED";
+            status?: "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED";
             totalAmount?: number;
             currency?: string;
             stripeSessionId?: string;
+            /** Format: uuid */
+            discountId?: string;
+            discountAmount?: number;
+            /** Format: uuid */
+            giftCardId?: string;
+            giftCardAmount?: number;
+            adminNotes?: string;
+            shippingAddress?: string;
             items?: components["schemas"]["OrderItemResponse"][];
             /** Format: date-time */
             createdAt?: string;
@@ -1957,10 +2303,80 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
             roles?: string[];
+            adminNotes?: string;
+            tags?: string[];
         };
         ApiResponseAdminUserResponse: {
             data?: components["schemas"]["AdminUserResponse"];
             meta?: unknown;
+        };
+        UpdateTagsRequest: {
+            tags?: string[];
+        };
+        UpdateNotesRequest: {
+            adminNotes?: string;
+        };
+        UpdateShippingRateRequest: {
+            name?: string;
+            price?: number;
+            /** Format: int32 */
+            minWeightGrams?: number;
+            /** Format: int32 */
+            maxWeightGrams?: number;
+            minOrderAmount?: number;
+            /** Format: int32 */
+            estimatedDaysMin?: number;
+            /** Format: int32 */
+            estimatedDaysMax?: number;
+            carrier?: string;
+            isActive?: boolean;
+        };
+        ApiResponseShippingRateResponse: {
+            data?: components["schemas"]["ShippingRateResponse"];
+            meta?: unknown;
+        };
+        ShippingRateResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            zoneId?: string;
+            name?: string;
+            price?: number;
+            /** Format: int32 */
+            minWeightGrams?: number;
+            /** Format: int32 */
+            maxWeightGrams?: number;
+            minOrderAmount?: number;
+            /** Format: int32 */
+            estimatedDaysMin?: number;
+            /** Format: int32 */
+            estimatedDaysMax?: number;
+            carrier?: string;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        UpdateShippingZoneRequest: {
+            name?: string;
+            description?: string;
+            countryCodes?: string[];
+            provinces?: string[];
+            isActive?: boolean;
+        };
+        ApiResponseShippingZoneResponse: {
+            data?: components["schemas"]["ShippingZoneResponse"];
+            meta?: unknown;
+        };
+        ShippingZoneResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            description?: string;
+            countryCodes?: string[];
+            provinces?: string[];
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
         };
         UpdateStaffNotesRequest: {
             staffNotes?: string;
@@ -2052,6 +2468,45 @@ export interface components {
             data?: components["schemas"]["AdminPageResponse"];
             meta?: unknown;
         };
+        UpdateFulfillmentRequest: {
+            /** @enum {string} */
+            status?: "PENDING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+            trackingNumber?: string;
+            trackingCompany?: string;
+            trackingUrl?: string;
+            note?: string;
+        };
+        ApiResponseFulfillmentResponse: {
+            data?: components["schemas"]["FulfillmentResponse"];
+            meta?: unknown;
+        };
+        FulfillmentItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            orderItemId?: string;
+            /** Format: int32 */
+            quantity?: number;
+        };
+        FulfillmentResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            orderId?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
+            trackingNumber?: string;
+            trackingCompany?: string;
+            trackingUrl?: string;
+            note?: string;
+            items?: components["schemas"]["FulfillmentItemResponse"][];
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        UpdateOrderRequest: {
+            adminNotes?: string;
+            shippingAddress?: string;
+        };
         UpdateRoleRequest: {
             name?: string;
             description?: string;
@@ -2073,6 +2528,71 @@ export interface components {
             name?: string;
             description?: string;
             permissions?: components["schemas"]["PermissionResponse"][];
+        };
+        UpdateGiftCardRequest: {
+            /** Format: date-time */
+            expiresAt?: string;
+            note?: string;
+            recipientEmail?: string;
+        };
+        ApiResponseGiftCardResponse: {
+            data?: components["schemas"]["GiftCardResponse"];
+            meta?: unknown;
+        };
+        GiftCardResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string;
+            initialBalance?: number;
+            currentBalance?: number;
+            currency?: string;
+            isActive?: boolean;
+            /** Format: date-time */
+            expiresAt?: string;
+            note?: string;
+            /** Format: uuid */
+            purchaserUserId?: string;
+            recipientEmail?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        UpdateDiscountRequest: {
+            code?: string;
+            /** @enum {string} */
+            type?: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_SHIPPING";
+            value?: number;
+            minOrderAmount?: number;
+            /** Format: int32 */
+            maxUses?: number;
+            /** Format: date-time */
+            startsAt?: string;
+            /** Format: date-time */
+            endsAt?: string;
+            isActive?: boolean;
+        };
+        ApiResponseDiscountResponse: {
+            data?: components["schemas"]["DiscountResponse"];
+            meta?: unknown;
+        };
+        DiscountResponse: {
+            /** Format: uuid */
+            id?: string;
+            code?: string;
+            /** @enum {string} */
+            type?: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_SHIPPING";
+            value?: number;
+            minOrderAmount?: number;
+            /** Format: int32 */
+            maxUses?: number;
+            /** Format: int32 */
+            usedCount?: number;
+            /** Format: date-time */
+            startsAt?: string;
+            /** Format: date-time */
+            endsAt?: string;
+            isActive?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
         };
         UpdateBlogRequest: {
             title?: string;
@@ -2255,6 +2775,10 @@ export interface components {
             /** Format: date-time */
             joinedAt?: string;
         };
+        CheckoutRequest: {
+            discountCode?: string;
+            giftCardCode?: string;
+        };
         ApiResponseCheckoutResponse: {
             data?: components["schemas"]["CheckoutResponse"];
             meta?: unknown;
@@ -2306,6 +2830,26 @@ export interface components {
         };
         AssignRoleRequest: {
             roleName: string;
+        };
+        CreateShippingZoneRequest: {
+            name: string;
+            description?: string;
+            countryCodes?: string[];
+            provinces?: string[];
+        };
+        CreateShippingRateRequest: {
+            name: string;
+            price: number;
+            /** Format: int32 */
+            minWeightGrams?: number;
+            /** Format: int32 */
+            maxWeightGrams?: number;
+            minOrderAmount?: number;
+            /** Format: int32 */
+            estimatedDaysMin?: number;
+            /** Format: int32 */
+            estimatedDaysMax?: number;
+            carrier?: string;
         };
         SendQuoteRequest: {
             /** Format: date-time */
@@ -2440,6 +2984,43 @@ export interface components {
             metaTitle?: string;
             metaDescription?: string;
         };
+        CreateFulfillmentRequest: {
+            trackingNumber?: string;
+            trackingCompany?: string;
+            trackingUrl?: string;
+            note?: string;
+            items: components["schemas"]["FulfillmentItemRequest"][];
+        };
+        FulfillmentItemRequest: {
+            /** Format: uuid */
+            orderItemId: string;
+            /** Format: int32 */
+            quantity?: number;
+        };
+        CreateOrderNoteRequest: {
+            message: string;
+        };
+        ApiResponseOrderEventResponse: {
+            data?: components["schemas"]["OrderEventResponse"];
+            meta?: unknown;
+        };
+        OrderEventResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            orderId?: string;
+            /** @enum {string} */
+            type?: "ORDER_PLACED" | "PAYMENT_CONFIRMED" | "ORDER_CANCELLED" | "ORDER_REFUNDED" | "ADMIN_REFUND_ISSUED" | "DISCOUNT_APPLIED" | "GIFT_CARD_APPLIED" | "FULFILLMENT_CREATED" | "FULFILLMENT_UPDATED" | "NOTE_ADDED";
+            message?: string;
+            /** Format: uuid */
+            authorId?: string;
+            authorName?: string;
+            metadata?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            createdAt?: string;
+        };
         CreateLocationRequest: {
             name: string;
             address?: string;
@@ -2499,6 +3080,50 @@ export interface components {
         AssignPermissionRequest: {
             /** Format: uuid */
             permissionId: string;
+        };
+        CreateGiftCardRequest: {
+            code?: string;
+            initialBalance: number;
+            currency?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            note?: string;
+            /** Format: uuid */
+            purchaserUserId?: string;
+            recipientEmail?: string;
+        };
+        GiftCardTransactionRequest: {
+            delta: number;
+            note?: string;
+        };
+        ApiResponseGiftCardTransactionResponse: {
+            data?: components["schemas"]["GiftCardTransactionResponse"];
+            meta?: unknown;
+        };
+        GiftCardTransactionResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            giftCardId?: string;
+            delta?: number;
+            /** Format: uuid */
+            orderId?: string;
+            note?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        CreateDiscountRequest: {
+            code: string;
+            /** @enum {string} */
+            type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_SHIPPING";
+            value: number;
+            minOrderAmount?: number;
+            /** Format: int32 */
+            maxUses?: number;
+            /** Format: date-time */
+            startsAt?: string;
+            /** Format: date-time */
+            endsAt?: string;
         };
         CreateCollectionRequest: {
             title: string;
@@ -2615,6 +3240,14 @@ export interface components {
             /** Format: int64 */
             size?: number;
             url?: string;
+            alt?: string;
+            title?: string;
+            /** Format: int32 */
+            width?: number;
+            /** Format: int32 */
+            height?: number;
+            /** Format: date-time */
+            createdAt?: string;
         };
         UpdateProductRequest: {
             title?: string;
@@ -2710,6 +3343,14 @@ export interface components {
             /** Format: int32 */
             position?: number;
         };
+        UpdateBlobRequest: {
+            alt?: string;
+            title?: string;
+        };
+        ApiResponseListShippingRateResponse: {
+            data?: components["schemas"]["ShippingRateResponse"][];
+            meta?: unknown;
+        };
         ApiResponsePagedResultOrderResponse: {
             data?: components["schemas"]["PagedResultOrderResponse"];
             meta?: unknown;
@@ -2725,6 +3366,30 @@ export interface components {
         PagedResultOrderResponse: {
             content?: components["schemas"]["OrderResponse"][];
             meta?: components["schemas"]["PageMeta"];
+        };
+        ApiResponseGiftCardValidationResponse: {
+            data?: components["schemas"]["GiftCardValidationResponse"];
+            meta?: unknown;
+        };
+        GiftCardValidationResponse: {
+            valid?: boolean;
+            code?: string;
+            currentBalance?: number;
+            currency?: string;
+            message?: string;
+        };
+        ApiResponseDiscountValidationResponse: {
+            data?: components["schemas"]["DiscountValidationResponse"];
+            meta?: unknown;
+        };
+        DiscountValidationResponse: {
+            valid?: boolean;
+            code?: string;
+            /** @enum {string} */
+            type?: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_SHIPPING";
+            value?: number;
+            discountedAmount?: number;
+            message?: string;
         };
         ApiResponsePagedResultQuoteRequestResponse: {
             data?: components["schemas"]["PagedResultQuoteRequestResponse"];
@@ -2859,7 +3524,7 @@ export interface components {
             /** Format: uuid */
             orderId?: string;
             /** @enum {string} */
-            status?: "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED";
+            status?: "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED";
         };
         ApiResponsePagedResultBlogResponse: {
             data?: components["schemas"]["PagedResultBlogResponse"];
@@ -2920,6 +3585,30 @@ export interface components {
             content?: components["schemas"]["AdminUserResponse"][];
             meta?: components["schemas"]["PageMeta"];
         };
+        ApiResponseStatsResponse: {
+            data?: components["schemas"]["StatsResponse"];
+            meta?: unknown;
+        };
+        StatsResponse: {
+            /** Format: date-time */
+            from?: string;
+            /** Format: date-time */
+            to?: string;
+            /** Format: int64 */
+            orderCount?: number;
+            totalRevenue?: number;
+            averageOrderValue?: number;
+            /** Format: int64 */
+            newCustomerCount?: number;
+        };
+        ApiResponsePagedResultShippingZoneResponse: {
+            data?: components["schemas"]["PagedResultShippingZoneResponse"];
+            meta?: unknown;
+        };
+        PagedResultShippingZoneResponse: {
+            content?: components["schemas"]["ShippingZoneResponse"][];
+            meta?: components["schemas"]["PageMeta"];
+        };
         ApiResponsePagedResultAdminProductResponse: {
             data?: components["schemas"]["PagedResultAdminProductResponse"];
             meta?: unknown;
@@ -2939,6 +3628,14 @@ export interface components {
         PagedResultAdminPageResponse: {
             content?: components["schemas"]["AdminPageResponse"][];
             meta?: components["schemas"]["PageMeta"];
+        };
+        ApiResponseListFulfillmentResponse: {
+            data?: components["schemas"]["FulfillmentResponse"][];
+            meta?: unknown;
+        };
+        ApiResponseListOrderEventResponse: {
+            data?: components["schemas"]["OrderEventResponse"][];
+            meta?: unknown;
         };
         ApiResponseListLocationResponse: {
             data?: components["schemas"]["LocationResponse"][];
@@ -2979,6 +3676,26 @@ export interface components {
         ApiResponseListPermissionResponse: {
             data?: components["schemas"]["PermissionResponse"][];
             meta?: unknown;
+        };
+        ApiResponsePagedResultGiftCardResponse: {
+            data?: components["schemas"]["PagedResultGiftCardResponse"];
+            meta?: unknown;
+        };
+        PagedResultGiftCardResponse: {
+            content?: components["schemas"]["GiftCardResponse"][];
+            meta?: components["schemas"]["PageMeta"];
+        };
+        ApiResponseListGiftCardTransactionResponse: {
+            data?: components["schemas"]["GiftCardTransactionResponse"][];
+            meta?: unknown;
+        };
+        ApiResponsePagedResultDiscountResponse: {
+            data?: components["schemas"]["PagedResultDiscountResponse"];
+            meta?: unknown;
+        };
+        PagedResultDiscountResponse: {
+            content?: components["schemas"]["DiscountResponse"][];
+            meta?: components["schemas"]["PageMeta"];
         };
         AdminCollectionSummaryResponse: {
             /** Format: uuid */
@@ -3022,9 +3739,29 @@ export interface components {
             content?: components["schemas"]["AdminArticleResponse"][];
             meta?: components["schemas"]["PageMeta"];
         };
+        ApiResponsePagedResultBlobResponse: {
+            data?: components["schemas"]["PagedResultBlobResponse"];
+            meta?: unknown;
+        };
+        PagedResultBlobResponse: {
+            content?: components["schemas"]["BlobResponse"][];
+            meta?: components["schemas"]["PageMeta"];
+        };
+        ApiResponseListBlobUsageResponse: {
+            data?: components["schemas"]["BlobUsageResponse"][];
+            meta?: unknown;
+        };
+        BlobUsageResponse: {
+            entityType?: string;
+            /** Format: uuid */
+            entityId?: string;
+        };
         ApiResponseListAddressResponse: {
             data?: components["schemas"]["AddressResponse"][];
             meta?: unknown;
+        };
+        BulkDeleteRequest: {
+            ids?: string[];
         };
     };
     responses: never;
@@ -3263,6 +4000,32 @@ export interface operations {
             };
         };
     };
+    updateTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTagsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAdminUserResponse"];
+                };
+            };
+        };
+    };
     suspendUser: {
         parameters: {
             query?: never;
@@ -3304,6 +4067,171 @@ export interface operations {
         };
     };
     updateNotes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNotesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseAdminUserResponse"];
+                };
+            };
+        };
+    };
+    getRate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                zoneId: string;
+                rateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseShippingRateResponse"];
+                };
+            };
+        };
+    };
+    updateRate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                zoneId: string;
+                rateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateShippingRateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseShippingRateResponse"];
+                };
+            };
+        };
+    };
+    deleteRate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                zoneId: string;
+                rateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getZone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseShippingZoneResponse"];
+                };
+            };
+        };
+    };
+    updateZone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateShippingZoneRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseShippingZoneResponse"];
+                };
+            };
+        };
+    };
+    deleteZone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateNotes_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3445,6 +4373,104 @@ export interface operations {
             };
         };
     };
+    getById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+                fulfillmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseFulfillmentResponse"];
+                };
+            };
+        };
+    };
+    update_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+                fulfillmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateFulfillmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseFulfillmentResponse"];
+                };
+            };
+        };
+    };
+    getOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseOrderResponse"];
+                };
+            };
+        };
+    };
+    updateOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOrderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseOrderResponse"];
+                };
+            };
+        };
+    };
     cancelOrder_1: {
         parameters: {
             query?: never;
@@ -3494,6 +4520,144 @@ export interface operations {
         };
     };
     deleteRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getById_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGiftCardResponse"];
+                };
+            };
+        };
+    };
+    update_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateGiftCardRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGiftCardResponse"];
+                };
+            };
+        };
+    };
+    deactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGiftCardResponse"];
+                };
+            };
+        };
+    };
+    getById_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDiscountResponse"];
+                };
+            };
+        };
+    };
+    update_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateDiscountRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDiscountResponse"];
+                };
+            };
+        };
+    };
+    delete_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4055,7 +5219,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CheckoutRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -4301,6 +5469,101 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    listZones: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePagedResultShippingZoneResponse"];
+                };
+            };
+        };
+    };
+    createZone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateShippingZoneRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseShippingZoneResponse"];
+                };
+            };
+        };
+    };
+    listRates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                zoneId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListShippingRateResponse"];
+                };
+            };
+        };
+    };
+    createRate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                zoneId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateShippingRateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseShippingRateResponse"];
+                };
             };
         };
     };
@@ -4588,6 +5851,128 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListFulfillmentResponse"];
+                };
+            };
+        };
+    };
+    create_3: {
+        parameters: {
+            query: {
+                admin: components["schemas"]["User"];
+            };
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFulfillmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseFulfillmentResponse"];
+                };
+            };
+        };
+    };
+    list_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListOrderEventResponse"];
+                };
+            };
+        };
+    };
+    addNote: {
+        parameters: {
+            query: {
+                admin: components["schemas"]["User"];
+            };
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOrderNoteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseOrderEventResponse"];
+                };
+            };
+        };
+    };
+    refundOrder_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseOrderResponse"];
+                };
+            };
+        };
+    };
+    list_6: {
+        parameters: {
+            query?: never;
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -4604,7 +5989,7 @@ export interface operations {
             };
         };
     };
-    create_3: {
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -4772,7 +6157,154 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_7: {
+        parameters: {
+            query?: {
+                isActive?: boolean;
+                codeContains?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePagedResultGiftCardResponse"];
+                };
+            };
+        };
+    };
+    create_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGiftCardRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGiftCardResponse"];
+                };
+            };
+        };
+    };
+    listTransactions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListGiftCardTransactionResponse"];
+                };
+            };
+        };
+    };
+    addTransaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GiftCardTransactionRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGiftCardTransactionResponse"];
+                };
+            };
+        };
+    };
+    list_8: {
+        parameters: {
+            query?: {
+                type?: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_SHIPPING";
+                isActive?: boolean;
+                codeContains?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePagedResultDiscountResponse"];
+                };
+            };
+        };
+    };
+    create_6: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDiscountRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDiscountResponse"];
+                };
+            };
+        };
+    };
+    list_9: {
         parameters: {
             query?: {
                 collectionType?: "MANUAL" | "AUTOMATED";
@@ -4798,7 +6330,7 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -5054,6 +6586,33 @@ export interface operations {
             };
         };
     };
+    list_10: {
+        parameters: {
+            query?: {
+                contentType?: string;
+                filenameContains?: string;
+                sortBy?: string;
+                sortDir?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePagedResultBlobResponse"];
+                };
+            };
+        };
+    };
     upload: {
         parameters: {
             query?: never;
@@ -5078,6 +6637,28 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ApiResponseBlobResponse"];
                 };
+            };
+        };
+    };
+    bulkDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDeleteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -5151,7 +6732,7 @@ export interface operations {
             };
         };
     };
-    delete_1: {
+    delete_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -5171,7 +6752,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -5419,7 +7000,7 @@ export interface operations {
             };
         };
     };
-    deactivate: {
+    deactivate_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -5439,7 +7020,7 @@ export interface operations {
             };
         };
     };
-    update_3: {
+    update_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -5465,7 +7046,7 @@ export interface operations {
             };
         };
     };
-    update_4: {
+    update_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -5539,7 +7120,7 @@ export interface operations {
             };
         };
     };
-    delete_2: {
+    delete_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -5559,7 +7140,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -5690,6 +7271,98 @@ export interface operations {
             };
         };
     };
+    getById_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBlobResponse"];
+                };
+            };
+        };
+    };
+    delete_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_9: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBlobRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBlobResponse"];
+                };
+            };
+        };
+    };
+    getRates: {
+        parameters: {
+            query: {
+                country: string;
+                province?: string;
+                orderAmount?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListShippingRateResponse"];
+                };
+            };
+        };
+    };
     listOrders: {
         parameters: {
             query: {
@@ -5714,7 +7387,7 @@ export interface operations {
             };
         };
     };
-    getOrder: {
+    getOrder_1: {
         parameters: {
             query: {
                 user: components["schemas"]["User"];
@@ -5734,6 +7407,51 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseOrderResponse"];
+                };
+            };
+        };
+    };
+    validate: {
+        parameters: {
+            query: {
+                code: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGiftCardValidationResponse"];
+                };
+            };
+        };
+    };
+    validate_1: {
+        parameters: {
+            query: {
+                code: string;
+                orderAmount?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDiscountValidationResponse"];
                 };
             };
         };
@@ -5828,7 +7546,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_11: {
         parameters: {
             query?: {
                 titleContains?: string;
@@ -5876,7 +7594,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_12: {
         parameters: {
             query?: {
                 page?: number;
@@ -5922,7 +7640,7 @@ export interface operations {
             };
         };
     };
-    list_8: {
+    list_13: {
         parameters: {
             query?: {
                 page?: number;
@@ -6198,7 +7916,30 @@ export interface operations {
             };
         };
     };
-    list_9: {
+    getStats: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseStatsResponse"];
+                };
+            };
+        };
+    };
+    list_14: {
         parameters: {
             query?: {
                 status?: "PENDING" | "ASSIGNED" | "DRAFT" | "SENT" | "ACCEPTED" | "PAID" | "REJECTED" | "EXPIRED" | "CANCELLED";
@@ -6271,7 +8012,7 @@ export interface operations {
     listOrders_1: {
         parameters: {
             query?: {
-                status?: "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED";
+                status?: "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED";
                 userId?: string;
                 from?: string;
                 to?: string;
@@ -6295,29 +8036,7 @@ export interface operations {
             };
         };
     };
-    getOrder_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseOrderResponse"];
-                };
-            };
-        };
-    };
-    listTransactions: {
+    listTransactions_1: {
         parameters: {
             query?: {
                 locationId?: string;
@@ -6381,6 +8100,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseListPermissionResponse"];
+                };
+            };
+        };
+    };
+    getUsages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListBlobUsageResponse"];
                 };
             };
         };
@@ -6521,26 +8262,6 @@ export interface operations {
                 id: string;
                 articleId: string;
                 imageId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    delete_3: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
             };
             cookie?: never;
         };

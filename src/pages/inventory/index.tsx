@@ -1,5 +1,3 @@
-import { useQuery } from "@tanstack/react-query"
-import { apiClient } from "@/api/client"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -12,16 +10,6 @@ import {
 import { Search } from "lucide-react"
 
 export function InventoryPage() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin", "inventory", "transactions"],
-    queryFn: async () => {
-      // Inventory is per-variant; show a placeholder
-      return { content: [] }
-    },
-  })
-
-  const items = (data as { content?: unknown[] } | undefined)?.content ?? []
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -47,20 +35,11 @@ export function InventoryPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            )}
-            {!isLoading && items.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
-                  Inventory is tracked per product variant. Open a product to view inventory.
-                </TableCell>
-              </TableRow>
-            )}
+            <TableRow>
+              <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
+                Inventory is tracked per product variant. Open a product to view inventory.
+              </TableCell>
+            </TableRow>
           </TableBody>
         </Table>
       </div>

@@ -4,8 +4,6 @@ import {
   LayoutDashboard,
   ShoppingCart,
   Package,
-  Layers,
-  Archive,
   FileText,
   BookOpen,
   Users,
@@ -16,6 +14,9 @@ import {
   ChevronDown,
   ChevronRight,
   Store,
+  Tag,
+  Gift,
+  Truck,
 } from "lucide-react"
 import { useState } from "react"
 
@@ -69,6 +70,16 @@ const navItems: NavItem[] = [
     href: "/companies",
     icon: Building2,
   },
+  {
+    label: "Discounts",
+    href: "/discounts",
+    icon: Tag,
+  },
+  {
+    label: "Gift cards",
+    href: "/gift-cards",
+    icon: Gift,
+  },
 ]
 
 const settingsItems: NavItem[] = [
@@ -76,6 +87,11 @@ const settingsItems: NavItem[] = [
     label: "Locations",
     href: "/settings/locations",
     icon: MapPin,
+  },
+  {
+    label: "Shipping",
+    href: "/settings/shipping",
+    icon: Truck,
   },
   {
     label: "Users & permissions",
