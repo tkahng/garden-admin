@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -21,9 +20,6 @@ export function CustomersPage() {
   const { page: rawPage, email } = useSearch({ from: "/_authenticated/customers" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
-  const [emailInput, setEmailInput] = useState(email ?? "")
-
-  useEffect(() => { setEmailInput(email ?? "") }, [email])
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "users", page, email],
@@ -56,9 +52,8 @@ export function CustomersPage() {
           <Input
             placeholder="Search by email..."
             className="pl-9"
-            value={emailInput}
+            value={email ?? ""}
             onChange={(e) => {
-              setEmailInput(e.target.value)
               void navigate({
                 to: "/customers",
                 search: { page: 0, email: e.target.value || undefined },

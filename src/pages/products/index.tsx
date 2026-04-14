@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -22,9 +21,6 @@ export function ProductsPage() {
   const { page: rawPage, titleContains } = useSearch({ from: "/_authenticated/products" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
-  const [searchInput, setSearchInput] = useState(titleContains ?? "")
-
-  useEffect(() => { setSearchInput(titleContains ?? "") }, [titleContains])
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "products", page, titleContains],
@@ -63,9 +59,8 @@ export function ProductsPage() {
           <Input
             placeholder="Search products..."
             className="pl-9"
-            value={searchInput}
+            value={titleContains ?? ""}
             onChange={(e) => {
-              setSearchInput(e.target.value)
               void navigate({
                 to: "/products",
                 search: { page: 0, titleContains: e.target.value || undefined },

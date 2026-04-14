@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react"
 import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -38,9 +37,6 @@ export function OrdersPage() {
   const { page: rawPage, status } = useSearch({ from: "/_authenticated/orders" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
-  const [statusInput, setStatusInput] = useState(status ?? "")
-
-  useEffect(() => { setStatusInput(status ?? "") }, [status])
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "orders", page, status],
@@ -73,9 +69,8 @@ export function OrdersPage() {
           <Input
             placeholder="Filter by status..."
             className="pl-9"
-            value={statusInput}
+            value={status ?? ""}
             onChange={(e) => {
-              setStatusInput(e.target.value)
               void navigate({
                 to: "/orders",
                 search: { page: 0, status: e.target.value || undefined },

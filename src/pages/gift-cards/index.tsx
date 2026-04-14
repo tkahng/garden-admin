@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
@@ -39,9 +39,6 @@ export function GiftCardsPage() {
   const { page: rawPage, codeContains } = useSearch({ from: "/_authenticated/gift-cards" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
-  const [codeInput, setCodeInput] = useState(codeContains ?? "")
-
-  useEffect(() => { setCodeInput(codeContains ?? "") }, [codeContains])
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "gift-cards", page, codeContains],
@@ -114,9 +111,8 @@ export function GiftCardsPage() {
           <Input
             placeholder="Search by code..."
             className="pl-9"
-            value={codeInput}
+            value={codeContains ?? ""}
             onChange={(e) => {
-              setCodeInput(e.target.value)
               void navigate({
                 to: "/gift-cards",
                 search: { page: 0, codeContains: e.target.value || undefined },
