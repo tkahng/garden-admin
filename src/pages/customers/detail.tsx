@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useParams, Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 import type { components } from "@/schema"
@@ -13,8 +13,7 @@ import { toast } from "sonner"
 
 type User = components["schemas"]["AdminUserResponse"]
 
-export function CustomerDetailPage() {
-  const { id } = useParams<{ id: string }>()
+export function CustomerDetailPage({ id }: { id: string }) {
   const qc = useQueryClient()
   const [tagInput, setTagInput] = useState("")
   const [notes, setNotes] = useState<string | undefined>(undefined)

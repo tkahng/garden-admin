@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
-import { apiClient, setAuthToken, getAuthToken } from "@/api/client"
+import { apiClient, setAuthToken } from "@/api/client"
 
 const USER_KEY = "garden_user"
 
@@ -10,7 +10,7 @@ interface AuthUser {
   lastName?: string
 }
 
-interface AuthContextValue {
+export interface AuthContextValue {
   user: AuthUser | null
   isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>

@@ -1,4 +1,4 @@
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -17,21 +17,24 @@ export function CollectionsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "collections"],
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/v1/admin/collections", {})
+      const { data, error } = await apiClient.GET(
+        "/api/v1/admin/collections",
+        {}
+      )
       if (error) throw error
       return data
     },
   })
 
-  const collections = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
+  const collections = data?.data?.content ?? []
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Collections</h1>
         <Button asChild size="sm">
-          <Link to="/collections/new">
-            <Plus className="size-4 mr-2" />
+          <Link to={"/collections/new" as string}>
+            <Plus className="mr-2 size-4" />
             Create collection
           </Link>
         </Button>
@@ -49,14 +52,20 @@ export function CollectionsPage() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground py-12">
+                <TableCell
+                  colSpan={3}
+                  className="py-12 text-center text-muted-foreground"
+                >
                   Loading...
                 </TableCell>
               </TableRow>
             )}
             {!isLoading && collections.length === 0 && (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground py-12">
+                <TableCell
+                  colSpan={3}
+                  className="py-12 text-center text-muted-foreground"
+                >
                   No collections yet.
                 </TableCell>
               </TableRow>
@@ -64,12 +73,19 @@ export function CollectionsPage() {
             {collections.map((c: Record<string, unknown>) => (
               <TableRow key={String(c.id)}>
                 <TableCell>
-                  <Link to={`/collections/${c.id}`} className="font-medium hover:underline">
+                  <Link
+                    to={`/collections/${c.id}` as string}
+                    className="font-medium hover:underline"
+                  >
                     {String(c.title ?? "Untitled")}
                   </Link>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={String(c.status) === "ACTIVE" ? "default" : "secondary"}>
+                  <Badge
+                    variant={
+                      String(c.status) === "ACTIVE" ? "default" : "secondary"
+                    }
+                  >
                     {String(c.status ?? "DRAFT")}
                   </Badge>
                 </TableCell>

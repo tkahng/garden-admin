@@ -1,4 +1,4 @@
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -29,7 +29,7 @@ export function BlogsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Blogs</h1>
         <Button asChild size="sm">
-          <Link to="/blogs/new">
+          <Link to={"/blogs/new" as string}>
             <Plus className="size-4 mr-2" />
             Add blog
           </Link>
@@ -63,7 +63,7 @@ export function BlogsPage() {
             {blogs.map((b: Record<string, unknown>) => (
               <TableRow key={String(b.id)}>
                 <TableCell>
-                  <Link to={`/blogs/${b.id}`} className="font-medium hover:underline">
+                  <Link to={`/blogs/${b.id}` as string} className="font-medium hover:underline">
                     {String(b.title ?? "Untitled")}
                   </Link>
                 </TableCell>

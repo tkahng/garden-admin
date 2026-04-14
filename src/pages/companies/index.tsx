@@ -1,4 +1,4 @@
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -30,7 +30,7 @@ export function CompaniesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Companies</h1>
         <Button asChild size="sm">
-          <Link to="/companies/new">
+          <Link to={"/companies/new" as string}>
             <Plus className="size-4 mr-2" />
             Add company
           </Link>
@@ -71,7 +71,7 @@ export function CompaniesPage() {
             {companies.map((c: Record<string, unknown>) => (
               <TableRow key={String(c.id)}>
                 <TableCell>
-                  <Link to={`/companies/${c.id}`} className="font-medium hover:underline">
+                  <Link to={`/companies/${c.id}` as string} className="font-medium hover:underline">
                     {String(c.name ?? "Unnamed")}
                   </Link>
                 </TableCell>

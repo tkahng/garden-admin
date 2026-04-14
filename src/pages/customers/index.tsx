@@ -1,4 +1,4 @@
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -66,7 +66,7 @@ export function CustomersPage() {
             {users.map((u: Record<string, unknown>) => (
               <TableRow key={String(u.id)}>
                 <TableCell>
-                  <Link to={`/customers/${String(u.id)}`} className="font-medium hover:underline">
+                  <Link to="/customers/$customerId" params={{ customerId: String(u.id) }} className="font-medium hover:underline">
                     {[u.firstName, u.lastName].filter(Boolean).join(" ") || String(u.email ?? "—")}
                   </Link>
                 </TableCell>

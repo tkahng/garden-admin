@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 
 export function Header() {
   const { user, logout } = useAuth()
@@ -51,13 +51,13 @@ export function Header() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem asChild>
-              <Link to="/settings/profile" className="flex items-center gap-2">
+              <Link to={"/settings/profile" as string} className="flex items-center gap-2">
                 <User className="size-4" />
                 Profile
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/settings" className="flex items-center gap-2">
+              <Link to={"/settings" as string} className="flex items-center gap-2">
                 <Settings className="size-4" />
                 Settings
               </Link>

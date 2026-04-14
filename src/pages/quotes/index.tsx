@@ -1,4 +1,4 @@
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
@@ -67,7 +67,7 @@ export function QuotesPage() {
             {quotes.map((q: Record<string, unknown>) => (
               <TableRow key={String(q.id)}>
                 <TableCell>
-                  <Link to={`/quotes/${q.id}`} className="font-medium hover:underline">
+                  <Link to={`/quotes/${q.id}` as string} className="font-medium hover:underline">
                     #{String(q.id).slice(0, 8)}
                   </Link>
                 </TableCell>

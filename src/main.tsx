@@ -1,13 +1,13 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
-import { RouterProvider } from "react-router"
+import { RouterProvider, createRouter } from "@tanstack/react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { routeTree } from "./routeTree.gen"
 
 import "./index.css"
 import { ThemeProvider } from "@/components/theme-provider.tsx"
-import { AuthProvider } from "@/contexts/auth-context"
+import { AuthProvider, useAuth } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/sonner"
-import { router } from "./router"
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,12 +18,30 @@ const queryClient = new QueryClient({
   },
 })
 
+const router = createRouter({
+  routeTree,
+  context: {
+    auth: undefined!,
+  },
+})
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router
+  }
+}
+
+function InnerApp() {
+  const auth = useAuth()
+  return <RouterProvider router={router} context={{ auth }} />
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <RouterProvider router={router} />
+          <InnerApp />
           <Toaster richColors />
         </AuthProvider>
       </QueryClientProvider>

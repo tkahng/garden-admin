@@ -1,4 +1,4 @@
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -24,23 +24,23 @@ export function ProductsPage() {
     },
   })
 
-  const products = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
+  const products = data?.data?.content ?? []
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Products</h1>
         <Button asChild size="sm">
-          <Link to="/products/new">
-            <Plus className="size-4 mr-2" />
+          <Link to={"/products/new" as string}>
+            <Plus className="mr-2 size-4" />
             Add product
           </Link>
         </Button>
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search products..." className="pl-9" />
         </div>
       </div>
@@ -58,16 +58,22 @@ export function ProductsPage() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
+                <TableCell
+                  colSpan={4}
+                  className="py-12 text-center text-muted-foreground"
+                >
                   Loading...
                 </TableCell>
               </TableRow>
             )}
             {!isLoading && products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
+                <TableCell
+                  colSpan={4}
+                  className="py-12 text-center text-muted-foreground"
+                >
                   No products yet.{" "}
-                  <Link to="/products/new" className="underline">
+                  <Link to={"/products/new" as string} className="underline">
                     Add your first product
                   </Link>
                 </TableCell>
@@ -76,15 +82,24 @@ export function ProductsPage() {
             {products.map((p: Record<string, unknown>) => (
               <TableRow key={String(p.id)}>
                 <TableCell>
-                  <Link to={`/products/${p.id}`} className="font-medium hover:underline">
+                  <Link
+                    to={`/products/${p.id}` as string}
+                    className="font-medium hover:underline"
+                  >
                     {String(p.title ?? p.name ?? "Untitled")}
                   </Link>
                   {p.handle != null && (
-                    <p className="text-xs text-muted-foreground">{String(p.handle)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {String(p.handle)}
+                    </p>
                   )}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={String(p.status) === "ACTIVE" ? "default" : "secondary"}>
+                  <Badge
+                    variant={
+                      String(p.status) === "ACTIVE" ? "default" : "secondary"
+                    }
+                  >
                     {String(p.status ?? "DRAFT")}
                   </Badge>
                 </TableCell>

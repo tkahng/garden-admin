@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react"
-import { useNavigate, Navigate } from "react-router"
+import { useNavigate } from "@tanstack/react-router"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,22 +9,18 @@ import { Store } from "lucide-react"
 import { toast } from "sonner"
 
 export function LoginPage() {
-  const { login, isAuthenticated } = useAuth()
+  const { login } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />
-  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setLoading(true)
     try {
       await login(email, password)
-      navigate("/", { replace: true })
+      await navigate({ to: "/" })
     } catch {
       toast.error("Invalid email or password")
     } finally {

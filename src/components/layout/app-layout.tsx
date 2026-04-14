@@ -1,15 +1,8 @@
-import { Outlet, Navigate } from "react-router"
+import { Outlet } from "@tanstack/react-router"
 import { Sidebar } from "./sidebar"
 import { Header } from "./header"
-import { useAuth } from "@/contexts/auth-context"
 
 export function AppLayout() {
-  const { isAuthenticated } = useAuth()
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
-  }
-
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />

@@ -1,4 +1,4 @@
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
@@ -82,7 +82,8 @@ export function OrdersPage() {
               <TableRow key={String(order.id)}>
                 <TableCell>
                   <Link
-                    to={`/orders/${order.id}`}
+                    to="/orders/$orderId"
+                    params={{ orderId: String(order.id) }}
                     className="font-medium hover:underline"
                   >
                     #{String(order.id).slice(0, 8)}

@@ -1,4 +1,4 @@
-import { Link } from "react-router"
+import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -30,7 +30,7 @@ export function LocationsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Locations</h1>
         <Button asChild size="sm">
-          <Link to="/settings/locations/new">
+          <Link to={"/settings/locations/new" as string}>
             <Plus className="size-4 mr-2" />
             Add location
           </Link>
@@ -64,7 +64,7 @@ export function LocationsPage() {
             {locations.map((l: Record<string, unknown>) => (
               <TableRow key={String(l.id)}>
                 <TableCell>
-                  <Link to={`/settings/locations/${l.id}`} className="font-medium hover:underline">
+                  <Link to={`/settings/locations/${l.id}` as string} className="font-medium hover:underline">
                     {String(l.name ?? "Unnamed")}
                   </Link>
                 </TableCell>
