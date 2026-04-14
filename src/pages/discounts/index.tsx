@@ -34,6 +34,8 @@ import { toast } from "sonner"
 type Discount = components["schemas"]["DiscountResponse"]
 type CreateDiscount = components["schemas"]["CreateDiscountRequest"]
 
+const PAGE_SIZE = 20
+
 function typeLabel(type: string | undefined) {
   switch (type) {
     case "PERCENTAGE": return "Percentage"
@@ -54,18 +56,22 @@ export function DiscountsPage() {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<Partial<CreateDiscount>>({ type: "PERCENTAGE" })
+  const [page, setPage] = useState(0)
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "discounts"],
+    queryKey: ["admin", "discounts", page],
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/v1/admin/discounts", {})
+      const { data, error } = await apiClient.GET("/api/v1/admin/discounts", {
+        params: { query: { page, size: PAGE_SIZE } },
+      })
       if (error) throw error
       return data
     },
   })
 
-  const discounts: Discount[] =
-    (data as { data?: { content?: Discount[] } } | undefined)?.data?.content ?? []
+  const discounts: Discount[] = data?.data?.content ?? []
+  const total = data?.data?.meta?.total ?? 0
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1
 
   const createMutation = useMutation({
     mutationFn: async (body: CreateDiscount) => {
@@ -176,6 +182,30 @@ export function DiscountsPage() {
             ))}
           </TableBody>
         </Table>
+        {!isLoading && total > 0 && (
+          <div className="flex items-center justify-between border-t px-4 py-3 text-sm text-muted-foreground">
+            <span>{total} discount{total !== 1 ? "s" : ""}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => p - 1)}
+                disabled={page === 0}
+              >
+                Previous
+              </Button>
+              <span>Page {page + 1} of {totalPages}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= totalPages - 1}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>

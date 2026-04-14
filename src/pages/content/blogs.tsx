@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,17 +13,26 @@ import { Plus } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 
+const PAGE_SIZE = 20
+
 export function BlogsPage() {
+  const [page, setPage] = useState(0)
+
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "blogs"],
+    queryKey: ["admin", "blogs", page],
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/v1/admin/blogs", {})
+      const { data, error } = await apiClient.GET("/api/v1/admin/blogs", {
+        params: { query: { page, pageSize: PAGE_SIZE } },
+      })
       if (error) throw error
       return data
     },
   })
 
-  const blogs = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
+  const blogs = data?.data?.content ?? []
+  const meta = data?.data?.meta
+  const total = meta?.total ?? 0
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1
 
   return (
     <div className="space-y-4">
@@ -60,7 +70,7 @@ export function BlogsPage() {
                 </TableCell>
               </TableRow>
             )}
-            {blogs.map((b: Record<string, unknown>) => (
+            {blogs.map((b) => (
               <TableRow key={String(b.id)}>
                 <TableCell>
                   <Link to={`/blogs/${b.id}` as string} className="font-medium hover:underline">
@@ -75,6 +85,30 @@ export function BlogsPage() {
             ))}
           </TableBody>
         </Table>
+        {!isLoading && total > 0 && (
+          <div className="flex items-center justify-between border-t px-4 py-3 text-sm text-muted-foreground">
+            <span>{total} blog{total !== 1 ? "s" : ""}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => p - 1)}
+                disabled={page === 0}
+              >
+                Previous
+              </Button>
+              <span>Page {page + 1} of {totalPages}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= totalPages - 1}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

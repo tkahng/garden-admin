@@ -1,6 +1,8 @@
+import { useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -13,17 +15,26 @@ import { Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 
+const PAGE_SIZE = 20
+
 export function CustomersPage() {
+  const [page, setPage] = useState(0)
+
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "users"],
+    queryKey: ["admin", "users", page],
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/v1/admin/users", {})
+      const { data, error } = await apiClient.GET("/api/v1/admin/users", {
+        params: { query: { page, size: PAGE_SIZE } },
+      })
       if (error) throw error
       return data
     },
   })
 
-  const users = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
+  const users = data?.data?.content ?? []
+  const meta = data?.data?.meta
+  const total = meta?.total ?? 0
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1
 
   return (
     <div className="space-y-4">
@@ -63,7 +74,7 @@ export function CustomersPage() {
                 </TableCell>
               </TableRow>
             )}
-            {users.map((u: Record<string, unknown>) => (
+            {users.map((u) => (
               <TableRow key={String(u.id)}>
                 <TableCell>
                   <Link to="/customers/$customerId" params={{ customerId: String(u.id) }} className="font-medium hover:underline">
@@ -72,8 +83,8 @@ export function CustomersPage() {
                 </TableCell>
                 <TableCell className="text-muted-foreground">{String(u.email ?? "—")}</TableCell>
                 <TableCell>
-                  <Badge variant={u.suspended ? "destructive" : "default"}>
-                    {u.suspended ? "Suspended" : "Active"}
+                  <Badge variant={u.status === "SUSPENDED" ? "destructive" : "default"}>
+                    {String(u.status ?? "ACTIVE")}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
@@ -83,6 +94,30 @@ export function CustomersPage() {
             ))}
           </TableBody>
         </Table>
+        {!isLoading && total > 0 && (
+          <div className="flex items-center justify-between border-t px-4 py-3 text-sm text-muted-foreground">
+            <span>{total} customer{total !== 1 ? "s" : ""}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => p - 1)}
+                disabled={page === 0}
+              >
+                Previous
+              </Button>
+              <span>Page {page + 1} of {totalPages}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= totalPages - 1}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

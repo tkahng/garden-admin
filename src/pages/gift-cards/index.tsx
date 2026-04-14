@@ -27,22 +27,28 @@ import { toast } from "sonner"
 type GiftCard = components["schemas"]["GiftCardResponse"]
 type CreateGiftCard = components["schemas"]["CreateGiftCardRequest"]
 
+const PAGE_SIZE = 20
+
 export function GiftCardsPage() {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<Partial<CreateGiftCard>>({ currency: "USD" })
+  const [page, setPage] = useState(0)
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "gift-cards"],
+    queryKey: ["admin", "gift-cards", page],
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/v1/admin/gift-cards", {})
+      const { data, error } = await apiClient.GET("/api/v1/admin/gift-cards", {
+        params: { query: { page, size: PAGE_SIZE } },
+      })
       if (error) throw error
       return data
     },
   })
 
-  const cards: GiftCard[] =
-    (data as { data?: { content?: GiftCard[] } } | undefined)?.data?.content ?? []
+  const cards: GiftCard[] = data?.data?.content ?? []
+  const total = data?.data?.meta?.total ?? 0
+  const totalPages = Math.ceil(total / PAGE_SIZE) || 1
 
   const createMutation = useMutation({
     mutationFn: async (body: CreateGiftCard) => {
@@ -149,6 +155,30 @@ export function GiftCardsPage() {
             ))}
           </TableBody>
         </Table>
+        {!isLoading && total > 0 && (
+          <div className="flex items-center justify-between border-t px-4 py-3 text-sm text-muted-foreground">
+            <span>{total} gift card{total !== 1 ? "s" : ""}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => p - 1)}
+                disabled={page === 0}
+              >
+                Previous
+              </Button>
+              <span>Page {page + 1} of {totalPages}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={page >= totalPages - 1}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
