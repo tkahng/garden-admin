@@ -24,7 +24,7 @@ export function ProductsPage() {
     },
   })
 
-  const products = (data as { content?: unknown[] } | undefined)?.content ?? []
+  const products = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
 
   return (
     <div className="space-y-4">
@@ -79,7 +79,7 @@ export function ProductsPage() {
                   <Link to={`/products/${p.id}`} className="font-medium hover:underline">
                     {String(p.title ?? p.name ?? "Untitled")}
                   </Link>
-                  {p.handle && (
+                  {p.handle != null && (
                     <p className="text-xs text-muted-foreground">{String(p.handle)}</p>
                   )}
                 </TableCell>

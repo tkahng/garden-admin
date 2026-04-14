@@ -22,7 +22,7 @@ export function BlogsPage() {
     },
   })
 
-  const blogs = (data as { content?: unknown[] } | undefined)?.content ?? []
+  const blogs = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
 
   return (
     <div className="space-y-4">

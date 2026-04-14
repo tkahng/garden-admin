@@ -22,7 +22,7 @@ export function PermissionsPage() {
     },
   })
 
-  const roles = (data as { content?: unknown[] } | undefined)?.content ?? (Array.isArray(data) ? data : [])
+  const roles = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? (Array.isArray(data) ? (data as Record<string, unknown>[]) : [])
 
   return (
     <div className="space-y-4">

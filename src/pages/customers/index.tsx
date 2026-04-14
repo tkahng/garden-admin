@@ -23,7 +23,7 @@ export function CustomersPage() {
     },
   })
 
-  const users = (data as { content?: unknown[] } | undefined)?.content ?? []
+  const users = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
 
   return (
     <div className="space-y-4">
@@ -66,8 +66,8 @@ export function CustomersPage() {
             {users.map((u: Record<string, unknown>) => (
               <TableRow key={String(u.id)}>
                 <TableCell>
-                  <Link to={`/customers/${u.id}`} className="font-medium hover:underline">
-                    {[u.firstName, u.lastName].filter(Boolean).join(" ") || "—"}
+                  <Link to={`/customers/${String(u.id)}`} className="font-medium hover:underline">
+                    {[u.firstName, u.lastName].filter(Boolean).join(" ") || String(u.email ?? "—")}
                   </Link>
                 </TableCell>
                 <TableCell className="text-muted-foreground">{String(u.email ?? "—")}</TableCell>

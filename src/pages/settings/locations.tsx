@@ -23,7 +23,7 @@ export function LocationsPage() {
     },
   })
 
-  const locations = (data as { content?: unknown[] } | undefined)?.content ?? []
+  const locations = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
 
   return (
     <div className="space-y-4">

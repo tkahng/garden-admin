@@ -23,7 +23,7 @@ export function CollectionsPage() {
     },
   })
 
-  const collections = (data as { content?: unknown[] } | undefined)?.content ?? []
+  const collections = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
 
   return (
     <div className="space-y-4">

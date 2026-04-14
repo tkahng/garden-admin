@@ -1,5 +1,4 @@
 import { Link } from "react-router"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
@@ -38,7 +37,7 @@ export function OrdersPage() {
     },
   })
 
-  const orders = (data as { content?: unknown[] } | undefined)?.content ?? []
+  const orders = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
 
   return (
     <div className="space-y-4">

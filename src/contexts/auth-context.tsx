@@ -19,6 +19,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
+  const [refreshToken, setRefreshToken] = useState<string>("")
 
   const login = useCallback(async (email: string, password: string) => {
     const { data, error } = await apiClient.POST("/api/v1/auth/login", {
@@ -26,19 +27,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     if (error) throw new Error("Login failed")
     if (data) {
+      const d = data as { id?: unknown; email?: string; firstName?: string; lastName?: string; data?: { refreshToken?: string; accessToken?: string } }
+      setRefreshToken(d.data?.refreshToken ?? "")
       setUser({
-        id: String((data as { id?: unknown }).id ?? ""),
-        email: (data as { email?: string }).email ?? email,
-        firstName: (data as { firstName?: string }).firstName,
-        lastName: (data as { lastName?: string }).lastName,
+        id: String(d.id ?? ""),
+        email: d.email ?? email,
+        firstName: d.firstName,
+        lastName: d.lastName,
       })
     }
   }, [])
 
   const logout = useCallback(async () => {
-    await apiClient.POST("/api/v1/auth/logout", {})
+    await apiClient.POST("/api/v1/auth/logout", { body: { refreshToken } })
     setUser(null)
-  }, [])
+    setRefreshToken("")
+  }, [refreshToken])
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
@@ -47,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error("useAuth must be used within AuthProvider")

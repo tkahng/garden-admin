@@ -23,7 +23,7 @@ export function PagesPage() {
     },
   })
 
-  const pages = (data as { content?: unknown[] } | undefined)?.content ?? []
+  const pages = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
 
   return (
     <div className="space-y-4">

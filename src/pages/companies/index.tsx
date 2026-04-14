@@ -17,13 +17,13 @@ export function CompaniesPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/v1/companies", {})
+      const { data, error } = await apiClient.GET("/api/v1/companies", { params: { query: { user: {} } } })
       if (error) throw error
       return data
     },
   })
 
-  const companies = (data as { content?: unknown[] } | undefined)?.content ?? []
+  const companies = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
 
   return (
     <div className="space-y-4">
