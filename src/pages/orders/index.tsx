@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Link } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
+import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,9 @@ import {
 import { Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
+import type { components } from "@/schema"
+
+type OrderStatus = components["schemas"]["OrderResponse"]["status"]
 
 const PAGE_SIZE = 20
 
@@ -32,13 +35,18 @@ function statusVariant(status: string) {
 }
 
 export function OrdersPage() {
-  const [page, setPage] = useState(0)
+  const { page: rawPage, status } = useSearch({ from: "/_authenticated/orders" })
+  const page = rawPage ?? 0
+  const navigate = useNavigate()
+  const [statusInput, setStatusInput] = useState(status ?? "")
+
+  useEffect(() => { setStatusInput(status ?? "") }, [status])
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "orders", page],
+    queryKey: ["admin", "orders", page, status],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/orders", {
-        params: { query: { page, size: PAGE_SIZE } },
+        params: { query: { page, size: PAGE_SIZE, status: status as OrderStatus } },
       })
       if (error) throw error
       return data
@@ -46,9 +54,12 @@ export function OrdersPage() {
   })
 
   const orders = data?.data?.content ?? []
-  const meta = data?.data?.meta
-  const total = meta?.total ?? 0
+  const total = data?.data?.meta?.total ?? 0
   const totalPages = Math.ceil(total / PAGE_SIZE) || 1
+
+  function setPage(newPage: number) {
+    void navigate({ to: "/orders", search: { page: newPage, status }, replace: true })
+  }
 
   return (
     <div className="space-y-4">
@@ -59,7 +70,19 @@ export function OrdersPage() {
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search orders..." className="pl-9" />
+          <Input
+            placeholder="Filter by status..."
+            className="pl-9"
+            value={statusInput}
+            onChange={(e) => {
+              setStatusInput(e.target.value)
+              void navigate({
+                to: "/orders",
+                search: { page: 0, status: e.target.value || undefined },
+                replace: true,
+              })
+            }}
+          />
         </div>
       </div>
 
@@ -77,33 +100,23 @@ export function OrdersPage() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
-                  Loading...
-                </TableCell>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">Loading...</TableCell>
               </TableRow>
             )}
             {!isLoading && orders.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
-                  No orders found
-                </TableCell>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">No orders found</TableCell>
               </TableRow>
             )}
             {orders.map((order) => (
               <TableRow key={String(order.id)}>
                 <TableCell>
-                  <Link
-                    to="/orders/$orderId"
-                    params={{ orderId: String(order.id) }}
-                    className="font-medium hover:underline"
-                  >
+                  <Link to="/orders/$orderId" params={{ orderId: String(order.id) }} className="font-medium hover:underline">
                     #{String(order.id).slice(0, 8)}
                   </Link>
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  {order.createdAt
-                    ? new Date(order.createdAt as string).toLocaleDateString()
-                    : "—"}
+                  {order.createdAt ? new Date(order.createdAt as string).toLocaleDateString() : "—"}
                 </TableCell>
                 <TableCell>
                   {String((order as Record<string, unknown>).customerEmail ?? order.userId ?? "—")}
@@ -114,9 +127,7 @@ export function OrdersPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {order.totalAmount != null
-                    ? `$${Number(order.totalAmount).toFixed(2)}`
-                    : "—"}
+                  {order.totalAmount != null ? `$${Number(order.totalAmount).toFixed(2)}` : "—"}
                 </TableCell>
               </TableRow>
             ))}
@@ -126,23 +137,9 @@ export function OrdersPage() {
           <div className="flex items-center justify-between border-t px-4 py-3 text-sm text-muted-foreground">
             <span>{total} order{total !== 1 ? "s" : ""}</span>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p - 1)}
-                disabled={page === 0}
-              >
-                Previous
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 0}>Previous</Button>
               <span>Page {page + 1} of {totalPages}</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p + 1)}
-                disabled={page >= totalPages - 1}
-              >
-                Next
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page >= totalPages - 1}>Next</Button>
             </div>
           </div>
         )}

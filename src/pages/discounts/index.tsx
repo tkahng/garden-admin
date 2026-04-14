@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 import type { components } from "@/schema"
@@ -28,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Search, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 type Discount = components["schemas"]["DiscountResponse"]
@@ -56,13 +57,19 @@ export function DiscountsPage() {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<Partial<CreateDiscount>>({ type: "PERCENTAGE" })
-  const [page, setPage] = useState(0)
+
+  const { page: rawPage, codeContains } = useSearch({ from: "/_authenticated/discounts" })
+  const page = rawPage ?? 0
+  const navigate = useNavigate()
+  const [codeInput, setCodeInput] = useState(codeContains ?? "")
+
+  useEffect(() => { setCodeInput(codeContains ?? "") }, [codeContains])
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "discounts", page],
+    queryKey: ["admin", "discounts", page, codeContains],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/discounts", {
-        params: { query: { page, size: PAGE_SIZE } },
+        params: { query: { page, size: PAGE_SIZE, codeContains: codeContains || undefined } },
       })
       if (error) throw error
       return data
@@ -72,6 +79,10 @@ export function DiscountsPage() {
   const discounts: Discount[] = data?.data?.content ?? []
   const total = data?.data?.meta?.total ?? 0
   const totalPages = Math.ceil(total / PAGE_SIZE) || 1
+
+  function setPage(newPage: number) {
+    void navigate({ to: "/discounts", search: { page: newPage, codeContains }, replace: true })
+  }
 
   const createMutation = useMutation({
     mutationFn: async (body: CreateDiscount) => {
@@ -117,6 +128,25 @@ export function DiscountsPage() {
           <Plus className="size-4 mr-2" />
           Create discount
         </Button>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search by code..."
+            className="pl-9"
+            value={codeInput}
+            onChange={(e) => {
+              setCodeInput(e.target.value)
+              void navigate({
+                to: "/discounts",
+                search: { page: 0, codeContains: e.target.value || undefined },
+                replace: true,
+              })
+            }}
+          />
+        </div>
       </div>
 
       <div className="rounded-lg border bg-card">
@@ -189,7 +219,7 @@ export function DiscountsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => p - 1)}
+                onClick={() => setPage(page - 1)}
                 disabled={page === 0}
               >
                 Previous
@@ -198,7 +228,7 @@ export function DiscountsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => p + 1)}
+                onClick={() => setPage(page + 1)}
                 disabled={page >= totalPages - 1}
               >
                 Next

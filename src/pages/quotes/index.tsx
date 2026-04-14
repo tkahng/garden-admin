@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Link } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
+import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,17 +14,25 @@ import {
 import { Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
+import type { components } from "@/schema"
+
+type QuoteStatus = components["schemas"]["QuoteRequestResponse"]["status"]
 
 const PAGE_SIZE = 20
 
 export function QuotesPage() {
-  const [page, setPage] = useState(0)
+  const { page: rawPage, status } = useSearch({ from: "/_authenticated/quotes" })
+  const page = rawPage ?? 0
+  const navigate = useNavigate()
+  const [statusInput, setStatusInput] = useState(status ?? "")
+
+  useEffect(() => { setStatusInput(status ?? "") }, [status])
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "quotes", page],
+    queryKey: ["admin", "quotes", page, status],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/quotes", {
-        params: { query: { page, size: PAGE_SIZE } },
+        params: { query: { page, size: PAGE_SIZE, status: status as QuoteStatus } },
       })
       if (error) throw error
       return data
@@ -32,9 +40,12 @@ export function QuotesPage() {
   })
 
   const quotes = data?.data?.content ?? []
-  const meta = data?.data?.meta
-  const total = meta?.total ?? 0
+  const total = data?.data?.meta?.total ?? 0
   const totalPages = Math.ceil(total / PAGE_SIZE) || 1
+
+  function setPage(newPage: number) {
+    void navigate({ to: "/quotes", search: { page: newPage, status }, replace: true })
+  }
 
   return (
     <div className="space-y-4">
@@ -45,7 +56,19 @@ export function QuotesPage() {
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search quotes..." className="pl-9" />
+          <Input
+            placeholder="Filter by status..."
+            className="pl-9"
+            value={statusInput}
+            onChange={(e) => {
+              setStatusInput(e.target.value)
+              void navigate({
+                to: "/quotes",
+                search: { page: 0, status: e.target.value || undefined },
+                replace: true,
+              })
+            }}
+          />
         </div>
       </div>
 
@@ -63,16 +86,12 @@ export function QuotesPage() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
-                  Loading...
-                </TableCell>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">Loading...</TableCell>
               </TableRow>
             )}
             {!isLoading && quotes.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">
-                  No quotes found
-                </TableCell>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-12">No quotes found</TableCell>
               </TableRow>
             )}
             {quotes.map((q) => (
@@ -102,23 +121,9 @@ export function QuotesPage() {
           <div className="flex items-center justify-between border-t px-4 py-3 text-sm text-muted-foreground">
             <span>{total} quote{total !== 1 ? "s" : ""}</span>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p - 1)}
-                disabled={page === 0}
-              >
-                Previous
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 0}>Previous</Button>
               <span>Page {page + 1} of {totalPages}</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p + 1)}
-                disabled={page >= totalPages - 1}
-              >
-                Next
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page >= totalPages - 1}>Next</Button>
             </div>
           </div>
         )}

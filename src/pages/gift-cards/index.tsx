@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 import type { components } from "@/schema"
@@ -21,7 +22,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Plus, Power } from "lucide-react"
+import { Plus, Power, Search } from "lucide-react"
 import { toast } from "sonner"
 
 type GiftCard = components["schemas"]["GiftCardResponse"]
@@ -33,13 +34,19 @@ export function GiftCardsPage() {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<Partial<CreateGiftCard>>({ currency: "USD" })
-  const [page, setPage] = useState(0)
+
+  const { page: rawPage, codeContains } = useSearch({ from: "/_authenticated/gift-cards" })
+  const page = rawPage ?? 0
+  const navigate = useNavigate()
+  const [codeInput, setCodeInput] = useState(codeContains ?? "")
+
+  useEffect(() => { setCodeInput(codeContains ?? "") }, [codeContains])
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "gift-cards", page],
+    queryKey: ["admin", "gift-cards", page, codeContains],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/gift-cards", {
-        params: { query: { page, size: PAGE_SIZE } },
+        params: { query: { page, size: PAGE_SIZE, codeContains: codeContains || undefined } },
       })
       if (error) throw error
       return data
@@ -49,6 +56,10 @@ export function GiftCardsPage() {
   const cards: GiftCard[] = data?.data?.content ?? []
   const total = data?.data?.meta?.total ?? 0
   const totalPages = Math.ceil(total / PAGE_SIZE) || 1
+
+  function setPage(newPage: number) {
+    void navigate({ to: "/gift-cards", search: { page: newPage, codeContains }, replace: true })
+  }
 
   const createMutation = useMutation({
     mutationFn: async (body: CreateGiftCard) => {
@@ -94,6 +105,25 @@ export function GiftCardsPage() {
           <Plus className="size-4 mr-2" />
           Issue gift card
         </Button>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search by code..."
+            className="pl-9"
+            value={codeInput}
+            onChange={(e) => {
+              setCodeInput(e.target.value)
+              void navigate({
+                to: "/gift-cards",
+                search: { page: 0, codeContains: e.target.value || undefined },
+                replace: true,
+              })
+            }}
+          />
+        </div>
       </div>
 
       <div className="rounded-lg border bg-card">
@@ -162,7 +192,7 @@ export function GiftCardsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => p - 1)}
+                onClick={() => setPage(page - 1)}
                 disabled={page === 0}
               >
                 Previous
@@ -171,7 +201,7 @@ export function GiftCardsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => p + 1)}
+                onClick={() => setPage(page + 1)}
                 disabled={page >= totalPages - 1}
               >
                 Next

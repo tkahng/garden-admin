@@ -1,7 +1,8 @@
-import { useState } from "react"
-import { Link } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
+import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -10,20 +11,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus } from "lucide-react"
+import { Plus, Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 
 const PAGE_SIZE = 20
 
 export function CollectionsPage() {
-  const [page, setPage] = useState(0)
+  const { page: rawPage, titleContains } = useSearch({ from: "/_authenticated/collections" })
+  const page = rawPage ?? 0
+  const navigate = useNavigate()
+  const [searchInput, setSearchInput] = useState(titleContains ?? "")
+
+  useEffect(() => { setSearchInput(titleContains ?? "") }, [titleContains])
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "collections", page],
+    queryKey: ["admin", "collections", page, titleContains],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/collections", {
-        params: { query: { page, size: PAGE_SIZE } },
+        params: { query: { page, size: PAGE_SIZE, titleContains: titleContains || undefined } },
       })
       if (error) throw error
       return data
@@ -31,9 +37,12 @@ export function CollectionsPage() {
   })
 
   const collections = data?.data?.content ?? []
-  const meta = data?.data?.meta
-  const total = meta?.total ?? 0
+  const total = data?.data?.meta?.total ?? 0
   const totalPages = Math.ceil(total / PAGE_SIZE) || 1
+
+  function setPage(newPage: number) {
+    void navigate({ to: "/collections", search: { page: newPage, titleContains }, replace: true })
+  }
 
   return (
     <div className="space-y-4">
@@ -45,6 +54,25 @@ export function CollectionsPage() {
             Create collection
           </Link>
         </Button>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="relative max-w-sm flex-1">
+          <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search collections..."
+            className="pl-9"
+            value={searchInput}
+            onChange={(e) => {
+              setSearchInput(e.target.value)
+              void navigate({
+                to: "/collections",
+                search: { page: 0, titleContains: e.target.value || undefined },
+                replace: true,
+              })
+            }}
+          />
+        </div>
       </div>
 
       <div className="rounded-lg border bg-card">
@@ -59,25 +87,18 @@ export function CollectionsPage() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={3} className="py-12 text-center text-muted-foreground">
-                  Loading...
-                </TableCell>
+                <TableCell colSpan={3} className="py-12 text-center text-muted-foreground">Loading...</TableCell>
               </TableRow>
             )}
             {!isLoading && collections.length === 0 && (
               <TableRow>
-                <TableCell colSpan={3} className="py-12 text-center text-muted-foreground">
-                  No collections yet.
-                </TableCell>
+                <TableCell colSpan={3} className="py-12 text-center text-muted-foreground">No collections yet.</TableCell>
               </TableRow>
             )}
             {collections.map((c) => (
               <TableRow key={String(c.id)}>
                 <TableCell>
-                  <Link
-                    to={`/collections/${c.id}` as string}
-                    className="font-medium hover:underline"
-                  >
+                  <Link to={`/collections/${c.id}` as string} className="font-medium hover:underline">
                     {String(c.title ?? "Untitled")}
                   </Link>
                 </TableCell>
@@ -97,23 +118,9 @@ export function CollectionsPage() {
           <div className="flex items-center justify-between border-t px-4 py-3 text-sm text-muted-foreground">
             <span>{total} collection{total !== 1 ? "s" : ""}</span>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p - 1)}
-                disabled={page === 0}
-              >
-                Previous
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 0}>Previous</Button>
               <span>Page {page + 1} of {totalPages}</span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage((p) => p + 1)}
-                disabled={page >= totalPages - 1}
-              >
-                Next
-              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page >= totalPages - 1}>Next</Button>
             </div>
           </div>
         )}
