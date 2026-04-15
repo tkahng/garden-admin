@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
-import { apiClient, setAuthToken } from "@/api/client"
+import { apiClient, setAuthToken, setUnauthorizedHandler } from "@/api/client"
+import { router } from "@/main"
 
 const USER_KEY = "garden_user"
 
@@ -37,6 +38,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(USER_KEY)
     }
   }, [user])
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setUser(null)
+      setRefreshToken("")
+      const redirectTo = window.location.pathname + window.location.search
+      router.navigate({ to: "/login", search: { redirect_to: redirectTo } })
+    })
+    return () => setUnauthorizedHandler(null)
+  }, [])
 
   const login = useCallback(async (email: string, password: string) => {
     const { data, error } = await apiClient.POST("/api/v1/auth/login", {

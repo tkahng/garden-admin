@@ -20,6 +20,12 @@ export function getAuthToken(): string {
   return localStorage.getItem(TOKEN_KEY) ?? ""
 }
 
+let unauthorizedHandler: (() => void) | null = null
+
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  unauthorizedHandler = handler
+}
+
 apiClient.use({
   async onRequest({ request }) {
     const token = getAuthToken()
@@ -27,5 +33,12 @@ apiClient.use({
       request.headers.set("Authorization", `Bearer ${token}`)
     }
     return request
+  },
+  async onResponse({ response }) {
+    if (response.status === 401) {
+      setAuthToken("")
+      unauthorizedHandler?.()
+    }
+    return response
   },
 })
