@@ -41,8 +41,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { ArrowLeft, Pencil, Plus, Trash2, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, ImageIcon, Pencil, Plus, Search, Star, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 type Product = components["schemas"]["AdminProductResponse"]
 type ProductOption = components["schemas"]["ProductOptionResponse"]
@@ -92,6 +93,11 @@ export function ProductDetailPage({ id }: { id: string }) {
   const [renameValue, setRenameValue] = useState<{ opt: ProductOption; val: ProductOptionValue } | null>(null)
   const [renameValueLabel, setRenameValueLabel] = useState("")
   const [deleteValue, setDeleteValue] = useState<{ opt: ProductOption; val: ProductOptionValue } | null>(null)
+
+  // Image picker
+  const [imagePickerOpen, setImagePickerOpen] = useState(false)
+  const [pickerSearch, setPickerSearch] = useState("")
+  const [pickerSelectedIds, setPickerSelectedIds] = useState<Set<string>>(new Set())
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin", "products", id] })
 
@@ -261,6 +267,64 @@ export function ProductDetailPage({ id }: { id: string }) {
     },
     onError: () => toast.error("Failed to delete value"),
   })
+
+  // ── Image mutations ────────────────────────────────────────────────────────
+
+  const addImageMutation = useMutation({
+    mutationFn: async (blobId: string) => {
+      const { error } = await apiClient.POST("/api/v1/admin/products/{id}/images", {
+        params: { path: { id } },
+        body: { blobId },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => { invalidate() },
+    onError: () => toast.error("Failed to add image"),
+  })
+
+  const deleteImageMutation = useMutation({
+    mutationFn: async (imgId: string) => {
+      const { error } = await apiClient.DELETE("/api/v1/admin/products/{id}/images/{imgId}", {
+        params: { path: { id, imgId } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => { toast.success("Image removed"); invalidate() },
+    onError: () => toast.error("Failed to remove image"),
+  })
+
+  const reorderImagesMutation = useMutation({
+    mutationFn: async (items: { id: string; position: number }[]) => {
+      const { error } = await apiClient.PATCH("/api/v1/admin/products/{id}/images/positions", {
+        params: { path: { id } },
+        body: items,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => { invalidate() },
+    onError: () => toast.error("Failed to reorder images"),
+  })
+
+  async function addPickedImages() {
+    const ids = Array.from(pickerSelectedIds)
+    for (const blobId of ids) {
+      await addImageMutation.mutateAsync(blobId)
+    }
+    toast.success(`Added ${ids.length} image${ids.length > 1 ? "s" : ""}`)
+    setImagePickerOpen(false)
+    setPickerSelectedIds(new Set())
+    setPickerSearch("")
+  }
+
+  function moveImage(imgId: string, dir: "up" | "down") {
+    const imgs = [...(product as Product).images ?? []]
+    const idx = imgs.findIndex((i) => i.id === imgId)
+    if (idx === -1) return
+    const swap = dir === "up" ? idx - 1 : idx + 1
+    if (swap < 0 || swap >= imgs.length) return
+    ;[imgs[idx], imgs[swap]] = [imgs[swap], imgs[idx]]
+    reorderImagesMutation.mutate(imgs.map((img, i) => ({ id: img.id!, position: i + 1 })))
+  }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -546,28 +610,83 @@ export function ProductDetailPage({ id }: { id: string }) {
           </Card>
 
           {/* Images */}
-          {images.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Images ({images.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-2">
-                  {images.map((img) => (
-                    <div key={img.id} className="aspect-square rounded-md overflow-hidden border bg-muted">
-                      {img.url ? (
-                        <img src={img.url} alt={img.altText ?? ""} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
-                          No image
-                        </div>
-                      )}
+          <Card>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base">Images ({images.length})</CardTitle>
+              <Button variant="outline" size="sm" onClick={() => setImagePickerOpen(true)}>
+                <Plus className="size-3.5 mr-1.5" />Add images
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {images.length === 0 ? (
+                <button
+                  onClick={() => setImagePickerOpen(true)}
+                  className="w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-muted-foreground/50 transition-colors"
+                >
+                  <ImageIcon className="size-8" />
+                  <span className="text-sm">Add images</span>
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  {images.map((img, idx) => (
+                    <div key={img.id} className="flex items-center gap-2 group">
+                      <div className="size-12 rounded border bg-muted shrink-0 overflow-hidden">
+                        {img.url ? (
+                          <img src={img.url} alt={img.altText ?? ""} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ImageIcon className="size-4 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground truncate">{img.altText || "No alt text"}</p>
+                        {p.featuredImageId === img.id && (
+                          <span className="inline-flex items-center gap-0.5 text-xs text-amber-600">
+                            <Star className="size-3 fill-amber-500 text-amber-500" />Featured
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost" size="icon" className="size-6"
+                          disabled={idx === 0}
+                          onClick={() => moveImage(img.id!, "up")}
+                          title="Move up"
+                        >
+                          <ChevronUp className="size-3" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="icon" className="size-6"
+                          disabled={idx === images.length - 1}
+                          onClick={() => moveImage(img.id!, "down")}
+                          title="Move down"
+                        >
+                          <ChevronDown className="size-3" />
+                        </Button>
+                        {p.featuredImageId !== img.id && (
+                          <Button
+                            variant="ghost" size="icon" className="size-6"
+                            onClick={() => updateMutation.mutate({ featuredImageId: img.id })}
+                            title="Set as featured"
+                          >
+                            <Star className="size-3" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost" size="icon" className="size-6 text-destructive"
+                          onClick={() => img.id && deleteImageMutation.mutate(img.id)}
+                          title="Remove image"
+                        >
+                          <Trash2 className="size-3" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              )}
+            </CardContent>
+          </Card>
 
           {/* Meta */}
           <Card>
@@ -1013,6 +1132,137 @@ export function ProductDetailPage({ id }: { id: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Image picker dialog */}
+      <Dialog
+        open={imagePickerOpen}
+        onOpenChange={(o) => {
+          setImagePickerOpen(o)
+          if (!o) { setPickerSelectedIds(new Set()); setPickerSearch("") }
+        }}
+      >
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add images from media library</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by filename..."
+                className="pl-9"
+                value={pickerSearch}
+                onChange={(e) => setPickerSearch(e.target.value)}
+              />
+            </div>
+            <BlobPickerGrid
+              search={pickerSearch}
+              selectedIds={pickerSelectedIds}
+              onToggle={(blobId) => {
+                setPickerSelectedIds((prev) => {
+                  const next = new Set(prev)
+                  if (next.has(blobId)) next.delete(blobId)
+                  else next.add(blobId)
+                  return next
+                })
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImagePickerOpen(false)}>Cancel</Button>
+            <Button
+              onClick={addPickedImages}
+              disabled={pickerSelectedIds.size === 0 || addImageMutation.isPending}
+            >
+              Add {pickerSelectedIds.size > 0 ? `${pickerSelectedIds.size} ` : ""}image{pickerSelectedIds.size !== 1 ? "s" : ""}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
+
+// ── Blob picker grid (image-only) ─────────────────────────────────────────────
+
+function BlobPickerGrid({
+  search,
+  selectedIds,
+  onToggle,
+}: {
+  search: string
+  selectedIds: Set<string>
+  onToggle: (id: string) => void
+}) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "blobs", "picker", search],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/blobs", {
+        params: {
+          query: {
+            page: 0,
+            size: 48,
+            contentType: "image/",
+            filenameContains: search || undefined,
+            sortBy: "createdAt",
+            sortDir: "desc",
+          },
+        },
+      })
+      if (error) throw error
+      return data?.data?.content ?? []
+    },
+  })
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-4 gap-2 h-72 overflow-y-auto">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="aspect-square rounded bg-muted animate-pulse" />
+        ))}
+      </div>
+    )
+  }
+
+  if (!data?.length) {
+    return (
+      <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">
+        No images found. Upload images in the Media library first.
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-4 gap-2 max-h-72 overflow-y-auto pr-1">
+      {data.map((blob) => {
+        const selected = selectedIds.has(blob.id!)
+        return (
+          <button
+            key={blob.id}
+            onClick={() => onToggle(blob.id!)}
+            className={cn(
+              "relative aspect-square rounded-md overflow-hidden border-2 transition-all",
+              selected ? "border-primary ring-2 ring-primary/20" : "border-transparent hover:border-muted-foreground/30"
+            )}
+          >
+            {blob.url ? (
+              <img src={blob.url} alt={blob.alt ?? ""} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <ImageIcon className="size-6 text-muted-foreground" />
+              </div>
+            )}
+            {selected && (
+              <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                <div className="size-6 rounded-full bg-primary flex items-center justify-center">
+                  <X className="size-3 text-primary-foreground rotate-45" />
+                </div>
+              </div>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+

@@ -15,10 +15,18 @@ import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 import { DataPagination } from "@/components/ui/data-pagination"
 import type { components } from "@/schema"
+import { cn } from "@/lib/utils"
 
 type Product = components["schemas"]["AdminProductResponse"]
 
 const PAGE_SIZE = 20
+
+const STATUS_TABS = [
+  { label: "All", value: undefined },
+  { label: "Active", value: "ACTIVE" },
+  { label: "Draft", value: "DRAFT" },
+  { label: "Archived", value: "ARCHIVED" },
+] as const
 
 function priceRange(p: Product): string {
   const prices = (p.variants ?? []).map((v) => v.price).filter((x): x is number => x != null)
@@ -36,15 +44,22 @@ function statusVariant(status: string | undefined) {
 }
 
 export function ProductsPage() {
-  const { page: rawPage, titleContains } = useSearch({ from: "/_authenticated/products" })
+  const { page: rawPage, titleContains, status } = useSearch({ from: "/_authenticated/products" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "products", page, titleContains],
+    queryKey: ["admin", "products", page, titleContains, status],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/products", {
-        params: { query: { page, size: PAGE_SIZE, titleContains: titleContains || undefined } },
+        params: {
+          query: {
+            page,
+            size: PAGE_SIZE,
+            titleContains: titleContains || undefined,
+            status: (status as "DRAFT" | "ACTIVE" | "ARCHIVED" | undefined) || undefined,
+          },
+        },
       })
       if (error) throw error
       return data
@@ -56,7 +71,11 @@ export function ProductsPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE) || 1
 
   function setPage(newPage: number) {
-    void navigate({ to: "/products", search: { page: newPage, titleContains }, replace: true })
+    void navigate({ to: "/products", search: { page: newPage, titleContains, status }, replace: true })
+  }
+
+  function setStatus(newStatus: string | undefined) {
+    void navigate({ to: "/products", search: { page: 0, titleContains, status: newStatus }, replace: true })
   }
 
   return (
@@ -71,6 +90,24 @@ export function ProductsPage() {
         </Button>
       </div>
 
+      {/* Status tabs */}
+      <div className="flex gap-1 border-b">
+        {STATUS_TABS.map((tab) => (
+          <button
+            key={tab.label}
+            onClick={() => setStatus(tab.value)}
+            className={cn(
+              "px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px",
+              (status ?? undefined) === tab.value
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex items-center gap-2">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -81,7 +118,7 @@ export function ProductsPage() {
             onChange={(e) => {
               void navigate({
                 to: "/products",
-                search: { page: 0, titleContains: e.target.value || undefined },
+                search: { page: 0, titleContains: e.target.value || undefined, status },
                 replace: true,
               })
             }}
