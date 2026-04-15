@@ -184,10 +184,10 @@ export function ProductDetailPage({ id }: { id: string }) {
   // ── Option mutations ───────────────────────────────────────────────────────
 
   const createOptionMutation = useMutation({
-    mutationFn: async (name: string) => {
+    mutationFn: async ({ name, position }: { name: string; position: number }) => {
       const { error } = await apiClient.POST("/api/v1/admin/products/{id}/options", {
         params: { path: { id } },
-        body: { name },
+        body: { name, position },
       })
       if (error) throw error
     },
@@ -226,10 +226,10 @@ export function ProductDetailPage({ id }: { id: string }) {
   // ── Option value mutations ─────────────────────────────────────────────────
 
   const createOptionValueMutation = useMutation({
-    mutationFn: async ({ optId, label }: { optId: string; label: string }) => {
+    mutationFn: async ({ optId, label, position }: { optId: string; label: string; position: number }) => {
       const { error } = await apiClient.POST("/api/v1/admin/products/{id}/options/{optId}/values", {
         params: { path: { id, optId } },
-        body: { label },
+        body: { label, position },
       })
       if (error) throw error
     },
@@ -787,14 +787,14 @@ export function ProductDetailPage({ id }: { id: string }) {
                 placeholder="e.g. Color, Size"
                 value={newOptionName}
                 onChange={(e) => setNewOptionName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && newOptionName.trim() && createOptionMutation.mutate(newOptionName.trim())}
+                onKeyDown={(e) => e.key === "Enter" && newOptionName.trim() && createOptionMutation.mutate({ name: newOptionName.trim(), position: options.length + 1 })}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOptionOpen(false)}>Cancel</Button>
             <Button
-              onClick={() => newOptionName.trim() && createOptionMutation.mutate(newOptionName.trim())}
+              onClick={() => newOptionName.trim() && createOptionMutation.mutate({ name: newOptionName.trim(), position: options.length + 1 })}
               disabled={createOptionMutation.isPending || !newOptionName.trim()}
             >Add</Button>
           </DialogFooter>
@@ -857,18 +857,24 @@ export function ProductDetailPage({ id }: { id: string }) {
                 placeholder="e.g. Red, Large"
                 value={newValueLabel}
                 onChange={(e) => setNewValueLabel(e.target.value)}
-                onKeyDown={(e) =>
-                  e.key === "Enter" && newValueLabel.trim() && addValueOpt?.id &&
-                  createOptionValueMutation.mutate({ optId: addValueOpt.id, label: newValueLabel.trim() })
-                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newValueLabel.trim() && addValueOpt?.id) {
+                    const valCount = (addValueOpt.values ?? []).length
+                    createOptionValueMutation.mutate({ optId: addValueOpt.id, label: newValueLabel.trim(), position: valCount + 1 })
+                  }
+                }}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddValueOpt(null)}>Cancel</Button>
             <Button
-              onClick={() => newValueLabel.trim() && addValueOpt?.id &&
-                createOptionValueMutation.mutate({ optId: addValueOpt.id, label: newValueLabel.trim() })}
+              onClick={() => {
+                if (newValueLabel.trim() && addValueOpt?.id) {
+                  const valCount = (addValueOpt.values ?? []).length
+                  createOptionValueMutation.mutate({ optId: addValueOpt.id, label: newValueLabel.trim(), position: valCount + 1 })
+                }
+              }}
               disabled={createOptionValueMutation.isPending || !newValueLabel.trim()}
             >Add</Button>
           </DialogFooter>

@@ -24,6 +24,7 @@ import { Route as AuthenticatedCustomersRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCompaniesRouteImport } from './routes/_authenticated/companies'
 import { Route as AuthenticatedCollectionsRouteImport } from './routes/_authenticated/collections'
 import { Route as AuthenticatedBlogsRouteImport } from './routes/_authenticated/blogs'
+import { Route as AuthenticatedProductsIndexRouteImport } from './routes/_authenticated/products.index'
 import { Route as AuthenticatedSettingsShippingRouteImport } from './routes/_authenticated/settings/shipping'
 import { Route as AuthenticatedSettingsPermissionsRouteImport } from './routes/_authenticated/settings/permissions'
 import { Route as AuthenticatedSettingsLocationsRouteImport } from './routes/_authenticated/settings/locations'
@@ -109,6 +110,12 @@ const AuthenticatedBlogsRoute = AuthenticatedBlogsRouteImport.update({
   path: '/blogs',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedProductsIndexRoute =
+  AuthenticatedProductsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedProductsRoute,
+  } as any)
 const AuthenticatedSettingsShippingRoute =
   AuthenticatedSettingsShippingRouteImport.update({
     id: '/settings/shipping',
@@ -188,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/settings/shipping': typeof AuthenticatedSettingsShippingRoute
+  '/products/': typeof AuthenticatedProductsIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -201,7 +209,6 @@ export interface FileRoutesByTo {
   '/media': typeof AuthenticatedMediaRoute
   '/orders': typeof AuthenticatedOrdersRouteWithChildren
   '/pages': typeof AuthenticatedPagesRoute
-  '/products': typeof AuthenticatedProductsRouteWithChildren
   '/quotes': typeof AuthenticatedQuotesRoute
   '/': typeof AuthenticatedIndexRoute
   '/collections/$collectionId': typeof AuthenticatedCollectionsCollectionIdRoute
@@ -213,6 +220,7 @@ export interface FileRoutesByTo {
   '/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/settings/shipping': typeof AuthenticatedSettingsShippingRoute
+  '/products': typeof AuthenticatedProductsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/_authenticated/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/_authenticated/settings/shipping': typeof AuthenticatedSettingsShippingRoute
+  '/_authenticated/products/': typeof AuthenticatedProductsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/settings/locations'
     | '/settings/permissions'
     | '/settings/shipping'
+    | '/products/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -280,7 +290,6 @@ export interface FileRouteTypes {
     | '/media'
     | '/orders'
     | '/pages'
-    | '/products'
     | '/quotes'
     | '/'
     | '/collections/$collectionId'
@@ -292,6 +301,7 @@ export interface FileRouteTypes {
     | '/settings/locations'
     | '/settings/permissions'
     | '/settings/shipping'
+    | '/products'
   id:
     | '__root__'
     | '/_authenticated'
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/locations'
     | '/_authenticated/settings/permissions'
     | '/_authenticated/settings/shipping'
+    | '/_authenticated/products/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -432,6 +443,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBlogsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/products/': {
+      id: '/_authenticated/products/'
+      path: '/'
+      fullPath: '/products/'
+      preLoaderRoute: typeof AuthenticatedProductsIndexRouteImport
+      parentRoute: typeof AuthenticatedProductsRoute
+    }
     '/_authenticated/settings/shipping': {
       id: '/_authenticated/settings/shipping'
       path: '/settings/shipping'
@@ -544,11 +562,13 @@ const AuthenticatedOrdersRouteWithChildren =
 interface AuthenticatedProductsRouteChildren {
   AuthenticatedProductsProductIdRoute: typeof AuthenticatedProductsProductIdRoute
   AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
+  AuthenticatedProductsIndexRoute: typeof AuthenticatedProductsIndexRoute
 }
 
 const AuthenticatedProductsRouteChildren: AuthenticatedProductsRouteChildren = {
   AuthenticatedProductsProductIdRoute: AuthenticatedProductsProductIdRoute,
   AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
+  AuthenticatedProductsIndexRoute: AuthenticatedProductsIndexRoute,
 }
 
 const AuthenticatedProductsRouteWithChildren =

@@ -44,7 +44,7 @@ function statusVariant(status: string | undefined) {
 }
 
 export function ProductsPage() {
-  const { page: rawPage, titleContains, status } = useSearch({ from: "/_authenticated/products" })
+  const { page: rawPage, titleContains, status } = useSearch({ from: "/_authenticated/products/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
 
