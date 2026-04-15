@@ -98,7 +98,7 @@ export function ProductsPage() {
             {products.map((p) => (
               <TableRow key={String(p.id)}>
                 <TableCell>
-                  <Link to={`/products/${p.id}` as string} className="font-medium hover:underline">
+                  <Link to="/products/$productId" params={{ productId: String(p.id) }} className="font-medium hover:underline">
                     {String(p.title ?? (p as Record<string, unknown>).name ?? "Untitled")}
                   </Link>
                   {p.handle != null && (
