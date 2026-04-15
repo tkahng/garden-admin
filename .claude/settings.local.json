@@ -5,7 +5,26 @@
       "Bash(npx tsc:*)",
       "Bash(npx vite:*)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
-      "Bash(pkill -f \"vite --port 5173\")"
+      "Bash(pkill -f \"vite --port 5173\")",
+      "Bash(npx eslint:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(grep:*)",
+      "Bash(sed -i '' 's|to={`/quotes/${q.id}`}|to={`/quotes/${q.id}` as string}|g' src/pages/quotes/index.tsx)",
+      "Bash(sed -i '' 's|to={`/products/${p.id}`}|to={`/products/${p.id}` as string}|g' src/pages/products/index.tsx)",
+      "Bash(sed -i '' 's|to={`/collections/${c.id}`}|to={`/collections/${c.id}` as string}|g' src/pages/collections/index.tsx)",
+      "Bash(sed -i '' 's|to={`/companies/${c.id}`}|to={`/companies/${c.id}` as string}|g' src/pages/companies/index.tsx)",
+      "Bash(sed -i '' 's|to={`/blogs/${b.id}`}|to={`/blogs/${b.id}` as string}|g' src/pages/content/blogs.tsx)",
+      "Bash(sed -i '' 's|to=\"/products/new\"|to={\"/products/new\" as string}|g' src/pages/products/index.tsx)",
+      "Bash(sed -i '' 's|to=\"/collections/new\"|to={\"/collections/new\" as string}|g' src/pages/collections/index.tsx)",
+      "Bash(sed -i '' 's|to=\"/companies/new\"|to={\"/companies/new\" as string}|g' src/pages/companies/index.tsx)",
+      "Bash(sed -i '' 's|to=\"/blogs/new\"|to={\"/blogs/new\" as string}|g' src/pages/content/blogs.tsx)",
+      "Bash(sed -i '' 's|to=\"/pages/new\"|to={\"/pages/new\" as string}|g' src/pages/content/pages.tsx)",
+      "Bash(npm run:*)",
+      "Bash(sed -n '3252,3300p' /Users/tkahng/github/tkahng/react/garden-admin/src/schema.d.ts)",
+      "Bash(sed -n '3430,3530p' /Users/tkahng/github/tkahng/react/garden-admin/src/schema.d.ts)",
+      "Bash(sed -n '839,900p' /Users/tkahng/github/tkahng/react/garden-admin/src/schema.d.ts)",
+      "Bash(sed -n '1239,1310p' /Users/tkahng/github/tkahng/react/garden-admin/src/schema.d.ts)"
     ]
   }
 }

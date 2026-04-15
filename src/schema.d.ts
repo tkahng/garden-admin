@@ -868,6 +868,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/products/{id}/options/{optId}/values": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createOptionValue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/products/{id}/images": {
         parameters: {
             query?: never;
@@ -1294,7 +1310,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        delete: operations["deleteOptionValue"];
         options?: never;
         head?: never;
         patch: operations["renameOptionValue"];
@@ -2886,6 +2902,7 @@ export interface components {
             /** Format: uuid */
             featuredImageId?: string;
             variants?: components["schemas"]["AdminVariantResponse"][];
+            options?: components["schemas"]["ProductOptionResponse"][];
             images?: components["schemas"]["ProductImageResponse"][];
             tags?: string[];
             /** Format: date-time */
@@ -2931,6 +2948,21 @@ export interface components {
             /** Format: int32 */
             position?: number;
         };
+        ProductOptionResponse: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            /** Format: int32 */
+            position?: number;
+            values?: components["schemas"]["ProductOptionValueResponse"][];
+        };
+        ProductOptionValueResponse: {
+            /** Format: uuid */
+            id?: string;
+            label?: string;
+            /** Format: int32 */
+            position?: number;
+        };
         CreateVariantRequest: {
             price?: number;
             compareAtPrice?: number;
@@ -2953,20 +2985,14 @@ export interface components {
             data?: components["schemas"]["ProductOptionResponse"];
             meta?: unknown;
         };
-        ProductOptionResponse: {
-            /** Format: uuid */
-            id?: string;
-            name?: string;
+        CreateOptionValueRequest: {
+            label: string;
             /** Format: int32 */
             position?: number;
-            values?: components["schemas"]["ProductOptionValueResponse"][];
         };
-        ProductOptionValueResponse: {
-            /** Format: uuid */
-            id?: string;
-            label?: string;
-            /** Format: int32 */
-            position?: number;
+        ApiResponseProductOptionValueResponse: {
+            data?: components["schemas"]["ProductOptionValueResponse"];
+            meta?: unknown;
         };
         CreateImageRequest: {
             /** Format: uuid */
@@ -3266,6 +3292,12 @@ export interface components {
             barcode?: string;
             weight?: number;
             weightUnit?: string;
+            /** @enum {string} */
+            fulfillmentType?: "IN_STOCK" | "PRE_ORDER" | "MADE_TO_ORDER";
+            /** @enum {string} */
+            inventoryPolicy?: "DENY" | "CONTINUE";
+            /** Format: int32 */
+            leadTimeDays?: number;
         };
         ProductStatusRequest: {
             /** @enum {string} */
@@ -3276,10 +3308,6 @@ export interface components {
         };
         RenameOptionValueRequest: {
             label: string;
-        };
-        ApiResponseProductOptionValueResponse: {
-            data?: components["schemas"]["ProductOptionValueResponse"];
-            meta?: unknown;
         };
         ImagePositionItem: {
             /** Format: uuid */
@@ -5770,6 +5798,33 @@ export interface operations {
             };
         };
     };
+    createOptionValue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                optId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOptionValueRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseProductOptionValueResponse"];
+                };
+            };
+        };
+    };
     addImage: {
         parameters: {
             query?: never;
@@ -6897,6 +6952,28 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ApiResponseProductOptionResponse"];
                 };
+            };
+        };
+    };
+    deleteOptionValue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                optId: string;
+                valId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

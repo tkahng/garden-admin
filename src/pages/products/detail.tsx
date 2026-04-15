@@ -926,38 +926,59 @@ export function ProductDetailPage({ id }: { id: string }) {
                 />
               </div>
             ) : null}
-            {!editingVariant && options.length > 0 && (
+            {options.length > 0 && (
               <div className="space-y-1.5">
                 <Label>Option values</Label>
-                <div className="space-y-2">
-                  {options.map((opt) => (
-                    <div key={opt.id} className="space-y-1">
-                      <p className="text-xs text-muted-foreground">{opt.name}</p>
-                      <Select
-                        onValueChange={(valId) => {
-                          const current = (variantForm.optionValueIds ?? []) as string[]
-                          const optValIds = (opt.values ?? []).map((v) => v.id!)
-                          const filtered = current.filter((vid) => !optValIds.includes(vid))
-                          setVariantForm((f) => ({ ...f, optionValueIds: [...filtered, valId] }))
-                        }}
-                        value={
-                          (variantForm.optionValueIds ?? []).find((vid) =>
-                            (opt.values ?? []).some((v) => v.id === vid)
-                          ) ?? ""
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={`Select ${opt.name}`} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(opt.values ?? []).map((val) => (
-                            <SelectItem key={val.id} value={val.id!}>{val.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  ))}
-                </div>
+                {editingVariant ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {(editingVariant.optionValues ?? []).length > 0 ? (
+                      (editingVariant.optionValues ?? []).map((ov) => (
+                        <span
+                          key={ov.optionName}
+                          className="inline-flex items-center gap-1 rounded border bg-muted px-2 py-0.5 text-xs"
+                        >
+                          <span className="text-muted-foreground">{ov.optionName}:</span>
+                          <span className="font-medium">{ov.valueLabel}</span>
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted-foreground">No option values assigned.</p>
+                    )}
+                    <p className="w-full text-xs text-muted-foreground mt-1">
+                      Option values cannot be changed after creation.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {options.map((opt) => (
+                      <div key={opt.id} className="space-y-1">
+                        <p className="text-xs text-muted-foreground">{opt.name}</p>
+                        <Select
+                          onValueChange={(valId) => {
+                            const current = (variantForm.optionValueIds ?? []) as string[]
+                            const optValIds = (opt.values ?? []).map((v) => v.id!)
+                            const filtered = current.filter((vid) => !optValIds.includes(vid))
+                            setVariantForm((f) => ({ ...f, optionValueIds: [...filtered, valId] }))
+                          }}
+                          value={
+                            (variantForm.optionValueIds ?? []).find((vid) =>
+                              (opt.values ?? []).some((v) => v.id === vid)
+                            ) ?? ""
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={`Select ${opt.name}`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(opt.values ?? []).map((val) => (
+                              <SelectItem key={val.id} value={val.id!}>{val.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

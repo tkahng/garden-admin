@@ -26,6 +26,8 @@ import { Route as AuthenticatedBlogsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsShippingRouteImport } from './routes/_authenticated/settings/shipping'
 import { Route as AuthenticatedSettingsPermissionsRouteImport } from './routes/_authenticated/settings/permissions'
 import { Route as AuthenticatedSettingsLocationsRouteImport } from './routes/_authenticated/settings/locations'
+import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products.new'
+import { Route as AuthenticatedProductsProductIdRouteImport } from './routes/_authenticated/products.$productId'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
 import { Route as AuthenticatedCustomersCustomerIdRouteImport } from './routes/_authenticated/customers.$customerId'
 
@@ -117,6 +119,18 @@ const AuthenticatedSettingsLocationsRoute =
     path: '/settings/locations',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedProductsNewRoute =
+  AuthenticatedProductsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedProductsRoute,
+  } as any)
+const AuthenticatedProductsProductIdRoute =
+  AuthenticatedProductsProductIdRouteImport.update({
+    id: '/$productId',
+    path: '/$productId',
+    getParentRoute: () => AuthenticatedProductsRoute,
+  } as any)
 const AuthenticatedOrdersOrderIdRoute =
   AuthenticatedOrdersOrderIdRouteImport.update({
     id: '/$orderId',
@@ -142,10 +156,12 @@ export interface FileRoutesByFullPath {
   '/inventory': typeof AuthenticatedInventoryRoute
   '/orders': typeof AuthenticatedOrdersRouteWithChildren
   '/pages': typeof AuthenticatedPagesRoute
-  '/products': typeof AuthenticatedProductsRoute
+  '/products': typeof AuthenticatedProductsRouteWithChildren
   '/quotes': typeof AuthenticatedQuotesRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/products/new': typeof AuthenticatedProductsNewRoute
+  '/products/$productId': typeof AuthenticatedProductsProductIdRoute
   '/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/settings/shipping': typeof AuthenticatedSettingsShippingRoute
@@ -161,11 +177,13 @@ export interface FileRoutesByTo {
   '/inventory': typeof AuthenticatedInventoryRoute
   '/orders': typeof AuthenticatedOrdersRouteWithChildren
   '/pages': typeof AuthenticatedPagesRoute
-  '/products': typeof AuthenticatedProductsRoute
+  '/products': typeof AuthenticatedProductsRouteWithChildren
   '/quotes': typeof AuthenticatedQuotesRoute
   '/': typeof AuthenticatedIndexRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/products/new': typeof AuthenticatedProductsNewRoute
+  '/products/$productId': typeof AuthenticatedProductsProductIdRoute
   '/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/settings/shipping': typeof AuthenticatedSettingsShippingRoute
@@ -183,11 +201,13 @@ export interface FileRoutesById {
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRouteWithChildren
   '/_authenticated/pages': typeof AuthenticatedPagesRoute
-  '/_authenticated/products': typeof AuthenticatedProductsRoute
+  '/_authenticated/products': typeof AuthenticatedProductsRouteWithChildren
   '/_authenticated/quotes': typeof AuthenticatedQuotesRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
+  '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
+  '/_authenticated/products/$productId': typeof AuthenticatedProductsProductIdRoute
   '/_authenticated/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/_authenticated/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/_authenticated/settings/shipping': typeof AuthenticatedSettingsShippingRoute
@@ -210,6 +230,8 @@ export interface FileRouteTypes {
     | '/quotes'
     | '/customers/$customerId'
     | '/orders/$orderId'
+    | '/products/new'
+    | '/products/$productId'
     | '/settings/locations'
     | '/settings/permissions'
     | '/settings/shipping'
@@ -230,6 +252,8 @@ export interface FileRouteTypes {
     | '/'
     | '/customers/$customerId'
     | '/orders/$orderId'
+    | '/products/new'
+    | '/products/$productId'
     | '/settings/locations'
     | '/settings/permissions'
     | '/settings/shipping'
@@ -251,6 +275,8 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/customers/$customerId'
     | '/_authenticated/orders/$orderId'
+    | '/_authenticated/products/new'
+    | '/_authenticated/products/$productId'
     | '/_authenticated/settings/locations'
     | '/_authenticated/settings/permissions'
     | '/_authenticated/settings/shipping'
@@ -382,6 +408,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsLocationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/products/new': {
+      id: '/_authenticated/products/new'
+      path: '/new'
+      fullPath: '/products/new'
+      preLoaderRoute: typeof AuthenticatedProductsNewRouteImport
+      parentRoute: typeof AuthenticatedProductsRoute
+    }
+    '/_authenticated/products/$productId': {
+      id: '/_authenticated/products/$productId'
+      path: '/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof AuthenticatedProductsProductIdRouteImport
+      parentRoute: typeof AuthenticatedProductsRoute
+    }
     '/_authenticated/orders/$orderId': {
       id: '/_authenticated/orders/$orderId'
       path: '/$orderId'
@@ -425,6 +465,21 @@ const AuthenticatedOrdersRouteChildren: AuthenticatedOrdersRouteChildren = {
 const AuthenticatedOrdersRouteWithChildren =
   AuthenticatedOrdersRoute._addFileChildren(AuthenticatedOrdersRouteChildren)
 
+interface AuthenticatedProductsRouteChildren {
+  AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
+  AuthenticatedProductsProductIdRoute: typeof AuthenticatedProductsProductIdRoute
+}
+
+const AuthenticatedProductsRouteChildren: AuthenticatedProductsRouteChildren = {
+  AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
+  AuthenticatedProductsProductIdRoute: AuthenticatedProductsProductIdRoute,
+}
+
+const AuthenticatedProductsRouteWithChildren =
+  AuthenticatedProductsRoute._addFileChildren(
+    AuthenticatedProductsRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
   AuthenticatedBlogsRoute: typeof AuthenticatedBlogsRoute
   AuthenticatedCollectionsRoute: typeof AuthenticatedCollectionsRoute
@@ -435,7 +490,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRouteWithChildren
   AuthenticatedPagesRoute: typeof AuthenticatedPagesRoute
-  AuthenticatedProductsRoute: typeof AuthenticatedProductsRoute
+  AuthenticatedProductsRoute: typeof AuthenticatedProductsRouteWithChildren
   AuthenticatedQuotesRoute: typeof AuthenticatedQuotesRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedSettingsLocationsRoute: typeof AuthenticatedSettingsLocationsRoute
@@ -453,7 +508,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRouteWithChildren,
   AuthenticatedPagesRoute: AuthenticatedPagesRoute,
-  AuthenticatedProductsRoute: AuthenticatedProductsRoute,
+  AuthenticatedProductsRoute: AuthenticatedProductsRouteWithChildren,
   AuthenticatedQuotesRoute: AuthenticatedQuotesRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedSettingsLocationsRoute: AuthenticatedSettingsLocationsRoute,

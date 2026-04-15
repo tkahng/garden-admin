@@ -10,12 +10,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Search } from "lucide-react"
+import { ImageIcon, Plus, Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 import { DataPagination } from "@/components/ui/data-pagination"
+import type { components } from "@/schema"
+
+type Product = components["schemas"]["AdminProductResponse"]
 
 const PAGE_SIZE = 20
+
+function priceRange(p: Product): string {
+  const prices = (p.variants ?? []).map((v) => v.price).filter((x): x is number => x != null)
+  if (prices.length === 0) return "—"
+  const min = Math.min(...prices)
+  const max = Math.max(...prices)
+  if (min === max) return `$${min.toFixed(2)}`
+  return `$${min.toFixed(2)} – $${max.toFixed(2)}`
+}
+
+function statusVariant(status: string | undefined) {
+  if (status === "ACTIVE") return "default"
+  if (status === "ARCHIVED") return "outline"
+  return "secondary"
+}
 
 export function ProductsPage() {
   const { page: rawPage, titleContains } = useSearch({ from: "/_authenticated/products" })
@@ -33,7 +51,7 @@ export function ProductsPage() {
     },
   })
 
-  const products = data?.data?.content ?? []
+  const products = (data?.data?.content ?? []) as Product[]
   const total = data?.data?.meta?.total ?? 0
   const totalPages = Math.ceil(total / PAGE_SIZE) || 1
 
@@ -46,7 +64,7 @@ export function ProductsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Products</h1>
         <Button asChild size="sm">
-          <Link to={"/products/new" as string}>
+          <Link to="/products/new">
             <Plus className="mr-2 size-4" />
             Add product
           </Link>
@@ -75,51 +93,76 @@ export function ProductsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Product</TableHead>
+              <TableHead className="w-[40%]">Product</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Variants</TableHead>
-              <TableHead>Price</TableHead>
+              <TableHead>Inventory</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Vendor</TableHead>
+              <TableHead className="text-right">Price</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={4} className="py-12 text-center text-muted-foreground">Loading...</TableCell>
+                <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">Loading...</TableCell>
               </TableRow>
             )}
             {!isLoading && products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="py-12 text-center text-muted-foreground">
+                <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
                   No products yet.{" "}
-                  <Link to={"/products/new" as string} className="underline">Add your first product</Link>
+                  <Link to="/products/new" className="underline">Add your first product</Link>
                 </TableCell>
               </TableRow>
             )}
-            {products.map((p) => (
-              <TableRow key={String(p.id)}>
-                <TableCell>
-                  <Link to="/products/$productId" params={{ productId: String(p.id) }} className="font-medium hover:underline">
-                    {String(p.title ?? (p as Record<string, unknown>).name ?? "Untitled")}
-                  </Link>
-                  {p.handle != null && (
-                    <p className="text-xs text-muted-foreground">{String(p.handle)}</p>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={String(p.status) === "ACTIVE" ? "default" : "secondary"}>
-                    {String(p.status ?? "DRAFT")}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {Array.isArray(p.variants) ? p.variants.length : "—"}
-                </TableCell>
-                <TableCell>
-                  {(p as Record<string, unknown>).price != null
-                    ? `$${Number((p as Record<string, unknown>).price).toFixed(2)}`
-                    : "—"}
-                </TableCell>
-              </TableRow>
-            ))}
+            {products.map((p) => {
+              const thumb = p.images?.[0]
+              const variantCount = p.variants?.length ?? 0
+              return (
+                <TableRow key={String(p.id)}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded border bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                        {thumb?.url ? (
+                          <img src={thumb.url} alt={thumb.altText ?? ""} className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon className="size-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <Link
+                          to="/products/$productId"
+                          params={{ productId: String(p.id) }}
+                          className="font-medium hover:underline truncate block"
+                        >
+                          {p.title ?? "Untitled"}
+                        </Link>
+                        {p.handle && (
+                          <p className="text-xs text-muted-foreground font-mono truncate">{p.handle}</p>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant(p.status)}>
+                      {p.status ?? "DRAFT"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {variantCount} variant{variantCount !== 1 ? "s" : ""}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {p.productType ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {p.vendor ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-right text-sm font-medium tabular-nums">
+                    {priceRange(p)}
+                  </TableCell>
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
         {!isLoading && (
