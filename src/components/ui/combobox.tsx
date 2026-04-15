@@ -295,5 +295,6 @@ export {
   ComboboxChipsInput,
   ComboboxTrigger,
   ComboboxValue,
-  useComboboxAnchor,
 }
+// eslint-disable-next-line react-refresh/only-export-components
+export { useComboboxAnchor }

@@ -808,7 +808,7 @@ export function OrderDetailPage({ id }: { id: string }) {
               <Textarea
                 rows={3}
                 value={(order as Order).shippingAddress ?? ""}
-                onChange={(e) => {
+                onChange={() => {
                   /* controlled via mutation only */
                 }}
                 placeholder="Shipping address..."

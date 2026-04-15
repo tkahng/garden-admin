@@ -55,7 +55,6 @@ type UpdateProduct = components["schemas"]["UpdateProductRequest"]
 
 const STATUS_OPTIONS = ["DRAFT", "ACTIVE", "ARCHIVED"] as const
 const FULFILLMENT_TYPES = ["IN_STOCK", "PRE_ORDER", "MADE_TO_ORDER"] as const
-const INVENTORY_POLICIES = ["DENY", "CONTINUE"] as const
 const WEIGHT_UNITS = ["kg", "g", "lb", "oz"]
 
 function statusVariant(status: string | undefined) {
@@ -1024,7 +1023,7 @@ export function ProductDetailPage({ id }: { id: string }) {
                 <Select
                   value={variantForm.inventoryPolicy ?? "DENY"}
                   onValueChange={(v) =>
-                    setVariantForm((f) => ({ ...f, inventoryPolicy: v as typeof INVENTORY_POLICIES[number] }))
+                    setVariantForm((f) => ({ ...f, inventoryPolicy: v as "DENY" | "CONTINUE" }))
                   }
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
