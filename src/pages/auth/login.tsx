@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react"
-import { useNavigate } from "@tanstack/react-router"
+import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { toast } from "sonner"
 export function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const { redirect_to } = useSearch({ strict: false }) as { redirect_to?: string }
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
@@ -20,7 +21,7 @@ export function LoginPage() {
     setLoading(true)
     try {
       await login(email, password)
-      await navigate({ to: "/" })
+      await navigate({ to: redirect_to ?? "/" })
     } catch {
       toast.error("Invalid email or password")
     } finally {

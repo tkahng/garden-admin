@@ -160,8 +160,8 @@ export interface FileRoutesByFullPath {
   '/quotes': typeof AuthenticatedQuotesRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
-  '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/$productId': typeof AuthenticatedProductsProductIdRoute
+  '/products/new': typeof AuthenticatedProductsNewRoute
   '/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/settings/shipping': typeof AuthenticatedSettingsShippingRoute
@@ -182,8 +182,8 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
-  '/products/new': typeof AuthenticatedProductsNewRoute
   '/products/$productId': typeof AuthenticatedProductsProductIdRoute
+  '/products/new': typeof AuthenticatedProductsNewRoute
   '/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/settings/shipping': typeof AuthenticatedSettingsShippingRoute
@@ -206,8 +206,8 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
-  '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/products/$productId': typeof AuthenticatedProductsProductIdRoute
+  '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/_authenticated/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/_authenticated/settings/shipping': typeof AuthenticatedSettingsShippingRoute
@@ -230,8 +230,8 @@ export interface FileRouteTypes {
     | '/quotes'
     | '/customers/$customerId'
     | '/orders/$orderId'
-    | '/products/new'
     | '/products/$productId'
+    | '/products/new'
     | '/settings/locations'
     | '/settings/permissions'
     | '/settings/shipping'
@@ -252,8 +252,8 @@ export interface FileRouteTypes {
     | '/'
     | '/customers/$customerId'
     | '/orders/$orderId'
-    | '/products/new'
     | '/products/$productId'
+    | '/products/new'
     | '/settings/locations'
     | '/settings/permissions'
     | '/settings/shipping'
@@ -275,8 +275,8 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/customers/$customerId'
     | '/_authenticated/orders/$orderId'
-    | '/_authenticated/products/new'
     | '/_authenticated/products/$productId'
+    | '/_authenticated/products/new'
     | '/_authenticated/settings/locations'
     | '/_authenticated/settings/permissions'
     | '/_authenticated/settings/shipping'
@@ -466,13 +466,13 @@ const AuthenticatedOrdersRouteWithChildren =
   AuthenticatedOrdersRoute._addFileChildren(AuthenticatedOrdersRouteChildren)
 
 interface AuthenticatedProductsRouteChildren {
-  AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
   AuthenticatedProductsProductIdRoute: typeof AuthenticatedProductsProductIdRoute
+  AuthenticatedProductsNewRoute: typeof AuthenticatedProductsNewRoute
 }
 
 const AuthenticatedProductsRouteChildren: AuthenticatedProductsRouteChildren = {
-  AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
   AuthenticatedProductsProductIdRoute: AuthenticatedProductsProductIdRoute,
+  AuthenticatedProductsNewRoute: AuthenticatedProductsNewRoute,
 }
 
 const AuthenticatedProductsRouteWithChildren =
