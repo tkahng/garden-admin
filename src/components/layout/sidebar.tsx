@@ -58,6 +58,7 @@ const navItems: NavItem[] = [
     children: [
       { label: "Pages", href: "/pages" },
       { label: "Blogs", href: "/blogs" },
+      { label: "Media library", href: "/media" },
     ],
   },
   {

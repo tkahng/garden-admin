@@ -16,6 +16,7 @@ import { Route as AuthenticatedQuotesRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedPagesRouteImport } from './routes/_authenticated/pages'
 import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
+import { Route as AuthenticatedMediaRouteImport } from './routes/_authenticated/media'
 import { Route as AuthenticatedInventoryRouteImport } from './routes/_authenticated/inventory'
 import { Route as AuthenticatedGiftCardsRouteImport } from './routes/_authenticated/gift-cards'
 import { Route as AuthenticatedDiscountsRouteImport } from './routes/_authenticated/discounts'
@@ -63,6 +64,11 @@ const AuthenticatedPagesRoute = AuthenticatedPagesRouteImport.update({
 const AuthenticatedOrdersRoute = AuthenticatedOrdersRouteImport.update({
   id: '/orders',
   path: '/orders',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMediaRoute = AuthenticatedMediaRouteImport.update({
+  id: '/media',
+  path: '/media',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedInventoryRoute = AuthenticatedInventoryRouteImport.update({
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/discounts': typeof AuthenticatedDiscountsRoute
   '/gift-cards': typeof AuthenticatedGiftCardsRoute
   '/inventory': typeof AuthenticatedInventoryRoute
+  '/media': typeof AuthenticatedMediaRoute
   '/orders': typeof AuthenticatedOrdersRouteWithChildren
   '/pages': typeof AuthenticatedPagesRoute
   '/products': typeof AuthenticatedProductsRouteWithChildren
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/discounts': typeof AuthenticatedDiscountsRoute
   '/gift-cards': typeof AuthenticatedGiftCardsRoute
   '/inventory': typeof AuthenticatedInventoryRoute
+  '/media': typeof AuthenticatedMediaRoute
   '/orders': typeof AuthenticatedOrdersRouteWithChildren
   '/pages': typeof AuthenticatedPagesRoute
   '/products': typeof AuthenticatedProductsRouteWithChildren
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/_authenticated/discounts': typeof AuthenticatedDiscountsRoute
   '/_authenticated/gift-cards': typeof AuthenticatedGiftCardsRoute
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
+  '/_authenticated/media': typeof AuthenticatedMediaRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRouteWithChildren
   '/_authenticated/pages': typeof AuthenticatedPagesRoute
   '/_authenticated/products': typeof AuthenticatedProductsRouteWithChildren
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/discounts'
     | '/gift-cards'
     | '/inventory'
+    | '/media'
     | '/orders'
     | '/pages'
     | '/products'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/discounts'
     | '/gift-cards'
     | '/inventory'
+    | '/media'
     | '/orders'
     | '/pages'
     | '/products'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/_authenticated/discounts'
     | '/_authenticated/gift-cards'
     | '/_authenticated/inventory'
+    | '/_authenticated/media'
     | '/_authenticated/orders'
     | '/_authenticated/pages'
     | '/_authenticated/products'
@@ -336,6 +348,13 @@ declare module '@tanstack/react-router' {
       path: '/orders'
       fullPath: '/orders'
       preLoaderRoute: typeof AuthenticatedOrdersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/media': {
+      id: '/_authenticated/media'
+      path: '/media'
+      fullPath: '/media'
+      preLoaderRoute: typeof AuthenticatedMediaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/inventory': {
@@ -488,6 +507,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDiscountsRoute: typeof AuthenticatedDiscountsRoute
   AuthenticatedGiftCardsRoute: typeof AuthenticatedGiftCardsRoute
   AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
+  AuthenticatedMediaRoute: typeof AuthenticatedMediaRoute
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRouteWithChildren
   AuthenticatedPagesRoute: typeof AuthenticatedPagesRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRouteWithChildren
@@ -506,6 +526,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDiscountsRoute: AuthenticatedDiscountsRoute,
   AuthenticatedGiftCardsRoute: AuthenticatedGiftCardsRoute,
   AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
+  AuthenticatedMediaRoute: AuthenticatedMediaRoute,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRouteWithChildren,
   AuthenticatedPagesRoute: AuthenticatedPagesRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRouteWithChildren,
