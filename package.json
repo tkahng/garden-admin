@@ -16,6 +16,9 @@
     "@base-ui/react": "^1.4.0",
     "@fontsource-variable/inter": "^5.2.8",
     "@tailwindcss/vite": "^4.2.1",
+    "@tanstack/react-query": "^5.99.0",
+    "@tanstack/react-router": "^1.168.21",
+    "@tanstack/router-plugin": "^1.167.22",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -40,6 +43,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@tanstack/router-cli": "^1.166.33",
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
