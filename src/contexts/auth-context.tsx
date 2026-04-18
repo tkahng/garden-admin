@@ -1,8 +1,13 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
 import { apiClient, setAuthToken, setUnauthorizedHandler } from "@/api/client"
-import { router } from "@/main"
 
 const USER_KEY = "garden_user"
+
+let navigationHandler: ((path: string) => void) | null = null
+
+export function setNavigationHandler(handler: ((path: string) => void) | null) {
+  navigationHandler = handler
+}
 
 interface AuthUser {
   id: string
@@ -44,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null)
       setRefreshToken("")
       const redirectTo = window.location.pathname + window.location.search
-      router.navigate({ to: "/login", search: { redirect_to: redirectTo } })
+      navigationHandler?.(redirectTo)
     })
     return () => setUnauthorizedHandler(null)
   }, [])

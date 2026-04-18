@@ -10,6 +10,28 @@
 
 ---
 
+## Deviations from Plan (implemented 2026-04-17)
+
+### 1. `auth-context.tsx` decoupled from `main.tsx` before Task 4
+
+**Problem:** `auth-context.tsx` imported `router` from `@/main`. `main.tsx` calls `createRoot(document.getElementById("root")!)` at module level — in jsdom, `getElementById("root")` returns `null`, so importing `auth-context.tsx` in any test would crash immediately. There was also a circular dependency (`auth-context` → `main` → `auth-context`).
+
+**Fix:** Added `setNavigationHandler(handler)` export to `auth-context.tsx` (same pattern already used by `setUnauthorizedHandler` in `client.ts`). The `router.navigate(...)` call was replaced with `navigationHandler?.(redirectTo)`. In `main.tsx`, `setNavigationHandler` is called once after `router` is created. `auth-context.tsx` no longer imports anything from `main.tsx`.
+
+### 2. `apiClient` fetch wrapper in `client.ts`
+
+**Problem:** `openapi-fetch`'s `createClient` captures `globalThis.fetch` at **creation time** (`fetch: baseFetch = globalThis.fetch` in its source). Since `apiClient` is a module-level singleton, it holds a reference to the pre-MSW `fetch`. MSW patches `globalThis.fetch` in `beforeAll`, which runs after imports — so the patched fetch was never used by `apiClient`, causing `ECONNREFUSED` instead of MSW interception.
+
+**Fix:** Pass a wrapper to `createClient` that defers `fetch` resolution to call time:
+
+```ts
+fetch: (...args) => globalThis.fetch(...args),
+```
+
+This ensures MSW's patched `fetch` is always used during tests.
+
+---
+
 ## File Map
 
 | Action | Path | Purpose |
