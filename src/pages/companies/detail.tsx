@@ -22,6 +22,17 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Card, CardContent } from "@/components/ui/card"
 import { ArrowLeft, ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -31,6 +42,9 @@ type PriceListEntry = components["schemas"]["PriceListEntryResponse"]
 type CreatePriceList = components["schemas"]["CreatePriceListRequest"]
 type UpdatePriceList = components["schemas"]["UpdatePriceListRequest"]
 type UpsertEntry = components["schemas"]["UpsertPriceListEntryRequest"]
+type CreditAccount = components["schemas"]["CreditAccountResponse"]
+type CreateCreditAccount = components["schemas"]["CreateCreditAccountRequest"]
+type UpdateCreditAccount = components["schemas"]["UpdateCreditAccountRequest"]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -50,6 +64,249 @@ function statusBadge(pl: PriceList) {
   if (pl.startsAt && new Date(pl.startsAt) > now)
     return <Badge variant="outline">Upcoming</Badge>
   return <Badge variant="default">Active</Badge>
+}
+
+function fmtCurrency(amount: number | undefined, currency = "USD") {
+  if (amount == null) return "—"
+  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount)
+}
+
+// ─── Credit account section ───────────────────────────────────────────────────
+
+function CreditAccountDialog({
+  open,
+  onOpenChange,
+  companyId,
+  existing,
+  onSuccess,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  companyId: string
+  existing: CreditAccount | null
+  onSuccess: () => void
+}) {
+  const [creditLimit, setCreditLimit] = useState("")
+  const [paymentTermsDays, setPaymentTermsDays] = useState("30")
+  const [currency, setCurrency] = useState("USD")
+
+  useEffect(() => {
+    if (open) {
+      setCreditLimit(existing?.creditLimit != null ? String(existing.creditLimit) : "")
+      setPaymentTermsDays(String(existing?.paymentTermsDays ?? 30))
+      setCurrency(existing?.currency ?? "USD")
+    }
+  }, [open, existing])
+
+  const createMutation = useMutation({
+    mutationFn: async (body: CreateCreditAccount) => {
+      const { error } = await apiClient.POST("/api/v1/admin/credit-accounts", { body })
+      if (error) throw error
+    },
+    onSuccess: () => { toast.success("Credit account created"); onSuccess() },
+    onError: () => toast.error("Failed to create credit account"),
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async (body: UpdateCreditAccount) => {
+      const { error } = await apiClient.PUT("/api/v1/admin/credit-accounts/company/{companyId}", {
+        params: { path: { companyId } },
+        body,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => { toast.success("Credit account updated"); onSuccess() },
+    onError: () => toast.error("Failed to update credit account"),
+  })
+
+  function handleSubmit() {
+    const limit = Number(creditLimit)
+    if (!limit || limit <= 0) { toast.error("Credit limit must be positive"); return }
+    if (existing) {
+      updateMutation.mutate({ creditLimit: limit, paymentTermsDays: Number(paymentTermsDays) || 30 })
+    } else {
+      createMutation.mutate({
+        companyId,
+        creditLimit: limit,
+        paymentTermsDays: Number(paymentTermsDays) || 30,
+        currency: currency || "USD",
+      })
+    }
+  }
+
+  const isPending = createMutation.isPending || updateMutation.isPending
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{existing ? "Edit credit account" : "Setup net terms"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>Credit limit</Label>
+            <Input
+              type="number"
+              min={1}
+              step="0.01"
+              placeholder="10000.00"
+              value={creditLimit}
+              onChange={(e) => setCreditLimit(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Payment terms (days)</Label>
+              <Input
+                type="number"
+                min={1}
+                placeholder="30"
+                value={paymentTermsDays}
+                onChange={(e) => setPaymentTermsDays(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Currency</Label>
+              <Input
+                placeholder="USD"
+                maxLength={3}
+                disabled={!!existing}
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+              />
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={isPending}>
+            {existing ? "Save" : "Create"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function CreditAccountSection({ companyId }: { companyId: string }) {
+  const qc = useQueryClient()
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [removeOpen, setRemoveOpen] = useState(false)
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "credit-account", companyId],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET(
+        "/api/v1/admin/credit-accounts/company/{companyId}",
+        { params: { path: { companyId } } },
+      )
+      // 404 means no credit account — treat as null
+      if (error) return null
+      return (data as { data?: CreditAccount } | undefined)?.data ?? null
+    },
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await apiClient.DELETE(
+        "/api/v1/admin/credit-accounts/company/{companyId}",
+        { params: { path: { companyId } } },
+      )
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Credit account removed")
+      qc.invalidateQueries({ queryKey: ["admin", "credit-account", companyId] })
+    },
+    onError: () => toast.error("Failed to remove credit account"),
+  })
+
+  const account = data ?? null
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">Credit account</h2>
+        {account ? (
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => setDialogOpen(true)}>
+              <Pencil className="size-3.5 mr-1.5" />
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-destructive border-destructive/40 hover:bg-destructive/10"
+              onClick={() => setRemoveOpen(true)}
+            >
+              <Trash2 className="size-3.5 mr-1.5" />
+              Remove
+            </Button>
+          </div>
+        ) : (
+          <Button size="sm" onClick={() => setDialogOpen(true)} disabled={isLoading}>
+            <Plus className="size-4 mr-2" />
+            Setup net terms
+          </Button>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="h-24 w-full bg-muted animate-pulse rounded-lg" />
+      ) : account ? (
+        <Card>
+          <CardContent className="pt-4 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              ["Credit limit", fmtCurrency(account.creditLimit, account.currency)],
+              ["Available", fmtCurrency(account.availableCredit, account.currency)],
+              ["Outstanding", fmtCurrency(account.outstandingBalance, account.currency)],
+              ["Payment terms", account.paymentTermsDays != null ? `NET ${account.paymentTermsDays}` : "—"],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">{label}</p>
+                <p className="text-sm font-semibold">{value}</p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          No net terms configured. Click "Setup net terms" to enable credit purchasing.
+        </p>
+      )}
+
+      <CreditAccountDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        companyId={companyId}
+        existing={account}
+        onSuccess={() => {
+          setDialogOpen(false)
+          qc.invalidateQueries({ queryKey: ["admin", "credit-account", companyId] })
+        }}
+      />
+
+      <AlertDialog open={removeOpen} onOpenChange={setRemoveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove credit account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will delete the net terms credit account for this company. Any outstanding balance must be settled first.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { setRemoveOpen(false); removeMutation.mutate() }}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
 }
 
 // ─── Entry row form ───────────────────────────────────────────────────────────
@@ -566,6 +823,9 @@ export function CompanyDetailPage({ id }: { id: string }) {
           </p>
         )}
       </div>
+
+      {/* Credit account */}
+      <CreditAccountSection companyId={id} />
 
       {/* Price lists section */}
       <div className="space-y-3">
