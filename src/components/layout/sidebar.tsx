@@ -71,6 +71,7 @@ const navItems: NavItem[] = [
     icon: Building2,
     children: [
       { label: "Companies", href: "/companies" },
+      { label: "Price lists", href: "/price-lists" },
       { label: "Invoices", href: "/invoices" },
     ],
   },
