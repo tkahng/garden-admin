@@ -67,9 +67,11 @@ const navItems: NavItem[] = [
     icon: Users,
   },
   {
-    label: "Companies",
-    href: "/companies",
+    label: "B2B",
     icon: Building2,
+    children: [
+      { label: "Companies", href: "/companies" },
+    ],
   },
   {
     label: "Discounts",

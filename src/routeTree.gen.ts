@@ -32,6 +32,7 @@ import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenti
 import { Route as AuthenticatedProductsProductIdRouteImport } from './routes/_authenticated/products.$productId'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
 import { Route as AuthenticatedCustomersCustomerIdRouteImport } from './routes/_authenticated/customers.$customerId'
+import { Route as AuthenticatedCompaniesCompanyIdRouteImport } from './routes/_authenticated/companies.$companyId'
 import { Route as AuthenticatedCollectionsNewRouteImport } from './routes/_authenticated/collections.new'
 import { Route as AuthenticatedCollectionsCollectionIdRouteImport } from './routes/_authenticated/collections.$collectionId'
 
@@ -158,6 +159,12 @@ const AuthenticatedCustomersCustomerIdRoute =
     path: '/$customerId',
     getParentRoute: () => AuthenticatedCustomersRoute,
   } as any)
+const AuthenticatedCompaniesCompanyIdRoute =
+  AuthenticatedCompaniesCompanyIdRouteImport.update({
+    id: '/$companyId',
+    path: '/$companyId',
+    getParentRoute: () => AuthenticatedCompaniesRoute,
+  } as any)
 const AuthenticatedCollectionsNewRoute =
   AuthenticatedCollectionsNewRouteImport.update({
     id: '/new',
@@ -176,7 +183,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/blogs': typeof AuthenticatedBlogsRoute
   '/collections': typeof AuthenticatedCollectionsRouteWithChildren
-  '/companies': typeof AuthenticatedCompaniesRoute
+  '/companies': typeof AuthenticatedCompaniesRouteWithChildren
   '/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/discounts': typeof AuthenticatedDiscountsRoute
   '/gift-cards': typeof AuthenticatedGiftCardsRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/quotes': typeof AuthenticatedQuotesRoute
   '/collections/$collectionId': typeof AuthenticatedCollectionsCollectionIdRoute
   '/collections/new': typeof AuthenticatedCollectionsNewRoute
+  '/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/products/$productId': typeof AuthenticatedProductsProductIdRoute
@@ -201,7 +209,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/blogs': typeof AuthenticatedBlogsRoute
   '/collections': typeof AuthenticatedCollectionsRouteWithChildren
-  '/companies': typeof AuthenticatedCompaniesRoute
+  '/companies': typeof AuthenticatedCompaniesRouteWithChildren
   '/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/discounts': typeof AuthenticatedDiscountsRoute
   '/gift-cards': typeof AuthenticatedGiftCardsRoute
@@ -213,6 +221,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/collections/$collectionId': typeof AuthenticatedCollectionsCollectionIdRoute
   '/collections/new': typeof AuthenticatedCollectionsNewRoute
+  '/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/products/$productId': typeof AuthenticatedProductsProductIdRoute
@@ -228,7 +237,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/blogs': typeof AuthenticatedBlogsRoute
   '/_authenticated/collections': typeof AuthenticatedCollectionsRouteWithChildren
-  '/_authenticated/companies': typeof AuthenticatedCompaniesRoute
+  '/_authenticated/companies': typeof AuthenticatedCompaniesRouteWithChildren
   '/_authenticated/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/_authenticated/discounts': typeof AuthenticatedDiscountsRoute
   '/_authenticated/gift-cards': typeof AuthenticatedGiftCardsRoute
@@ -241,6 +250,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/collections/$collectionId': typeof AuthenticatedCollectionsCollectionIdRoute
   '/_authenticated/collections/new': typeof AuthenticatedCollectionsNewRoute
+  '/_authenticated/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/_authenticated/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/_authenticated/products/$productId': typeof AuthenticatedProductsProductIdRoute
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/quotes'
     | '/collections/$collectionId'
     | '/collections/new'
+    | '/companies/$companyId'
     | '/customers/$customerId'
     | '/orders/$orderId'
     | '/products/$productId'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/'
     | '/collections/$collectionId'
     | '/collections/new'
+    | '/companies/$companyId'
     | '/customers/$customerId'
     | '/orders/$orderId'
     | '/products/$productId'
@@ -321,6 +333,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/collections/$collectionId'
     | '/_authenticated/collections/new'
+    | '/_authenticated/companies/$companyId'
     | '/_authenticated/customers/$customerId'
     | '/_authenticated/orders/$orderId'
     | '/_authenticated/products/$productId'
@@ -499,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCustomersCustomerIdRouteImport
       parentRoute: typeof AuthenticatedCustomersRoute
     }
+    '/_authenticated/companies/$companyId': {
+      id: '/_authenticated/companies/$companyId'
+      path: '/$companyId'
+      fullPath: '/companies/$companyId'
+      preLoaderRoute: typeof AuthenticatedCompaniesCompanyIdRouteImport
+      parentRoute: typeof AuthenticatedCompaniesRoute
+    }
     '/_authenticated/collections/new': {
       id: '/_authenticated/collections/new'
       path: '/new'
@@ -531,6 +551,20 @@ const AuthenticatedCollectionsRouteChildren: AuthenticatedCollectionsRouteChildr
 const AuthenticatedCollectionsRouteWithChildren =
   AuthenticatedCollectionsRoute._addFileChildren(
     AuthenticatedCollectionsRouteChildren,
+  )
+
+interface AuthenticatedCompaniesRouteChildren {
+  AuthenticatedCompaniesCompanyIdRoute: typeof AuthenticatedCompaniesCompanyIdRoute
+}
+
+const AuthenticatedCompaniesRouteChildren: AuthenticatedCompaniesRouteChildren =
+  {
+    AuthenticatedCompaniesCompanyIdRoute: AuthenticatedCompaniesCompanyIdRoute,
+  }
+
+const AuthenticatedCompaniesRouteWithChildren =
+  AuthenticatedCompaniesRoute._addFileChildren(
+    AuthenticatedCompaniesRouteChildren,
   )
 
 interface AuthenticatedCustomersRouteChildren {
@@ -579,7 +613,7 @@ const AuthenticatedProductsRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedBlogsRoute: typeof AuthenticatedBlogsRoute
   AuthenticatedCollectionsRoute: typeof AuthenticatedCollectionsRouteWithChildren
-  AuthenticatedCompaniesRoute: typeof AuthenticatedCompaniesRoute
+  AuthenticatedCompaniesRoute: typeof AuthenticatedCompaniesRouteWithChildren
   AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRouteWithChildren
   AuthenticatedDiscountsRoute: typeof AuthenticatedDiscountsRoute
   AuthenticatedGiftCardsRoute: typeof AuthenticatedGiftCardsRoute
@@ -598,7 +632,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBlogsRoute: AuthenticatedBlogsRoute,
   AuthenticatedCollectionsRoute: AuthenticatedCollectionsRouteWithChildren,
-  AuthenticatedCompaniesRoute: AuthenticatedCompaniesRoute,
+  AuthenticatedCompaniesRoute: AuthenticatedCompaniesRouteWithChildren,
   AuthenticatedCustomersRoute: AuthenticatedCustomersRouteWithChildren,
   AuthenticatedDiscountsRoute: AuthenticatedDiscountsRoute,
   AuthenticatedGiftCardsRoute: AuthenticatedGiftCardsRoute,
