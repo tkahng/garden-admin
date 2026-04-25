@@ -1,7 +1,9 @@
+import { useState } from "react"
 import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Table,
   TableBody,
@@ -10,12 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ImageIcon, Plus, Search } from "lucide-react"
-import { useQuery } from "@tanstack/react-query"
+import { ImageIcon, Plus, Search, Trash2 } from "lucide-react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 import { DataPagination } from "@/components/ui/data-pagination"
 import type { components } from "@/schema"
 import { cn } from "@/lib/utils"
+import { bulkChangeProductStatus, bulkDeleteProducts } from "@/lib/bulk-api"
 
 type Product = components["schemas"]["AdminProductResponse"]
 
@@ -47,6 +50,9 @@ export function ProductsPage() {
   const { page: rawPage, titleContains, status } = useSearch({ from: "/_authenticated/products/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "products", page, titleContains, status],
@@ -70,13 +76,49 @@ export function ProductsPage() {
   const total = data?.data?.meta?.total ?? 0
   const totalPages = Math.ceil(total / PAGE_SIZE) || 1
 
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["admin", "products"] })
+    setSelectedIds(new Set())
+  }
+
+  const bulkStatusMutation = useMutation({
+    mutationFn: (newStatus: string) => bulkChangeProductStatus([...selectedIds], newStatus),
+    onSuccess: invalidate,
+  })
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: () => bulkDeleteProducts([...selectedIds]),
+    onSuccess: invalidate,
+  })
+
+  function toggleAll() {
+    if (selectedIds.size === products.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(products.map((p) => String(p.id))))
+    }
+  }
+
+  function toggleOne(id: string) {
+    const next = new Set(selectedIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelectedIds(next)
+  }
+
   function setPage(newPage: number) {
+    setSelectedIds(new Set())
     void navigate({ to: "/products", search: { page: newPage, titleContains, status }, replace: true })
   }
 
   function setStatus(newStatus: string | undefined) {
+    setSelectedIds(new Set())
     void navigate({ to: "/products", search: { page: 0, titleContains, status: newStatus }, replace: true })
   }
+
+  const allChecked = products.length > 0 && selectedIds.size === products.length
+  const someChecked = selectedIds.size > 0 && selectedIds.size < products.length
+  const isBusy = bulkStatusMutation.isPending || bulkDeleteMutation.isPending
 
   return (
     <div className="space-y-4">
@@ -126,11 +168,65 @@ export function ProductsPage() {
         </div>
       </div>
 
+      {/* Bulk action toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-4 py-2">
+          <span className="text-sm font-medium text-muted-foreground mr-2">
+            {selectedIds.size} selected
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={isBusy}
+            onClick={() => bulkStatusMutation.mutate("ACTIVE")}
+          >
+            Set Active
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={isBusy}
+            onClick={() => bulkStatusMutation.mutate("DRAFT")}
+          >
+            Set Draft
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={isBusy}
+            onClick={() => bulkStatusMutation.mutate("ARCHIVED")}
+          >
+            Archive
+          </Button>
+          <Button
+            size="sm"
+            variant="destructive"
+            disabled={isBusy}
+            onClick={() => {
+              if (confirm(`Delete ${selectedIds.size} product(s)? This cannot be undone.`)) {
+                bulkDeleteMutation.mutate()
+              }
+            }}
+          >
+            <Trash2 className="mr-1 size-3" />
+            Delete
+          </Button>
+        </div>
+      )}
+
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[40%]">Product</TableHead>
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={allChecked}
+                  data-state={someChecked ? "indeterminate" : allChecked ? "checked" : "unchecked"}
+                  onCheckedChange={toggleAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
+              <TableHead className="w-[38%]">Product</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Inventory</TableHead>
               <TableHead>Type</TableHead>
@@ -141,22 +237,31 @@ export function ProductsPage() {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">Loading...</TableCell>
+                <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">Loading...</TableCell>
               </TableRow>
             )}
             {!isLoading && products.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
                   No products yet.{" "}
                   <Link to="/products/new" className="underline">Add your first product</Link>
                 </TableCell>
               </TableRow>
             )}
             {products.map((p) => {
+              const id = String(p.id)
               const thumb = p.images?.[0]
               const variantCount = p.variants?.length ?? 0
+              const checked = selectedIds.has(id)
               return (
-                <TableRow key={String(p.id)}>
+                <TableRow key={id} data-state={checked ? "selected" : undefined}>
+                  <TableCell>
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={() => toggleOne(id)}
+                      aria-label={`Select ${p.title ?? "product"}`}
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="size-10 rounded border bg-muted flex items-center justify-center shrink-0 overflow-hidden">
@@ -169,7 +274,7 @@ export function ProductsPage() {
                       <div className="min-w-0">
                         <Link
                           to="/products/$productId"
-                          params={{ productId: String(p.id) }}
+                          params={{ productId: id }}
                           className="font-medium hover:underline truncate block"
                         >
                           {p.title ?? "Untitled"}
