@@ -1,5 +1,9 @@
+import { useState } from "react"
 import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Download } from "lucide-react"
+import { downloadCsv } from "@/lib/download"
 import {
   Table,
   TableBody,
@@ -57,6 +61,19 @@ export function OrdersPage() {
   const { page: rawPage, status } = useSearch({ from: "/_authenticated/orders" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
+  const [exporting, setExporting] = useState(false)
+
+  async function handleExport() {
+    setExporting(true)
+    try {
+      const params = new URLSearchParams()
+      if (status) params.set("status", status)
+      const qs = params.toString()
+      await downloadCsv(`/api/v1/admin/orders/export${qs ? `?${qs}` : ""}`, "orders.csv")
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "orders", page, status],
@@ -85,6 +102,10 @@ export function OrdersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Orders</h1>
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
+          <Download className="mr-2 size-4" />
+          {exporting ? "Exporting…" : "Export CSV"}
+        </Button>
       </div>
 
       {/* Status tabs */}

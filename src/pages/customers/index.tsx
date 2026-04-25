@@ -1,6 +1,10 @@
+import { useState } from "react"
 import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Download } from "lucide-react"
+import { downloadCsv } from "@/lib/download"
 import {
   Table,
   TableBody,
@@ -20,6 +24,19 @@ export function CustomersPage() {
   const { page: rawPage, email } = useSearch({ from: "/_authenticated/customers" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
+  const [exporting, setExporting] = useState(false)
+
+  async function handleExport() {
+    setExporting(true)
+    try {
+      const params = new URLSearchParams()
+      if (email) params.set("email", email)
+      const qs = params.toString()
+      await downloadCsv(`/api/v1/admin/users/export${qs ? `?${qs}` : ""}`, "customers.csv")
+    } finally {
+      setExporting(false)
+    }
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "users", page, email],
@@ -44,6 +61,10 @@ export function CustomersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Customers</h1>
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
+          <Download className="mr-2 size-4" />
+          {exporting ? "Exporting…" : "Export CSV"}
+        </Button>
       </div>
 
       <div className="flex items-center gap-2">
