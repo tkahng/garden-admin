@@ -6,7 +6,7 @@ import { routeTree } from "./routeTree.gen"
 
 import "./index.css"
 import { ThemeProvider } from "@/components/theme-provider.tsx"
-import { AuthProvider, useAuth } from "@/contexts/auth-context"
+import { AuthProvider, useAuth, setNavigationHandler } from "@/contexts/auth-context"
 import { Toaster } from "@/components/ui/sonner"
 
 const queryClient = new QueryClient({
@@ -23,6 +23,10 @@ export const router = createRouter({
   context: {
     auth: undefined!,
   },
+})
+
+setNavigationHandler((redirectTo) => {
+  router.navigate({ to: "/login", search: { redirect_to: redirectTo } })
 })
 
 declare module "@tanstack/react-router" {

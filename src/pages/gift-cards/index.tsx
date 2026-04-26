@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { useNavigate, useSearch } from "@tanstack/react-router"
+import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+
 import { apiClient } from "@/api/client"
 import type { components } from "@/schema"
 import { Button } from "@/components/ui/button"
@@ -22,7 +23,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Plus, Power, Search } from "lucide-react"
+import { Plus, Search } from "lucide-react"
 import { toast } from "sonner"
 import { DataPagination } from "@/components/ui/data-pagination"
 
@@ -71,20 +72,6 @@ export function GiftCardsPage() {
       setForm({ currency: "USD" })
     },
     onError: () => toast.error("Failed to create gift card"),
-  })
-
-  const deactivateMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await apiClient.PUT("/api/v1/admin/gift-cards/{id}/deactivate", {
-        params: { path: { id } },
-      })
-      if (error) throw error
-    },
-    onSuccess: () => {
-      toast.success("Gift card deactivated")
-      qc.invalidateQueries({ queryKey: ["admin", "gift-cards"] })
-    },
-    onError: () => toast.error("Failed to deactivate gift card"),
   })
 
   function handleSubmit() {
@@ -153,7 +140,15 @@ export function GiftCardsPage() {
             )}
             {cards.map((c) => (
               <TableRow key={c.id}>
-                <TableCell className="font-mono font-medium">{c.code}</TableCell>
+                <TableCell>
+                  <Link
+                    to="/gift-cards/$giftCardId"
+                    params={{ giftCardId: c.id! }}
+                    className="font-mono font-medium hover:underline"
+                  >
+                    {c.code}
+                  </Link>
+                </TableCell>
                 <TableCell>${(c.initialBalance ?? 0).toFixed(2)}</TableCell>
                 <TableCell className="font-medium">${(c.currentBalance ?? 0).toFixed(2)}</TableCell>
                 <TableCell className="text-muted-foreground">{c.recipientEmail ?? "—"}</TableCell>
@@ -164,19 +159,6 @@ export function GiftCardsPage() {
                   <Badge variant={c.isActive ? "default" : "secondary"}>
                     {c.isActive ? "Active" : "Inactive"}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  {c.isActive && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-8 text-destructive"
-                      title="Deactivate"
-                      onClick={() => deactivateMutation.mutate(c.id!)}
-                    >
-                      <Power className="size-4" />
-                    </Button>
-                  )}
                 </TableCell>
               </TableRow>
             ))}

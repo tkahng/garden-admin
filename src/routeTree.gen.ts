@@ -14,9 +14,11 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedQuotesRouteImport } from './routes/_authenticated/quotes'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
+import { Route as AuthenticatedPriceListsRouteImport } from './routes/_authenticated/price-lists'
 import { Route as AuthenticatedPagesRouteImport } from './routes/_authenticated/pages'
 import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
 import { Route as AuthenticatedMediaRouteImport } from './routes/_authenticated/media'
+import { Route as AuthenticatedInvoicesRouteImport } from './routes/_authenticated/invoices'
 import { Route as AuthenticatedInventoryRouteImport } from './routes/_authenticated/inventory'
 import { Route as AuthenticatedGiftCardsRouteImport } from './routes/_authenticated/gift-cards'
 import { Route as AuthenticatedDiscountsRouteImport } from './routes/_authenticated/discounts'
@@ -28,12 +30,17 @@ import { Route as AuthenticatedProductsIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedSettingsShippingRouteImport } from './routes/_authenticated/settings/shipping'
 import { Route as AuthenticatedSettingsPermissionsRouteImport } from './routes/_authenticated/settings/permissions'
 import { Route as AuthenticatedSettingsLocationsRouteImport } from './routes/_authenticated/settings/locations'
+import { Route as AuthenticatedQuotesQuoteIdRouteImport } from './routes/_authenticated/quotes.$quoteId'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products.new'
 import { Route as AuthenticatedProductsProductIdRouteImport } from './routes/_authenticated/products.$productId'
 import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authenticated/orders.$orderId'
+import { Route as AuthenticatedInvoicesInvoiceIdRouteImport } from './routes/_authenticated/invoices.$invoiceId'
+import { Route as AuthenticatedGiftCardsGiftCardIdRouteImport } from './routes/_authenticated/gift-cards.$giftCardId'
 import { Route as AuthenticatedCustomersCustomerIdRouteImport } from './routes/_authenticated/customers.$customerId'
+import { Route as AuthenticatedCompaniesCompanyIdRouteImport } from './routes/_authenticated/companies.$companyId'
 import { Route as AuthenticatedCollectionsNewRouteImport } from './routes/_authenticated/collections.new'
 import { Route as AuthenticatedCollectionsCollectionIdRouteImport } from './routes/_authenticated/collections.$collectionId'
+import { Route as AuthenticatedBlogsBlogIdRouteImport } from './routes/_authenticated/blogs.$blogId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -59,6 +66,11 @@ const AuthenticatedProductsRoute = AuthenticatedProductsRouteImport.update({
   path: '/products',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedPriceListsRoute = AuthenticatedPriceListsRouteImport.update({
+  id: '/price-lists',
+  path: '/price-lists',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedPagesRoute = AuthenticatedPagesRouteImport.update({
   id: '/pages',
   path: '/pages',
@@ -72,6 +84,11 @@ const AuthenticatedOrdersRoute = AuthenticatedOrdersRouteImport.update({
 const AuthenticatedMediaRoute = AuthenticatedMediaRouteImport.update({
   id: '/media',
   path: '/media',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedInvoicesRoute = AuthenticatedInvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedInventoryRoute = AuthenticatedInventoryRouteImport.update({
@@ -134,6 +151,12 @@ const AuthenticatedSettingsLocationsRoute =
     path: '/settings/locations',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedQuotesQuoteIdRoute =
+  AuthenticatedQuotesQuoteIdRouteImport.update({
+    id: '/$quoteId',
+    path: '/$quoteId',
+    getParentRoute: () => AuthenticatedQuotesRoute,
+  } as any)
 const AuthenticatedProductsNewRoute =
   AuthenticatedProductsNewRouteImport.update({
     id: '/new',
@@ -152,11 +175,29 @@ const AuthenticatedOrdersOrderIdRoute =
     path: '/$orderId',
     getParentRoute: () => AuthenticatedOrdersRoute,
   } as any)
+const AuthenticatedInvoicesInvoiceIdRoute =
+  AuthenticatedInvoicesInvoiceIdRouteImport.update({
+    id: '/$invoiceId',
+    path: '/$invoiceId',
+    getParentRoute: () => AuthenticatedInvoicesRoute,
+  } as any)
+const AuthenticatedGiftCardsGiftCardIdRoute =
+  AuthenticatedGiftCardsGiftCardIdRouteImport.update({
+    id: '/$giftCardId',
+    path: '/$giftCardId',
+    getParentRoute: () => AuthenticatedGiftCardsRoute,
+  } as any)
 const AuthenticatedCustomersCustomerIdRoute =
   AuthenticatedCustomersCustomerIdRouteImport.update({
     id: '/$customerId',
     path: '/$customerId',
     getParentRoute: () => AuthenticatedCustomersRoute,
+  } as any)
+const AuthenticatedCompaniesCompanyIdRoute =
+  AuthenticatedCompaniesCompanyIdRouteImport.update({
+    id: '/$companyId',
+    path: '/$companyId',
+    getParentRoute: () => AuthenticatedCompaniesRoute,
   } as any)
 const AuthenticatedCollectionsNewRoute =
   AuthenticatedCollectionsNewRouteImport.update({
@@ -170,28 +211,41 @@ const AuthenticatedCollectionsCollectionIdRoute =
     path: '/$collectionId',
     getParentRoute: () => AuthenticatedCollectionsRoute,
   } as any)
+const AuthenticatedBlogsBlogIdRoute =
+  AuthenticatedBlogsBlogIdRouteImport.update({
+    id: '/$blogId',
+    path: '/$blogId',
+    getParentRoute: () => AuthenticatedBlogsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
-  '/blogs': typeof AuthenticatedBlogsRoute
+  '/blogs': typeof AuthenticatedBlogsRouteWithChildren
   '/collections': typeof AuthenticatedCollectionsRouteWithChildren
-  '/companies': typeof AuthenticatedCompaniesRoute
+  '/companies': typeof AuthenticatedCompaniesRouteWithChildren
   '/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/discounts': typeof AuthenticatedDiscountsRoute
-  '/gift-cards': typeof AuthenticatedGiftCardsRoute
+  '/gift-cards': typeof AuthenticatedGiftCardsRouteWithChildren
   '/inventory': typeof AuthenticatedInventoryRoute
+  '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/media': typeof AuthenticatedMediaRoute
   '/orders': typeof AuthenticatedOrdersRouteWithChildren
   '/pages': typeof AuthenticatedPagesRoute
+  '/price-lists': typeof AuthenticatedPriceListsRoute
   '/products': typeof AuthenticatedProductsRouteWithChildren
-  '/quotes': typeof AuthenticatedQuotesRoute
+  '/quotes': typeof AuthenticatedQuotesRouteWithChildren
+  '/blogs/$blogId': typeof AuthenticatedBlogsBlogIdRoute
   '/collections/$collectionId': typeof AuthenticatedCollectionsCollectionIdRoute
   '/collections/new': typeof AuthenticatedCollectionsNewRoute
+  '/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
+  '/gift-cards/$giftCardId': typeof AuthenticatedGiftCardsGiftCardIdRoute
+  '/invoices/$invoiceId': typeof AuthenticatedInvoicesInvoiceIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/products/$productId': typeof AuthenticatedProductsProductIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
+  '/quotes/$quoteId': typeof AuthenticatedQuotesQuoteIdRoute
   '/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/settings/shipping': typeof AuthenticatedSettingsShippingRoute
@@ -199,24 +253,31 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
-  '/blogs': typeof AuthenticatedBlogsRoute
+  '/blogs': typeof AuthenticatedBlogsRouteWithChildren
   '/collections': typeof AuthenticatedCollectionsRouteWithChildren
-  '/companies': typeof AuthenticatedCompaniesRoute
+  '/companies': typeof AuthenticatedCompaniesRouteWithChildren
   '/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/discounts': typeof AuthenticatedDiscountsRoute
-  '/gift-cards': typeof AuthenticatedGiftCardsRoute
+  '/gift-cards': typeof AuthenticatedGiftCardsRouteWithChildren
   '/inventory': typeof AuthenticatedInventoryRoute
+  '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/media': typeof AuthenticatedMediaRoute
   '/orders': typeof AuthenticatedOrdersRouteWithChildren
   '/pages': typeof AuthenticatedPagesRoute
-  '/quotes': typeof AuthenticatedQuotesRoute
+  '/price-lists': typeof AuthenticatedPriceListsRoute
+  '/quotes': typeof AuthenticatedQuotesRouteWithChildren
   '/': typeof AuthenticatedIndexRoute
+  '/blogs/$blogId': typeof AuthenticatedBlogsBlogIdRoute
   '/collections/$collectionId': typeof AuthenticatedCollectionsCollectionIdRoute
   '/collections/new': typeof AuthenticatedCollectionsNewRoute
+  '/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
+  '/gift-cards/$giftCardId': typeof AuthenticatedGiftCardsGiftCardIdRoute
+  '/invoices/$invoiceId': typeof AuthenticatedInvoicesInvoiceIdRoute
   '/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/products/$productId': typeof AuthenticatedProductsProductIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
+  '/quotes/$quoteId': typeof AuthenticatedQuotesQuoteIdRoute
   '/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/settings/shipping': typeof AuthenticatedSettingsShippingRoute
@@ -226,25 +287,32 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
-  '/_authenticated/blogs': typeof AuthenticatedBlogsRoute
+  '/_authenticated/blogs': typeof AuthenticatedBlogsRouteWithChildren
   '/_authenticated/collections': typeof AuthenticatedCollectionsRouteWithChildren
-  '/_authenticated/companies': typeof AuthenticatedCompaniesRoute
+  '/_authenticated/companies': typeof AuthenticatedCompaniesRouteWithChildren
   '/_authenticated/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/_authenticated/discounts': typeof AuthenticatedDiscountsRoute
-  '/_authenticated/gift-cards': typeof AuthenticatedGiftCardsRoute
+  '/_authenticated/gift-cards': typeof AuthenticatedGiftCardsRouteWithChildren
   '/_authenticated/inventory': typeof AuthenticatedInventoryRoute
+  '/_authenticated/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/_authenticated/media': typeof AuthenticatedMediaRoute
   '/_authenticated/orders': typeof AuthenticatedOrdersRouteWithChildren
   '/_authenticated/pages': typeof AuthenticatedPagesRoute
+  '/_authenticated/price-lists': typeof AuthenticatedPriceListsRoute
   '/_authenticated/products': typeof AuthenticatedProductsRouteWithChildren
-  '/_authenticated/quotes': typeof AuthenticatedQuotesRoute
+  '/_authenticated/quotes': typeof AuthenticatedQuotesRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/blogs/$blogId': typeof AuthenticatedBlogsBlogIdRoute
   '/_authenticated/collections/$collectionId': typeof AuthenticatedCollectionsCollectionIdRoute
   '/_authenticated/collections/new': typeof AuthenticatedCollectionsNewRoute
+  '/_authenticated/companies/$companyId': typeof AuthenticatedCompaniesCompanyIdRoute
   '/_authenticated/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
+  '/_authenticated/gift-cards/$giftCardId': typeof AuthenticatedGiftCardsGiftCardIdRoute
+  '/_authenticated/invoices/$invoiceId': typeof AuthenticatedInvoicesInvoiceIdRoute
   '/_authenticated/orders/$orderId': typeof AuthenticatedOrdersOrderIdRoute
   '/_authenticated/products/$productId': typeof AuthenticatedProductsProductIdRoute
   '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
+  '/_authenticated/quotes/$quoteId': typeof AuthenticatedQuotesQuoteIdRoute
   '/_authenticated/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/_authenticated/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/_authenticated/settings/shipping': typeof AuthenticatedSettingsShippingRoute
@@ -262,17 +330,24 @@ export interface FileRouteTypes {
     | '/discounts'
     | '/gift-cards'
     | '/inventory'
+    | '/invoices'
     | '/media'
     | '/orders'
     | '/pages'
+    | '/price-lists'
     | '/products'
     | '/quotes'
+    | '/blogs/$blogId'
     | '/collections/$collectionId'
     | '/collections/new'
+    | '/companies/$companyId'
     | '/customers/$customerId'
+    | '/gift-cards/$giftCardId'
+    | '/invoices/$invoiceId'
     | '/orders/$orderId'
     | '/products/$productId'
     | '/products/new'
+    | '/quotes/$quoteId'
     | '/settings/locations'
     | '/settings/permissions'
     | '/settings/shipping'
@@ -287,17 +362,24 @@ export interface FileRouteTypes {
     | '/discounts'
     | '/gift-cards'
     | '/inventory'
+    | '/invoices'
     | '/media'
     | '/orders'
     | '/pages'
+    | '/price-lists'
     | '/quotes'
     | '/'
+    | '/blogs/$blogId'
     | '/collections/$collectionId'
     | '/collections/new'
+    | '/companies/$companyId'
     | '/customers/$customerId'
+    | '/gift-cards/$giftCardId'
+    | '/invoices/$invoiceId'
     | '/orders/$orderId'
     | '/products/$productId'
     | '/products/new'
+    | '/quotes/$quoteId'
     | '/settings/locations'
     | '/settings/permissions'
     | '/settings/shipping'
@@ -313,18 +395,25 @@ export interface FileRouteTypes {
     | '/_authenticated/discounts'
     | '/_authenticated/gift-cards'
     | '/_authenticated/inventory'
+    | '/_authenticated/invoices'
     | '/_authenticated/media'
     | '/_authenticated/orders'
     | '/_authenticated/pages'
+    | '/_authenticated/price-lists'
     | '/_authenticated/products'
     | '/_authenticated/quotes'
     | '/_authenticated/'
+    | '/_authenticated/blogs/$blogId'
     | '/_authenticated/collections/$collectionId'
     | '/_authenticated/collections/new'
+    | '/_authenticated/companies/$companyId'
     | '/_authenticated/customers/$customerId'
+    | '/_authenticated/gift-cards/$giftCardId'
+    | '/_authenticated/invoices/$invoiceId'
     | '/_authenticated/orders/$orderId'
     | '/_authenticated/products/$productId'
     | '/_authenticated/products/new'
+    | '/_authenticated/quotes/$quoteId'
     | '/_authenticated/settings/locations'
     | '/_authenticated/settings/permissions'
     | '/_authenticated/settings/shipping'
@@ -373,6 +462,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProductsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/price-lists': {
+      id: '/_authenticated/price-lists'
+      path: '/price-lists'
+      fullPath: '/price-lists'
+      preLoaderRoute: typeof AuthenticatedPriceListsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/pages': {
       id: '/_authenticated/pages'
       path: '/pages'
@@ -392,6 +488,13 @@ declare module '@tanstack/react-router' {
       path: '/media'
       fullPath: '/media'
       preLoaderRoute: typeof AuthenticatedMediaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/invoices': {
+      id: '/_authenticated/invoices'
+      path: '/invoices'
+      fullPath: '/invoices'
+      preLoaderRoute: typeof AuthenticatedInvoicesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/inventory': {
@@ -471,6 +574,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsLocationsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/quotes/$quoteId': {
+      id: '/_authenticated/quotes/$quoteId'
+      path: '/$quoteId'
+      fullPath: '/quotes/$quoteId'
+      preLoaderRoute: typeof AuthenticatedQuotesQuoteIdRouteImport
+      parentRoute: typeof AuthenticatedQuotesRoute
+    }
     '/_authenticated/products/new': {
       id: '/_authenticated/products/new'
       path: '/new'
@@ -492,12 +602,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrdersOrderIdRouteImport
       parentRoute: typeof AuthenticatedOrdersRoute
     }
+    '/_authenticated/invoices/$invoiceId': {
+      id: '/_authenticated/invoices/$invoiceId'
+      path: '/$invoiceId'
+      fullPath: '/invoices/$invoiceId'
+      preLoaderRoute: typeof AuthenticatedInvoicesInvoiceIdRouteImport
+      parentRoute: typeof AuthenticatedInvoicesRoute
+    }
+    '/_authenticated/gift-cards/$giftCardId': {
+      id: '/_authenticated/gift-cards/$giftCardId'
+      path: '/$giftCardId'
+      fullPath: '/gift-cards/$giftCardId'
+      preLoaderRoute: typeof AuthenticatedGiftCardsGiftCardIdRouteImport
+      parentRoute: typeof AuthenticatedGiftCardsRoute
+    }
     '/_authenticated/customers/$customerId': {
       id: '/_authenticated/customers/$customerId'
       path: '/$customerId'
       fullPath: '/customers/$customerId'
       preLoaderRoute: typeof AuthenticatedCustomersCustomerIdRouteImport
       parentRoute: typeof AuthenticatedCustomersRoute
+    }
+    '/_authenticated/companies/$companyId': {
+      id: '/_authenticated/companies/$companyId'
+      path: '/$companyId'
+      fullPath: '/companies/$companyId'
+      preLoaderRoute: typeof AuthenticatedCompaniesCompanyIdRouteImport
+      parentRoute: typeof AuthenticatedCompaniesRoute
     }
     '/_authenticated/collections/new': {
       id: '/_authenticated/collections/new'
@@ -513,8 +644,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCollectionsCollectionIdRouteImport
       parentRoute: typeof AuthenticatedCollectionsRoute
     }
+    '/_authenticated/blogs/$blogId': {
+      id: '/_authenticated/blogs/$blogId'
+      path: '/$blogId'
+      fullPath: '/blogs/$blogId'
+      preLoaderRoute: typeof AuthenticatedBlogsBlogIdRouteImport
+      parentRoute: typeof AuthenticatedBlogsRoute
+    }
   }
 }
+
+interface AuthenticatedBlogsRouteChildren {
+  AuthenticatedBlogsBlogIdRoute: typeof AuthenticatedBlogsBlogIdRoute
+}
+
+const AuthenticatedBlogsRouteChildren: AuthenticatedBlogsRouteChildren = {
+  AuthenticatedBlogsBlogIdRoute: AuthenticatedBlogsBlogIdRoute,
+}
+
+const AuthenticatedBlogsRouteWithChildren =
+  AuthenticatedBlogsRoute._addFileChildren(AuthenticatedBlogsRouteChildren)
 
 interface AuthenticatedCollectionsRouteChildren {
   AuthenticatedCollectionsCollectionIdRoute: typeof AuthenticatedCollectionsCollectionIdRoute
@@ -533,6 +682,20 @@ const AuthenticatedCollectionsRouteWithChildren =
     AuthenticatedCollectionsRouteChildren,
   )
 
+interface AuthenticatedCompaniesRouteChildren {
+  AuthenticatedCompaniesCompanyIdRoute: typeof AuthenticatedCompaniesCompanyIdRoute
+}
+
+const AuthenticatedCompaniesRouteChildren: AuthenticatedCompaniesRouteChildren =
+  {
+    AuthenticatedCompaniesCompanyIdRoute: AuthenticatedCompaniesCompanyIdRoute,
+  }
+
+const AuthenticatedCompaniesRouteWithChildren =
+  AuthenticatedCompaniesRoute._addFileChildren(
+    AuthenticatedCompaniesRouteChildren,
+  )
+
 interface AuthenticatedCustomersRouteChildren {
   AuthenticatedCustomersCustomerIdRoute: typeof AuthenticatedCustomersCustomerIdRoute
 }
@@ -546,6 +709,34 @@ const AuthenticatedCustomersRouteChildren: AuthenticatedCustomersRouteChildren =
 const AuthenticatedCustomersRouteWithChildren =
   AuthenticatedCustomersRoute._addFileChildren(
     AuthenticatedCustomersRouteChildren,
+  )
+
+interface AuthenticatedGiftCardsRouteChildren {
+  AuthenticatedGiftCardsGiftCardIdRoute: typeof AuthenticatedGiftCardsGiftCardIdRoute
+}
+
+const AuthenticatedGiftCardsRouteChildren: AuthenticatedGiftCardsRouteChildren =
+  {
+    AuthenticatedGiftCardsGiftCardIdRoute:
+      AuthenticatedGiftCardsGiftCardIdRoute,
+  }
+
+const AuthenticatedGiftCardsRouteWithChildren =
+  AuthenticatedGiftCardsRoute._addFileChildren(
+    AuthenticatedGiftCardsRouteChildren,
+  )
+
+interface AuthenticatedInvoicesRouteChildren {
+  AuthenticatedInvoicesInvoiceIdRoute: typeof AuthenticatedInvoicesInvoiceIdRoute
+}
+
+const AuthenticatedInvoicesRouteChildren: AuthenticatedInvoicesRouteChildren = {
+  AuthenticatedInvoicesInvoiceIdRoute: AuthenticatedInvoicesInvoiceIdRoute,
+}
+
+const AuthenticatedInvoicesRouteWithChildren =
+  AuthenticatedInvoicesRoute._addFileChildren(
+    AuthenticatedInvoicesRouteChildren,
   )
 
 interface AuthenticatedOrdersRouteChildren {
@@ -576,19 +767,32 @@ const AuthenticatedProductsRouteWithChildren =
     AuthenticatedProductsRouteChildren,
   )
 
+interface AuthenticatedQuotesRouteChildren {
+  AuthenticatedQuotesQuoteIdRoute: typeof AuthenticatedQuotesQuoteIdRoute
+}
+
+const AuthenticatedQuotesRouteChildren: AuthenticatedQuotesRouteChildren = {
+  AuthenticatedQuotesQuoteIdRoute: AuthenticatedQuotesQuoteIdRoute,
+}
+
+const AuthenticatedQuotesRouteWithChildren =
+  AuthenticatedQuotesRoute._addFileChildren(AuthenticatedQuotesRouteChildren)
+
 interface AuthenticatedRouteChildren {
-  AuthenticatedBlogsRoute: typeof AuthenticatedBlogsRoute
+  AuthenticatedBlogsRoute: typeof AuthenticatedBlogsRouteWithChildren
   AuthenticatedCollectionsRoute: typeof AuthenticatedCollectionsRouteWithChildren
-  AuthenticatedCompaniesRoute: typeof AuthenticatedCompaniesRoute
+  AuthenticatedCompaniesRoute: typeof AuthenticatedCompaniesRouteWithChildren
   AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRouteWithChildren
   AuthenticatedDiscountsRoute: typeof AuthenticatedDiscountsRoute
-  AuthenticatedGiftCardsRoute: typeof AuthenticatedGiftCardsRoute
+  AuthenticatedGiftCardsRoute: typeof AuthenticatedGiftCardsRouteWithChildren
   AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
+  AuthenticatedInvoicesRoute: typeof AuthenticatedInvoicesRouteWithChildren
   AuthenticatedMediaRoute: typeof AuthenticatedMediaRoute
   AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRouteWithChildren
   AuthenticatedPagesRoute: typeof AuthenticatedPagesRoute
+  AuthenticatedPriceListsRoute: typeof AuthenticatedPriceListsRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRouteWithChildren
-  AuthenticatedQuotesRoute: typeof AuthenticatedQuotesRoute
+  AuthenticatedQuotesRoute: typeof AuthenticatedQuotesRouteWithChildren
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedSettingsLocationsRoute: typeof AuthenticatedSettingsLocationsRoute
   AuthenticatedSettingsPermissionsRoute: typeof AuthenticatedSettingsPermissionsRoute
@@ -596,18 +800,20 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedBlogsRoute: AuthenticatedBlogsRoute,
+  AuthenticatedBlogsRoute: AuthenticatedBlogsRouteWithChildren,
   AuthenticatedCollectionsRoute: AuthenticatedCollectionsRouteWithChildren,
-  AuthenticatedCompaniesRoute: AuthenticatedCompaniesRoute,
+  AuthenticatedCompaniesRoute: AuthenticatedCompaniesRouteWithChildren,
   AuthenticatedCustomersRoute: AuthenticatedCustomersRouteWithChildren,
   AuthenticatedDiscountsRoute: AuthenticatedDiscountsRoute,
-  AuthenticatedGiftCardsRoute: AuthenticatedGiftCardsRoute,
+  AuthenticatedGiftCardsRoute: AuthenticatedGiftCardsRouteWithChildren,
   AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
+  AuthenticatedInvoicesRoute: AuthenticatedInvoicesRouteWithChildren,
   AuthenticatedMediaRoute: AuthenticatedMediaRoute,
   AuthenticatedOrdersRoute: AuthenticatedOrdersRouteWithChildren,
   AuthenticatedPagesRoute: AuthenticatedPagesRoute,
+  AuthenticatedPriceListsRoute: AuthenticatedPriceListsRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRouteWithChildren,
-  AuthenticatedQuotesRoute: AuthenticatedQuotesRoute,
+  AuthenticatedQuotesRoute: AuthenticatedQuotesRouteWithChildren,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedSettingsLocationsRoute: AuthenticatedSettingsLocationsRoute,
   AuthenticatedSettingsPermissionsRoute: AuthenticatedSettingsPermissionsRoute,

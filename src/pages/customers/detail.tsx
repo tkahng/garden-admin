@@ -8,10 +8,141 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, X } from "lucide-react"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { ArrowLeft, X, Plus, ChevronsUpDown } from "lucide-react"
 import { toast } from "sonner"
 
+type Role = components["schemas"]["RoleResponse"]
 type User = components["schemas"]["AdminUserResponse"]
+
+// ─── Roles card ───────────────────────────────────────────────────────────────
+
+function RolesCard({ userId, assignedRoleNames }: { userId: string; assignedRoleNames: string[] }) {
+  const qc = useQueryClient()
+  const [open, setOpen] = useState(false)
+
+  const { data: allRoles } = useQuery({
+    queryKey: ["admin", "iam", "roles"],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/iam/roles", {})
+      if (error) throw error
+      return (data as { data?: Role[] } | undefined)?.data ?? []
+    },
+  })
+
+  const assignMutation = useMutation({
+    mutationFn: async (roleName: string) => {
+      const { error } = await apiClient.POST("/api/v1/admin/users/{id}/roles", {
+        params: { path: { id: userId } },
+        body: { roleName },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Role assigned")
+      void qc.invalidateQueries({ queryKey: ["admin", "users", userId] })
+    },
+    onError: () => toast.error("Failed to assign role"),
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: async (roleName: string) => {
+      const { error } = await apiClient.DELETE("/api/v1/admin/users/{id}/roles/{roleName}", {
+        params: { path: { id: userId, roleName } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Role removed")
+      void qc.invalidateQueries({ queryKey: ["admin", "users", userId] })
+    },
+    onError: () => toast.error("Failed to remove role"),
+  })
+
+  const assignedSet = new Set(assignedRoleNames)
+  const available = (allRoles ?? []).filter((r) => r.name && !assignedSet.has(r.name))
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">Roles</CardTitle>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                disabled={available.length === 0}
+              >
+                <Plus className="size-3 mr-1" />
+                Add role
+                <ChevronsUpDown className="size-3 ml-1 text-muted-foreground" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-0" align="end">
+              <Command>
+                <CommandInput placeholder="Search roles…" />
+                <CommandList>
+                  <CommandEmpty>No roles available.</CommandEmpty>
+                  <CommandGroup>
+                    {available.map((r) => (
+                      <CommandItem
+                        key={r.id}
+                        value={r.name ?? ""}
+                        onSelect={() => {
+                          assignMutation.mutate(r.name!)
+                          setOpen(false)
+                        }}
+                      >
+                        <span className="font-medium text-sm">{r.name}</span>
+                        {r.description && (
+                          <span className="ml-2 text-xs text-muted-foreground truncate">{r.description}</span>
+                        )}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-wrap gap-1.5 min-h-8">
+          {assignedRoleNames.length === 0 && (
+            <span className="text-sm text-muted-foreground">No roles assigned.</span>
+          )}
+          {assignedRoleNames.map((name) => (
+            <Badge key={name} variant="secondary" className="gap-1 pr-1 font-normal">
+              {name}
+              <button
+                onClick={() => removeMutation.mutate(name)}
+                disabled={removeMutation.isPending}
+                className="ml-0.5 rounded-sm opacity-60 hover:opacity-100 hover:bg-muted transition-opacity"
+                aria-label={`Remove ${name}`}
+              >
+                <X className="size-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 export function CustomerDetailPage({ id }: { id: string }) {
   const qc = useQueryClient()
@@ -170,16 +301,6 @@ export function CustomerDetailPage({ id }: { id: string }) {
                 </span>
               </div>
             ))}
-            {(user?.roles?.length ?? 0) > 0 && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Roles</span>
-                <div className="flex flex-wrap gap-1 justify-end">
-                  {user!.roles!.map((r) => (
-                    <Badge key={r} variant="outline" className="text-xs">{r}</Badge>
-                  ))}
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -222,6 +343,9 @@ export function CustomerDetailPage({ id }: { id: string }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Roles */}
+      <RolesCard userId={id} assignedRoleNames={user?.roles ?? []} />
 
       {/* Admin notes */}
       <Card>
