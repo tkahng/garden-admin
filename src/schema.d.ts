@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/guest-cart/items/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateItem_1"];
+        post?: never;
+        delete: operations["removeItem_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/companies/{id}": {
         parameters: {
             query?: never;
@@ -92,9 +108,9 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["updateItem_1"];
+        put: operations["updateItem_2"];
         post?: never;
-        delete: operations["removeItem_1"];
+        delete: operations["removeItem_2"];
         options?: never;
         head?: never;
         patch?: never;
@@ -236,9 +252,9 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["updateItem_2"];
+        put: operations["updateItem_3"];
         post?: never;
-        delete: operations["removeItem_2"];
+        delete: operations["removeItem_3"];
         options?: never;
         head?: never;
         patch?: never;
@@ -628,6 +644,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/products/{productId}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_1"];
+        put?: never;
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/invitations/{token}/accept": {
         parameters: {
             query?: never;
@@ -644,6 +676,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/guest-cart/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["addItem_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/companies": {
         parameters: {
             query?: never;
@@ -651,9 +699,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_1"];
+        get: operations["list_2"];
         put?: never;
-        post: operations["create"];
+        post: operations["create_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -708,6 +756,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checkout/guest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["guestCheckout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cart/items": {
         parameters: {
             query?: never;
@@ -717,7 +781,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["addItem_1"];
+        post: operations["addItem_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -868,6 +932,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users/bulk/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["bulkSuspend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/bulk/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["bulkReactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/shipping/zones": {
         parameters: {
             query?: never;
@@ -925,7 +1021,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["addItem_2"];
+        post: operations["addItem_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -971,9 +1067,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_2"];
+        get: operations["list_3"];
         put?: never;
-        post: operations["create_1"];
+        post: operations["create_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1044,6 +1140,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/products/bulk/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["bulkDelete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/price-lists": {
         parameters: {
             query?: never;
@@ -1053,22 +1165,6 @@ export interface paths {
         };
         get: operations["listByCompany"];
         put?: never;
-        post: operations["create_2"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/admin/pages": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["list_3"];
-        put?: never;
         post: operations["create_3"];
         delete?: never;
         options?: never;
@@ -1076,7 +1172,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/orders/{orderId}/fulfillments": {
+    "/api/v1/admin/pages": {
         parameters: {
             query?: never;
             header?: never;
@@ -1092,7 +1188,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/admin/orders/{orderId}/events": {
+    "/api/v1/admin/orders/{orderId}/fulfillments": {
         parameters: {
             query?: never;
             header?: never;
@@ -1100,6 +1196,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["list_5"];
+        put?: never;
+        post: operations["create_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{orderId}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_6"];
         put?: never;
         post: operations["addNote"];
         delete?: never;
@@ -1124,6 +1236,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/orders/bulk/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["bulkCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/locations": {
         parameters: {
             query?: never;
@@ -1131,9 +1259,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
-        post: operations["create_5"];
+        post: operations["create_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1259,9 +1387,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_7"];
+        get: operations["list_8"];
         put?: never;
-        post: operations["create_6"];
+        post: operations["create_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1291,9 +1419,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_8"];
+        get: operations["list_9"];
         put?: never;
-        post: operations["create_7"];
+        post: operations["create_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1309,7 +1437,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["create_8"];
+        post: operations["create_9"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1323,9 +1451,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_9"];
+        get: operations["list_10"];
         put?: never;
-        post: operations["create_9"];
+        post: operations["create_10"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1419,10 +1547,26 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_10"];
+        get: operations["list_11"];
         put?: never;
         post: operations["upload"];
-        delete: operations["bulkDelete"];
+        delete: operations["bulkDelete_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/wishlist/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["addItem_4"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1442,6 +1586,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reviews/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateStatus"];
         trace?: never;
     };
     "/api/v1/admin/products/{id}": {
@@ -1538,6 +1698,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["reorderImages"];
+        trace?: never;
+    };
+    "/api/v1/admin/products/bulk/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["bulkChangeStatus"];
         trace?: never;
     };
     "/api/v1/admin/pages/{id}/status": {
@@ -1780,6 +1956,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/quotes/{id}": {
         parameters: {
             query?: never;
@@ -1851,7 +2043,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_11"];
+        get: operations["list_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1876,6 +2068,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/products/{handle}/related": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRelated"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pages": {
         parameters: {
             query?: never;
@@ -1883,7 +2091,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_12"];
+        get: operations["list_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1919,6 +2127,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/guest-cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCart_1"];
+        put?: never;
+        post?: never;
+        delete: operations["abandonCart"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1995,7 +2219,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_13"];
+        get: operations["list_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2059,10 +2283,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getCart_1"];
+        get: operations["getCart_2"];
         put?: never;
         post?: never;
-        delete: operations["abandonCart"];
+        delete: operations["abandonCart_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2148,6 +2372,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/check-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["checkEmail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/users": {
         parameters: {
             query?: never;
@@ -2156,6 +2396,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["listUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["exportCsv"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2180,6 +2436,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/stats/top-products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTopProducts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stats/top-customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTopCustomers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stats/time-series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTimeSeries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/quotes": {
         parameters: {
             query?: never;
@@ -2187,7 +2491,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_14"];
+        get: operations["list_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2260,6 +2564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/orders/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["exportCsv_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/invoices": {
         parameters: {
             query?: never;
@@ -2267,7 +2587,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2348,6 +2668,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getUsages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/account/wishlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getWishlist"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2484,51 +2820,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/account/wishlist/items/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["removeItem_4"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        Permission: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            name?: string;
-            resource?: string;
-            action?: string;
-        };
-        Role: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            name?: string;
-            description?: string;
-            permissions?: components["schemas"]["Permission"][];
-        };
-        User: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            email?: string;
-            firstName?: string;
-            lastName?: string;
-            phone?: string;
-            /** @enum {string} */
-            status?: "UNVERIFIED" | "ACTIVE" | "SUSPENDED";
-            /** Format: date-time */
-            emailVerifiedAt?: string;
-            adminNotes?: string;
-            tags?: string[];
-            roles?: components["schemas"]["Role"][];
-        };
         ApiResponseOrderResponse: {
             data?: components["schemas"]["OrderResponse"];
             meta?: unknown;
@@ -2555,6 +2866,7 @@ export interface components {
             id?: string;
             /** Format: uuid */
             userId?: string;
+            guestEmail?: string;
             /** @enum {string} */
             status?: "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "INVOICED";
             totalAmount?: number;
@@ -2568,7 +2880,11 @@ export interface components {
             giftCardAmount?: number;
             adminNotes?: string;
             shippingAddress?: string;
+            shippingCost?: number;
+            /** Format: uuid */
+            shippingRateId?: string;
             items?: components["schemas"]["OrderItemResponse"][];
+            taxAmount?: number;
             /** Format: date-time */
             createdAt?: string;
         };
@@ -2598,6 +2914,40 @@ export interface components {
             /** @enum {string} */
             status?: "ACTIVE" | "SUBMITTED";
             items?: components["schemas"]["QuoteCartItemResponse"][];
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        UpdateCartItemRequest: {
+            /** Format: int32 */
+            quantity?: number;
+        };
+        ApiResponseCartResponse: {
+            data?: components["schemas"]["CartResponse"];
+            meta?: unknown;
+        };
+        CartItemProductInfo: {
+            /** Format: uuid */
+            productId?: string;
+            productTitle?: string;
+            variantTitle?: string;
+            imageUrl?: string;
+        };
+        CartItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            variantId?: string;
+            /** Format: int32 */
+            quantity?: number;
+            unitPrice?: number;
+            product?: components["schemas"]["CartItemProductInfo"];
+        };
+        CartResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            status?: "ACTIVE" | "CHECKED_OUT" | "ABANDONED";
+            items?: components["schemas"]["CartItemResponse"][];
             /** Format: date-time */
             createdAt?: string;
         };
@@ -2657,40 +3007,6 @@ export interface components {
         UpdateMemberRoleRequest: {
             /** @enum {string} */
             role: "OWNER" | "MANAGER" | "MEMBER";
-        };
-        UpdateCartItemRequest: {
-            /** Format: int32 */
-            quantity?: number;
-        };
-        ApiResponseCartResponse: {
-            data?: components["schemas"]["CartResponse"];
-            meta?: unknown;
-        };
-        CartItemProductInfo: {
-            /** Format: uuid */
-            productId?: string;
-            productTitle?: string;
-            variantTitle?: string;
-            imageUrl?: string;
-        };
-        CartItemResponse: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: uuid */
-            variantId?: string;
-            /** Format: int32 */
-            quantity?: number;
-            unitPrice?: number;
-            product?: components["schemas"]["CartItemProductInfo"];
-        };
-        CartResponse: {
-            /** Format: uuid */
-            id?: string;
-            /** @enum {string} */
-            status?: "ACTIVE" | "CHECKED_OUT" | "ABANDONED";
-            items?: components["schemas"]["CartItemResponse"][];
-            /** Format: date-time */
-            createdAt?: string;
         };
         UpdateUserRequest: {
             firstName?: string;
@@ -3240,6 +3556,34 @@ export interface components {
             quantity?: number;
             note?: string;
         };
+        CreateReviewRequest: {
+            /** Format: int32 */
+            rating: number;
+            title?: string;
+            body?: string;
+        };
+        ApiResponseReviewResponse: {
+            data?: components["schemas"]["ReviewResponse"];
+            meta?: unknown;
+        };
+        ReviewResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            productId?: string;
+            /** Format: uuid */
+            userId?: string;
+            reviewerName?: string;
+            /** Format: int32 */
+            rating?: number;
+            title?: string;
+            body?: string;
+            verifiedPurchase?: boolean;
+            /** @enum {string} */
+            status?: "PUBLISHED" | "HIDDEN";
+            /** Format: date-time */
+            createdAt?: string;
+        };
         ApiResponseInvitationResponse: {
             data?: components["schemas"]["InvitationResponse"];
             meta?: unknown;
@@ -3264,6 +3608,12 @@ export interface components {
             expiresAt?: string;
             /** Format: date-time */
             createdAt?: string;
+        };
+        AddCartItemRequest: {
+            /** Format: uuid */
+            variantId: string;
+            /** Format: int32 */
+            quantity?: number;
         };
         CreateCompanyRequest: {
             name: string;
@@ -3291,6 +3641,8 @@ export interface components {
         CheckoutRequest: {
             discountCode?: string;
             giftCardCode?: string;
+            /** Format: uuid */
+            shippingRateId?: string;
         };
         ApiResponseCheckoutResponse: {
             data?: components["schemas"]["CheckoutResponse"];
@@ -3301,11 +3653,24 @@ export interface components {
             /** Format: uuid */
             orderId?: string;
         };
-        AddCartItemRequest: {
+        GuestAddressRequest: {
+            firstName: string;
+            lastName: string;
+            address1: string;
+            address2?: string;
+            city: string;
+            province?: string;
+            zip: string;
+            country: string;
+        };
+        GuestCheckoutRequest: {
+            /** Format: email */
+            email: string;
+            shippingAddress: components["schemas"]["GuestAddressRequest"];
             /** Format: uuid */
-            variantId: string;
-            /** Format: int32 */
-            quantity?: number;
+            shippingRateId: string;
+            discountCode?: string;
+            giftCardCode?: string;
         };
         UpdatePasswordRequest: {
             currentPassword: string;
@@ -3343,6 +3708,9 @@ export interface components {
         };
         AssignRoleRequest: {
             roleName: string;
+        };
+        BulkIdsRequest: {
+            ids: string[];
         };
         CreateShippingZoneRequest: {
             name: string;
@@ -3385,6 +3753,8 @@ export interface components {
             vendor?: string;
             productType?: string;
             tags?: string[];
+            metaTitle?: string;
+            metaDescription?: string;
         };
         AdminProductResponse: {
             /** Format: uuid */
@@ -3402,6 +3772,8 @@ export interface components {
             options?: components["schemas"]["ProductOptionResponse"][];
             images?: components["schemas"]["ProductImageResponse"][];
             tags?: string[];
+            metaTitle?: string;
+            metaDescription?: string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -3726,6 +4098,8 @@ export interface components {
             disjunctive?: boolean;
             /** Format: uuid */
             featuredImageId?: string;
+            metaTitle?: string;
+            metaDescription?: string;
         };
         AdminCollectionResponse: {
             /** Format: uuid */
@@ -3743,6 +4117,8 @@ export interface components {
             /** Format: int64 */
             productCount?: number;
             rules?: components["schemas"]["CollectionRuleResponse"][];
+            metaTitle?: string;
+            metaDescription?: string;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -3841,6 +4217,33 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        AddWishlistItemRequest: {
+            /** Format: uuid */
+            productId: string;
+        };
+        ApiResponseWishlistResponse: {
+            data?: components["schemas"]["WishlistResponse"];
+            meta?: unknown;
+        };
+        WishlistItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            productId?: string;
+            title?: string;
+            handle?: string;
+            featuredImageUrl?: string;
+            priceMin?: number;
+        };
+        WishlistResponse: {
+            /** Format: uuid */
+            id?: string;
+            items?: components["schemas"]["WishlistItemResponse"][];
+        };
+        UpdateReviewStatusRequest: {
+            /** @enum {string} */
+            status: "PUBLISHED" | "HIDDEN";
+        };
         UpdateProductRequest: {
             title?: string;
             description?: string;
@@ -3850,6 +4253,8 @@ export interface components {
             /** Format: uuid */
             featuredImageId?: string;
             tags?: string[];
+            metaTitle?: string;
+            metaDescription?: string;
         };
         UpdateVariantRequest: {
             price?: number;
@@ -3880,6 +4285,11 @@ export interface components {
             id?: string;
             /** Format: int32 */
             position?: number;
+        };
+        BulkStatusRequest: {
+            ids: string[];
+            /** @enum {string} */
+            status: "DRAFT" | "ACTIVE" | "ARCHIVED";
         };
         PageStatusRequest: {
             /** @enum {string} */
@@ -3918,6 +4328,8 @@ export interface components {
             disjunctive?: boolean;
             /** Format: uuid */
             featuredImageId?: string;
+            metaTitle?: string;
+            metaDescription?: string;
         };
         CollectionStatusRequest: {
             /** @enum {string} */
@@ -3985,20 +4397,31 @@ export interface components {
             discountedAmount?: number;
             message?: string;
         };
-        ApiResponsePagedResultQuoteRequestResponse: {
-            data?: components["schemas"]["PagedResultQuoteRequestResponse"];
+        ApiResponseSearchResponse: {
+            data?: components["schemas"]["SearchResponse"];
             meta?: unknown;
         };
-        PagedResultQuoteRequestResponse: {
-            content?: components["schemas"]["QuoteRequestResponse"][];
+        CollectionSummaryResponse: {
+            /** Format: uuid */
+            id?: string;
+            title?: string;
+            handle?: string;
+            featuredImageUrl?: string;
+        };
+        PagedResultCollectionSummaryResponse: {
+            content?: components["schemas"]["CollectionSummaryResponse"][];
             meta?: components["schemas"]["PageMeta"];
-        };
-        ApiResponsePagedResultProductSummaryResponse: {
-            data?: components["schemas"]["PagedResultProductSummaryResponse"];
-            meta?: unknown;
         };
         PagedResultProductSummaryResponse: {
             content?: components["schemas"]["ProductSummaryResponse"][];
+            meta?: components["schemas"]["PageMeta"];
+        };
+        PagedResultSearchArticleResult: {
+            content?: components["schemas"]["SearchArticleResult"][];
+            meta?: components["schemas"]["PageMeta"];
+        };
+        PagedResultSearchPageResult: {
+            content?: components["schemas"]["SearchPageResult"][];
             meta?: components["schemas"]["PageMeta"];
         };
         ProductSummaryResponse: {
@@ -4012,6 +4435,52 @@ export interface components {
             priceMax?: number;
             compareAtPriceMin?: number;
             compareAtPriceMax?: number;
+        };
+        SearchArticleResult: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            blogId?: string;
+            blogHandle?: string;
+            title?: string;
+            handle?: string;
+            excerpt?: string;
+            /** Format: date-time */
+            publishedAt?: string;
+        };
+        SearchPageResult: {
+            /** Format: uuid */
+            id?: string;
+            title?: string;
+            handle?: string;
+            /** Format: date-time */
+            publishedAt?: string;
+        };
+        SearchResponse: {
+            products?: components["schemas"]["PagedResultProductSummaryResponse"];
+            collections?: components["schemas"]["PagedResultCollectionSummaryResponse"];
+            articles?: components["schemas"]["PagedResultSearchArticleResult"];
+            pages?: components["schemas"]["PagedResultSearchPageResult"];
+        };
+        ApiResponsePagedResultQuoteRequestResponse: {
+            data?: components["schemas"]["PagedResultQuoteRequestResponse"];
+            meta?: unknown;
+        };
+        PagedResultQuoteRequestResponse: {
+            content?: components["schemas"]["QuoteRequestResponse"][];
+            meta?: components["schemas"]["PageMeta"];
+        };
+        ApiResponsePagedResultProductSummaryResponse: {
+            data?: components["schemas"]["PagedResultProductSummaryResponse"];
+            meta?: unknown;
+        };
+        ApiResponsePagedResultReviewResponse: {
+            data?: components["schemas"]["PagedResultReviewResponse"];
+            meta?: unknown;
+        };
+        PagedResultReviewResponse: {
+            content?: components["schemas"]["ReviewResponse"][];
+            meta?: components["schemas"]["PageMeta"];
         };
         ApiResponseProductDetailResponse: {
             data?: components["schemas"]["ProductDetailResponse"];
@@ -4028,6 +4497,9 @@ export interface components {
             variants?: components["schemas"]["ProductVariantResponse"][];
             images?: components["schemas"]["ProductImageResponse"][];
             tags?: string[];
+            reviewSummary?: components["schemas"]["ReviewSummaryResponse"];
+            metaTitle?: string;
+            metaDescription?: string;
         };
         ProductVariantResponse: {
             /** Format: uuid */
@@ -4043,6 +4515,15 @@ export interface components {
             inventoryPolicy?: "DENY" | "CONTINUE";
             /** Format: int32 */
             leadTimeDays?: number;
+        };
+        ReviewSummaryResponse: {
+            averageRating?: number;
+            /** Format: int64 */
+            reviewCount?: number;
+        };
+        ApiResponseListProductSummaryResponse: {
+            data?: components["schemas"]["ProductSummaryResponse"][];
+            meta?: unknown;
         };
         ApiResponsePagedResultPageResponse: {
             data?: components["schemas"]["PagedResultPageResponse"];
@@ -4124,17 +4605,6 @@ export interface components {
             data?: components["schemas"]["PagedResultCollectionSummaryResponse"];
             meta?: unknown;
         };
-        CollectionSummaryResponse: {
-            /** Format: uuid */
-            id?: string;
-            title?: string;
-            handle?: string;
-            featuredImageUrl?: string;
-        };
-        PagedResultCollectionSummaryResponse: {
-            content?: components["schemas"]["CollectionSummaryResponse"][];
-            meta?: components["schemas"]["PageMeta"];
-        };
         ApiResponseCollectionDetailResponse: {
             data?: components["schemas"]["CollectionDetailResponse"];
             meta?: unknown;
@@ -4146,6 +4616,8 @@ export interface components {
             handle?: string;
             description?: string;
             featuredImageUrl?: string;
+            metaTitle?: string;
+            metaDescription?: string;
         };
         ApiResponsePagedResultCollectionProductResponse: {
             data?: components["schemas"]["PagedResultCollectionProductResponse"];
@@ -4216,6 +4688,10 @@ export interface components {
             data?: components["schemas"]["ArticleResponse"];
             meta?: unknown;
         };
+        ApiResponseBoolean: {
+            data?: boolean;
+            meta?: unknown;
+        };
         ApiResponsePagedResultAdminUserResponse: {
             data?: components["schemas"]["PagedResultAdminUserResponse"];
             meta?: unknown;
@@ -4239,6 +4715,43 @@ export interface components {
             averageOrderValue?: number;
             /** Format: int64 */
             newCustomerCount?: number;
+        };
+        ApiResponseListTopProductEntry: {
+            data?: components["schemas"]["TopProductEntry"][];
+            meta?: unknown;
+        };
+        TopProductEntry: {
+            /** Format: uuid */
+            productId?: string;
+            title?: string;
+            handle?: string;
+            /** Format: int64 */
+            orderCount?: number;
+            revenue?: number;
+        };
+        ApiResponseListTopCustomerEntry: {
+            data?: components["schemas"]["TopCustomerEntry"][];
+            meta?: unknown;
+        };
+        TopCustomerEntry: {
+            /** Format: uuid */
+            userId?: string;
+            email?: string;
+            firstName?: string;
+            lastName?: string;
+            /** Format: int64 */
+            orderCount?: number;
+            revenue?: number;
+        };
+        ApiResponseListTimeSeriesPoint: {
+            data?: components["schemas"]["TimeSeriesPoint"][];
+            meta?: unknown;
+        };
+        TimeSeriesPoint: {
+            date?: string;
+            /** Format: int64 */
+            orderCount?: number;
+            revenue?: number;
         };
         ApiResponsePagedResultShippingZoneResponse: {
             data?: components["schemas"]["PagedResultShippingZoneResponse"];
@@ -4425,9 +4938,7 @@ export type $defs = Record<string, never>;
 export interface operations {
     cancelOrder: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -4449,9 +4960,7 @@ export interface operations {
     };
     updateItem: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 itemId: string;
@@ -4477,9 +4986,7 @@ export interface operations {
     };
     removeItem: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 itemId: string;
@@ -4499,11 +5006,61 @@ export interface operations {
             };
         };
     };
+    updateItem_1: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Guest-Session": string;
+            };
+            path: {
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCartItemRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCartResponse"];
+                };
+            };
+        };
+    };
+    removeItem_1: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Guest-Session": string;
+            };
+            path: {
+                itemId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCartResponse"];
+                };
+            };
+        };
+    };
     get: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -4525,9 +5082,7 @@ export interface operations {
     };
     update: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -4553,9 +5108,7 @@ export interface operations {
     };
     updateSpendingLimit: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -4582,9 +5135,7 @@ export interface operations {
     };
     updateMemberRole: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -4609,11 +5160,9 @@ export interface operations {
             };
         };
     };
-    updateItem_1: {
+    updateItem_2: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 itemId: string;
@@ -4637,11 +5186,9 @@ export interface operations {
             };
         };
     };
-    removeItem_1: {
+    removeItem_2: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 itemId: string;
@@ -4966,7 +5513,7 @@ export interface operations {
             };
         };
     };
-    updateItem_2: {
+    updateItem_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -4993,7 +5540,7 @@ export interface operations {
             };
         };
     };
-    removeItem_2: {
+    removeItem_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -5711,9 +6258,7 @@ export interface operations {
     };
     getAccount: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -5733,9 +6278,7 @@ export interface operations {
     };
     updateAccount: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -5759,9 +6302,7 @@ export interface operations {
     };
     updateAddress: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -5787,9 +6328,7 @@ export interface operations {
     };
     deleteAddress: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -5833,9 +6372,7 @@ export interface operations {
     };
     refundOrder: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -5857,8 +6394,7 @@ export interface operations {
     };
     list: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
+            query?: {
                 page?: number;
                 size?: number;
             };
@@ -5881,9 +6417,7 @@ export interface operations {
     };
     submit: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -5907,9 +6441,7 @@ export interface operations {
     };
     reject: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -5931,9 +6463,7 @@ export interface operations {
     };
     rejectSpend: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -5955,9 +6485,7 @@ export interface operations {
     };
     cancel: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -5979,9 +6507,7 @@ export interface operations {
     };
     approveSpend: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -6003,9 +6529,7 @@ export interface operations {
     };
     accept: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -6027,9 +6551,7 @@ export interface operations {
     };
     addItem: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -6051,11 +6573,60 @@ export interface operations {
             };
         };
     };
+    list_1: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePagedResultReviewResponse"];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseReviewResponse"];
+                };
+            };
+        };
+    };
     accept_1: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 token: string;
@@ -6075,11 +6646,35 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    addItem_1: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
+            query?: never;
+            header: {
+                "X-Guest-Session": string;
             };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddCartItemRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCartResponse"];
+                };
+            };
+        };
+    };
+    list_2: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -6097,11 +6692,9 @@ export interface operations {
             };
         };
     };
-    create: {
+    create_1: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -6125,9 +6718,7 @@ export interface operations {
     };
     listMembers: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -6149,9 +6740,7 @@ export interface operations {
     };
     addMember: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -6177,9 +6766,7 @@ export interface operations {
     };
     listInvitations: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -6201,9 +6788,7 @@ export interface operations {
     };
     invite: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -6229,9 +6814,7 @@ export interface operations {
     };
     checkout: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -6253,11 +6836,35 @@ export interface operations {
             };
         };
     };
-    addItem_1: {
+    guestCheckout: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
+            query?: never;
+            header: {
+                "X-Guest-Session": string;
             };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuestCheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCheckoutResponse"];
+                };
+            };
+        };
+    };
+    addItem_2: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -6281,9 +6888,7 @@ export interface operations {
     };
     updatePassword: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -6489,6 +7094,50 @@ export interface operations {
             };
         };
     };
+    bulkSuspend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    bulkReactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listZones: {
         parameters: {
             query?: {
@@ -6610,7 +7259,7 @@ export interface operations {
             };
         };
     };
-    addItem_2: {
+    addItem_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -6684,7 +7333,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_3: {
         parameters: {
             query?: {
                 status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
@@ -6711,7 +7360,7 @@ export interface operations {
             };
         };
     };
-    create_1: {
+    create_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -6840,6 +7489,28 @@ export interface operations {
             };
         };
     };
+    bulkDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listByCompany: {
         parameters: {
             query: {
@@ -6862,7 +7533,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -6886,7 +7557,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query?: {
                 page?: number;
@@ -6913,7 +7584,7 @@ export interface operations {
             };
         };
     };
-    create_3: {
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -6937,7 +7608,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -6959,11 +7630,9 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_5: {
         parameters: {
-            query: {
-                admin: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 orderId: string;
@@ -6987,7 +7656,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -7011,9 +7680,7 @@ export interface operations {
     };
     addNote: {
         parameters: {
-            query: {
-                admin: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 orderId: string;
@@ -7059,7 +7726,29 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    bulkCancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    list_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -7079,7 +7768,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -7295,7 +7984,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_8: {
         parameters: {
             query?: {
                 isActive?: boolean;
@@ -7320,7 +8009,7 @@ export interface operations {
             };
         };
     };
-    create_6: {
+    create_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -7392,7 +8081,7 @@ export interface operations {
             };
         };
     };
-    list_8: {
+    list_9: {
         parameters: {
             query?: {
                 type?: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_SHIPPING";
@@ -7418,7 +8107,7 @@ export interface operations {
             };
         };
     };
-    create_7: {
+    create_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -7442,7 +8131,7 @@ export interface operations {
             };
         };
     };
-    create_8: {
+    create_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -7466,7 +8155,7 @@ export interface operations {
             };
         };
     };
-    list_9: {
+    list_10: {
         parameters: {
             query?: {
                 collectionType?: "MANUAL" | "AUTOMATED";
@@ -7492,7 +8181,7 @@ export interface operations {
             };
         };
     };
-    create_9: {
+    create_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -7748,7 +8437,7 @@ export interface operations {
             };
         };
     };
-    list_10: {
+    list_11: {
         parameters: {
             query?: {
                 contentType?: string;
@@ -7802,7 +8491,7 @@ export interface operations {
             };
         };
     };
-    bulkDelete: {
+    bulkDelete_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -7824,11 +8513,33 @@ export interface operations {
             };
         };
     };
+    addItem_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddWishlistItemRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseWishlistResponse"];
+                };
+            };
+        };
+    };
     listAddresses: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -7848,9 +8559,7 @@ export interface operations {
     };
     createAddress: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -7868,6 +8577,32 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseAddressResponse"];
+                };
+            };
+        };
+    };
+    updateStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReviewStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseReviewResponse"];
                 };
             };
         };
@@ -8124,6 +8859,28 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ImagePositionItem"][];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    bulkChangeStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkStatusRequest"];
             };
         };
         responses: {
@@ -8549,8 +9306,7 @@ export interface operations {
     };
     listOrders: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
+            query?: {
                 page?: number;
                 size?: number;
             };
@@ -8573,9 +9329,7 @@ export interface operations {
     };
     getOrder_1: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -8640,11 +9394,34 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    search: {
         parameters: {
             query: {
-                user: components["schemas"]["User"];
+                q: string;
+                types?: string[];
+                page?: number;
+                size?: number;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseSearchResponse"];
+                };
+            };
+        };
+    };
+    get_6: {
+        parameters: {
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -8666,9 +9443,7 @@ export interface operations {
     };
     downloadPdf: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -8690,8 +9465,7 @@ export interface operations {
     };
     listPendingApprovals: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
+            query?: {
                 page?: number;
                 size?: number;
             };
@@ -8714,9 +9488,7 @@ export interface operations {
     };
     getCart: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -8736,9 +9508,7 @@ export interface operations {
     };
     clearCart: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -8754,7 +9524,7 @@ export interface operations {
             };
         };
     };
-    list_11: {
+    list_12: {
         parameters: {
             query?: {
                 titleContains?: string;
@@ -8802,7 +9572,31 @@ export interface operations {
             };
         };
     };
-    list_12: {
+    getRelated: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                handle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListProductSummaryResponse"];
+                };
+            };
+        };
+    };
+    list_13: {
         parameters: {
             query?: {
                 page?: number;
@@ -8870,10 +9664,51 @@ export interface operations {
             };
         };
     };
+    getCart_1: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Guest-Session": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCartResponse"];
+                };
+            };
+        };
+    };
+    abandonCart: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Guest-Session": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     resolvePrice: {
         parameters: {
             query: {
-                user: components["schemas"]["User"];
                 variantId: string;
                 qty?: number;
             };
@@ -8898,9 +9733,7 @@ export interface operations {
     };
     listPriceLists: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -8922,9 +9755,7 @@ export interface operations {
     };
     listPriceListEntries: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -8947,9 +9778,7 @@ export interface operations {
     };
     listInvoices: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -8969,7 +9798,7 @@ export interface operations {
             };
         };
     };
-    list_13: {
+    list_14: {
         parameters: {
             query?: {
                 page?: number;
@@ -9042,7 +9871,6 @@ export interface operations {
     checkoutReturn: {
         parameters: {
             query: {
-                user: components["schemas"]["User"];
                 session_id: string;
             };
             header?: never;
@@ -9062,11 +9890,9 @@ export interface operations {
             };
         };
     };
-    getCart_1: {
+    getCart_2: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -9084,11 +9910,9 @@ export interface operations {
             };
         };
     };
-    abandonCart: {
+    abandonCart_1: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -9220,6 +10044,28 @@ export interface operations {
             };
         };
     };
+    checkEmail: {
+        parameters: {
+            query: {
+                email: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBoolean"];
+                };
+            };
+        };
+    };
     listUsers: {
         parameters: {
             query?: {
@@ -9241,6 +10087,29 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponsePagedResultAdminUserResponse"];
+                };
+            };
+        };
+    };
+    exportCsv: {
+        parameters: {
+            query?: {
+                status?: "UNVERIFIED" | "ACTIVE" | "SUSPENDED";
+                email?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
                 };
             };
         };
@@ -9268,7 +10137,78 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    getTopProducts: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListTopProductEntry"];
+                };
+            };
+        };
+    };
+    getTopCustomers: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListTopCustomerEntry"];
+                };
+            };
+        };
+    };
+    getTimeSeries: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListTimeSeriesPoint"];
+                };
+            };
+        };
+    };
+    list_15: {
         parameters: {
             query?: {
                 status?: "PENDING" | "ASSIGNED" | "DRAFT" | "SENT" | "ACCEPTED" | "PAID" | "REJECTED" | "EXPIRED" | "CANCELLED" | "PENDING_APPROVAL";
@@ -9387,7 +10327,32 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    exportCsv_1: {
+        parameters: {
+            query?: {
+                status?: "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "INVOICED";
+                userId?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
+    list_16: {
         parameters: {
             query?: {
                 companyId?: string;
@@ -9546,11 +10511,29 @@ export interface operations {
             };
         };
     };
+    getWishlist: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseWishlistResponse"];
+                };
+            };
+        };
+    };
     removeMember: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -9571,9 +10554,7 @@ export interface operations {
     };
     cancelInvitation: {
         parameters: {
-            query: {
-                user: components["schemas"]["User"];
-            };
+            query?: never;
             header?: never;
             path: {
                 id: string;
@@ -9718,6 +10699,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    removeItem_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                productId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseWishlistResponse"];
+                };
             };
         };
     };
