@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "@/api/client"
+import { apiClient, getAuthToken } from "@/api/client"
 import type { components } from "@/schema"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -42,8 +42,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, Ban, ImageIcon, Pencil, RefreshCcw, Plus, Package } from "lucide-react"
+import { ArrowLeft, Ban, ImageIcon, Pencil, RefreshCcw, Plus, Package, FileText } from "lucide-react"
 import { toast } from "sonner"
+
+const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
 
 type Order = components["schemas"]["OrderResponse"]
 type OrderItem = components["schemas"]["OrderItemResponse"]
@@ -110,6 +112,11 @@ export function OrderDetailPage({ id }: { id: string }) {
   const [refundOpen, setRefundOpen] = useState(false)
   const [noteText, setNoteText] = useState("")
 
+  // Create invoice
+  const [invoiceOpen, setInvoiceOpen] = useState(false)
+  const [invoiceCompanyId, setInvoiceCompanyId] = useState("")
+  const [invoiceTerms, setInvoiceTerms] = useState(30)
+
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: ["admin", "orders", id] })
   }
@@ -154,6 +161,17 @@ export function OrderDetailPage({ id }: { id: string }) {
 
   const fulfillments: Fulfillment[] = fulfillmentsData ?? []
   const events: OrderEvent[] = eventsData ?? []
+
+  const { data: companiesData } = useQuery({
+    queryKey: ["companies"],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/companies", { params: { query: { user: {} as never } } })
+      if (error) throw error
+      return data
+    },
+    enabled: invoiceOpen,
+  })
+  const companies = (companiesData as { content?: { id: string; name: string }[] } | undefined)?.content ?? []
 
   // ── Mutations ─────────────────────────────────────────────────────────────
 
@@ -262,6 +280,32 @@ export function OrderDetailPage({ id }: { id: string }) {
     onError: () => toast.error("Failed to add note"),
   })
 
+  const createInvoiceMutation = useMutation({
+    mutationFn: async ({ companyId, paymentTermsDays }: { companyId: string; paymentTermsDays: number }) => {
+      const token = getAuthToken()
+      const res = await fetch(`${BASE_URL}/api/v1/admin/invoices/from-order/${id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ companyId, paymentTermsDays }),
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(`HTTP ${res.status}: ${text}`)
+      }
+    },
+    onSuccess: () => {
+      toast.success("Invoice created")
+      invalidate()
+      setInvoiceOpen(false)
+      setInvoiceCompanyId("")
+      setInvoiceTerms(30)
+    },
+    onError: () => toast.error("Failed to create invoice"),
+  })
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   function openCreateFulfillment() {
@@ -300,6 +344,7 @@ export function OrderDetailPage({ id }: { id: string }) {
   const canCancel = o.status !== "CANCELLED" && o.status !== "REFUNDED"
   const canRefund = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED" || o.status === "FULFILLED"
   const canFulfill = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED"
+  const canInvoice = o.status !== "CANCELLED" && o.status !== "REFUNDED"
 
   const subtotal = items.reduce((sum, i) => sum + (i.unitPrice ?? 0) * (i.quantity ?? 0), 0)
 
@@ -328,6 +373,12 @@ export function OrderDetailPage({ id }: { id: string }) {
             <Button size="sm" onClick={openCreateFulfillment}>
               <Package className="size-4 mr-2" />
               Fulfill items
+            </Button>
+          )}
+          {canInvoice && (
+            <Button variant="outline" size="sm" onClick={() => setInvoiceOpen(true)}>
+              <FileText className="size-4 mr-2" />
+              Create invoice
             </Button>
           )}
           {canRefund && (
@@ -878,6 +929,51 @@ export function OrderDetailPage({ id }: { id: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Create invoice */}
+      <Dialog open={invoiceOpen} onOpenChange={(v) => { setInvoiceOpen(v); if (!v) { setInvoiceCompanyId(""); setInvoiceTerms(30) } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Create invoice</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label>Company</Label>
+              <Select value={invoiceCompanyId} onValueChange={setInvoiceCompanyId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a company..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Payment terms (days)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={invoiceTerms}
+                onChange={(e) => setInvoiceTerms(Number(e.target.value))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInvoiceOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (!invoiceCompanyId) { toast.error("Select a company"); return }
+                createInvoiceMutation.mutate({ companyId: invoiceCompanyId, paymentTermsDays: invoiceTerms })
+              }}
+              disabled={createInvoiceMutation.isPending}
+            >
+              Create invoice
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
