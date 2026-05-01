@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 import type { components } from "@/schema"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -21,6 +20,8 @@ import {
 } from "@/components/ui/table"
 import { DataPagination } from "@/components/ui/data-pagination"
 import { cn } from "@/lib/utils"
+
+type Company = components["schemas"]["CompanyResponse"]
 
 type Invoice = components["schemas"]["InvoiceResponse"]
 type InvoiceStatus = NonNullable<Invoice["status"]>
@@ -60,6 +61,16 @@ export function InvoicesPage() {
   const { page: rawPage, status, companyId } = useSearch({ from: "/_authenticated/invoices" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
+
+  const { data: companiesData } = useQuery({
+    queryKey: ["companies"],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/companies")
+      if (error) throw error
+      return (data as { data?: Company[] } | undefined)?.data ?? []
+    },
+  })
+  const companies: Company[] = companiesData ?? []
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "invoices", page, status, companyId],
@@ -115,32 +126,26 @@ export function InvoicesPage() {
 
       {/* Filters */}
       <div className="flex items-center gap-2">
-        <Input
-          placeholder="Filter by company ID…"
-          className="max-w-xs"
+        <Select
           value={companyId ?? ""}
-          onChange={(e) =>
+          onValueChange={(v) =>
             void navigate({
               to: "/invoices",
-              search: { page: 0, status, companyId: e.target.value || undefined },
+              search: { page: 0, status, companyId: v || undefined },
               replace: true,
             })
           }
-        />
-        <Select
-          value={status ?? ""}
-          onValueChange={(v) => setStatus(v || undefined)}
         >
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Status" />
+          <SelectTrigger className="w-56">
+            <SelectValue placeholder="All companies" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All statuses</SelectItem>
-            <SelectItem value="ISSUED">Issued</SelectItem>
-            <SelectItem value="PARTIAL">Partial</SelectItem>
-            <SelectItem value="PAID">Paid</SelectItem>
-            <SelectItem value="OVERDUE">Overdue</SelectItem>
-            <SelectItem value="VOID">Void</SelectItem>
+            <SelectItem value="">All companies</SelectItem>
+            {companies.map((c) => (
+              <SelectItem key={c.id!} value={c.id!}>
+                {c.name ?? c.id}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
