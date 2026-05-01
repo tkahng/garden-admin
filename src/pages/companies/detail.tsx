@@ -33,7 +33,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronRight, Plus, Pencil, Trash2, ShieldCheck } from "lucide-react"
 import { toast } from "sonner"
 
 type Company = components["schemas"]["CompanyResponse"]
@@ -255,18 +255,44 @@ function CreditAccountSection({ companyId }: { companyId: string }) {
         <div className="h-24 w-full bg-muted animate-pulse rounded-lg" />
       ) : account ? (
         <Card>
-          <CardContent className="pt-4 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              ["Credit limit", fmtCurrency(account.creditLimit, account.currency)],
-              ["Available", fmtCurrency(account.availableCredit, account.currency)],
-              ["Outstanding", fmtCurrency(account.outstandingBalance, account.currency)],
-              ["Payment terms", account.paymentTermsDays != null ? `NET ${account.paymentTermsDays}` : "—"],
-            ].map(([label, value]) => (
-              <div key={label}>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">{label}</p>
-                <p className="text-sm font-semibold">{value}</p>
+          <CardContent className="pt-4 pb-4 space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                ["Credit limit", fmtCurrency(account.creditLimit, account.currency)],
+                ["Available", fmtCurrency(account.availableCredit, account.currency)],
+                ["Outstanding", fmtCurrency(account.outstandingBalance, account.currency)],
+                ["Payment terms", account.paymentTermsDays != null ? `NET ${account.paymentTermsDays}` : "—"],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">{label}</p>
+                  <p className="text-sm font-semibold">{value}</p>
+                </div>
+              ))}
+            </div>
+            {account.creditLimit != null && account.creditLimit > 0 && (
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Credit utilization</span>
+                  <span>
+                    {Math.round(((account.outstandingBalance ?? 0) / account.creditLimit) * 100)}%
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      (account.outstandingBalance ?? 0) / account.creditLimit > 0.8
+                        ? "bg-destructive"
+                        : (account.outstandingBalance ?? 0) / account.creditLimit > 0.5
+                          ? "bg-yellow-500"
+                          : "bg-primary"
+                    }`}
+                    style={{
+                      width: `${Math.min(100, Math.round(((account.outstandingBalance ?? 0) / account.creditLimit) * 100))}%`,
+                    }}
+                  />
+                </div>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -742,6 +768,70 @@ function PriceListDialog({
   )
 }
 
+// ─── Tax exempt section ───────────────────────────────────────────────────────
+
+function TaxExemptSection({ company, onUpdated }: { company: Company; onUpdated: () => void }) {
+  const [pending, setPending] = useState(false)
+
+  const mutation = useMutation({
+    mutationFn: async (taxExempt: boolean) => {
+      const { error } = await apiClient.PUT("/api/v1/admin/companies/{id}", {
+        params: { path: { id: company.id! } },
+        body: {
+          name: company.name!,
+          taxId: company.taxId ?? undefined,
+          phone: company.phone ?? undefined,
+          billingAddressLine1: company.billingAddressLine1 ?? undefined,
+          billingAddressLine2: company.billingAddressLine2 ?? undefined,
+          billingCity: company.billingCity ?? undefined,
+          billingState: company.billingState ?? undefined,
+          billingPostalCode: company.billingPostalCode ?? undefined,
+          billingCountry: company.billingCountry ?? undefined,
+          taxExempt,
+        },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Tax exemption updated")
+      onUpdated()
+    },
+    onError: () => toast.error("Failed to update tax exemption"),
+    onSettled: () => setPending(false),
+  })
+
+  function toggle() {
+    setPending(true)
+    mutation.mutate(!company.taxExempt)
+  }
+
+  const exempt = company.taxExempt ?? false
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+      <div className="flex items-center gap-2.5">
+        <ShieldCheck className={`size-4 ${exempt ? "text-green-600" : "text-muted-foreground"}`} />
+        <div>
+          <p className="text-sm font-medium">Tax exempt</p>
+          <p className="text-xs text-muted-foreground">
+            {exempt
+              ? "This company is tax exempt. Tax will not be collected at checkout."
+              : "Tax will be collected at checkout."}
+          </p>
+        </div>
+      </div>
+      <Button
+        size="sm"
+        variant={exempt ? "destructive" : "outline"}
+        onClick={toggle}
+        disabled={pending || mutation.isPending}
+      >
+        {exempt ? "Remove exemption" : "Mark exempt"}
+      </Button>
+    </div>
+  )
+}
+
 // ─── Company detail page ──────────────────────────────────────────────────────
 
 export function CompanyDetailPage({ id }: { id: string }) {
@@ -823,6 +913,14 @@ export function CompanyDetailPage({ id }: { id: string }) {
           </p>
         )}
       </div>
+
+      {/* Tax exemption */}
+      {company && (
+        <TaxExemptSection
+          company={company}
+          onUpdated={() => qc.invalidateQueries({ queryKey: ["company", id] })}
+        />
+      )}
 
       {/* Credit account */}
       <CreditAccountSection companyId={id} />

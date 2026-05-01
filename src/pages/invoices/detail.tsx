@@ -34,12 +34,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ArrowLeft, AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 
 type Invoice = components["schemas"]["InvoiceResponse"]
 type InvoiceStatus = NonNullable<Invoice["status"]>
 type RecordPayment = components["schemas"]["RecordPaymentRequest"]
+
+const PAYMENT_METHODS = [
+  { value: "STRIPE", label: "Stripe (card)" },
+  { value: "ACH", label: "ACH transfer" },
+  { value: "CHECK", label: "Check" },
+  { value: "WIRE", label: "Wire transfer" },
+  { value: "CASH", label: "Cash" },
+  { value: "CREDIT_MEMO", label: "Credit memo" },
+] as const
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -78,7 +94,7 @@ function RecordPaymentDialog({
   onOpenChange: (v: boolean) => void
   onSuccess: () => void
 }) {
-  const [form, setForm] = useState<Partial<RecordPayment>>({})
+  const [form, setForm] = useState<Partial<RecordPayment>>({ paymentMethod: "STRIPE" })
 
   const mutation = useMutation({
     mutationFn: async (body: RecordPayment) => {
@@ -90,7 +106,7 @@ function RecordPaymentDialog({
     },
     onSuccess: () => {
       toast.success("Payment recorded")
-      setForm({})
+      setForm({ paymentMethod: "STRIPE" })
       onSuccess()
     },
     onError: () => toast.error("Failed to record payment"),
@@ -111,6 +127,22 @@ function RecordPaymentDialog({
           <DialogTitle>Record payment</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>Payment method</Label>
+            <Select
+              value={form.paymentMethod ?? "STRIPE"}
+              onValueChange={(v) => setForm((f) => ({ ...f, paymentMethod: v as RecordPayment["paymentMethod"] }))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAYMENT_METHODS.map((m) => (
+                  <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="space-y-1.5">
             <Label>Amount</Label>
             <Input
