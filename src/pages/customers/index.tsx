@@ -18,11 +18,22 @@ import {
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 import { DataPagination } from "@/components/ui/data-pagination"
+import { cn } from "@/lib/utils"
+import type { components } from "@/schema"
+
+type UserStatus = components["schemas"]["AdminUserResponse"]["status"]
+
+const STATUS_TABS: { label: string; value: UserStatus | undefined }[] = [
+  { label: "All", value: undefined },
+  { label: "Active", value: "ACTIVE" },
+  { label: "Unverified", value: "UNVERIFIED" },
+  { label: "Suspended", value: "SUSPENDED" },
+]
 
 const PAGE_SIZE = 20
 
 export function CustomersPage() {
-  const { page: rawPage, email } = useSearch({ from: "/_authenticated/customers" })
+  const { page: rawPage, email, status } = useSearch({ from: "/_authenticated/customers" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -34,6 +45,7 @@ export function CustomersPage() {
     try {
       const params = new URLSearchParams()
       if (email) params.set("email", email)
+      if (status) params.set("status", status)
       const qs = params.toString()
       await downloadCsv(`/api/v1/admin/users/export${qs ? `?${qs}` : ""}`, "customers.csv")
     } finally {
@@ -42,10 +54,10 @@ export function CustomersPage() {
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "users", page, email],
+    queryKey: ["admin", "users", page, email, status],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/users", {
-        params: { query: { page, size: PAGE_SIZE, email: email || undefined } },
+        params: { query: { page, size: PAGE_SIZE, email: email || undefined, status: status as UserStatus } },
       })
       if (error) throw error
       return data
@@ -88,7 +100,12 @@ export function CustomersPage() {
 
   function setPage(newPage: number) {
     setSelectedIds(new Set())
-    void navigate({ to: "/customers", search: { page: newPage, email }, replace: true })
+    void navigate({ to: "/customers", search: { page: newPage, email, status }, replace: true })
+  }
+
+  function setStatus(newStatus: string | undefined) {
+    setSelectedIds(new Set())
+    void navigate({ to: "/customers", search: { page: 0, email, status: newStatus }, replace: true })
   }
 
   const allChecked = users.length > 0 && selectedIds.size === users.length
@@ -105,6 +122,24 @@ export function CustomersPage() {
         </Button>
       </div>
 
+      {/* Status tabs */}
+      <div className="flex gap-1 border-b overflow-x-auto">
+        {STATUS_TABS.map((tab) => (
+          <button
+            key={tab.label}
+            onClick={() => setStatus(tab.value)}
+            className={cn(
+              "px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap shrink-0",
+              (status ?? undefined) === tab.value
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -115,7 +150,7 @@ export function CustomersPage() {
             onChange={(e) => {
               void navigate({
                 to: "/customers",
-                search: { page: 0, email: e.target.value || undefined },
+                search: { page: 0, email: e.target.value || undefined, status },
                 replace: true,
               })
             }}
