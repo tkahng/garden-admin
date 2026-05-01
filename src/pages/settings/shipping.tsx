@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
@@ -19,19 +20,142 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { Plus, ChevronDown, Trash2 } from "lucide-react"
+import { Plus, ChevronDown, Trash2, Pencil } from "lucide-react"
 import { toast } from "sonner"
 
 type Zone = components["schemas"]["ShippingZoneResponse"]
 type Rate = components["schemas"]["ShippingRateResponse"]
 type CreateZone = components["schemas"]["CreateShippingZoneRequest"]
 type CreateRate = components["schemas"]["CreateShippingRateRequest"]
+type UpdateZone = components["schemas"]["UpdateShippingZoneRequest"]
+type UpdateRate = components["schemas"]["UpdateShippingRateRequest"]
 
-function ZoneCard({ zone }: { zone: Zone }) {
+// ── Rate dialog ───────────────────────────────────────────────────────────────
+
+function RateDialog({
+  open,
+  onClose,
+  zoneName,
+  existing,
+  onSave,
+  isPending,
+}: {
+  open: boolean
+  onClose: () => void
+  zoneName: string
+  existing?: Rate | null
+  onSave: (form: Partial<CreateRate>) => void
+  isPending: boolean
+}) {
+  const [form, setForm] = useState<Partial<CreateRate>>(
+    existing
+      ? {
+          name: existing.name ?? "",
+          price: existing.price ?? 0,
+          carrier: existing.carrier ?? "",
+          estimatedDaysMin: existing.estimatedDaysMin ?? undefined,
+          estimatedDaysMax: existing.estimatedDaysMax ?? undefined,
+          minOrderAmount: existing.minOrderAmount ?? undefined,
+        }
+      : {}
+  )
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{existing ? "Edit rate" : `Add rate to ${zoneName}`}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>Rate name</Label>
+            <Input
+              placeholder="Standard shipping"
+              value={form.name ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Price ($)</Label>
+              <Input
+                type="number"
+                min={0}
+                value={form.price ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, price: Number(e.target.value) }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Carrier</Label>
+              <Input
+                placeholder="UPS"
+                value={form.carrier ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, carrier: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Min days</Label>
+              <Input
+                type="number"
+                min={0}
+                value={form.estimatedDaysMin ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, estimatedDaysMin: Number(e.target.value) }))}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Max days</Label>
+              <Input
+                type="number"
+                min={0}
+                value={form.estimatedDaysMax ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, estimatedDaysMax: Number(e.target.value) }))}
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Min order amount ($)</Label>
+            <Input
+              type="number"
+              min={0}
+              placeholder="0.00"
+              value={form.minOrderAmount ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, minOrderAmount: Number(e.target.value) }))}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button
+            onClick={() => {
+              if (!form.name || form.price == null) {
+                toast.error("Name and price are required")
+                return
+              }
+              onSave(form)
+            }}
+            disabled={isPending}
+          >
+            {existing ? "Save" : "Add rate"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ── Zone card ─────────────────────────────────────────────────────────────────
+
+function ZoneCard({ zone, onEdit, onDelete }: {
+  zone: Zone
+  onEdit: (zone: Zone) => void
+  onDelete: (id: string) => void
+}) {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [rateOpen, setRateOpen] = useState(false)
-  const [form, setForm] = useState<Partial<CreateRate>>({})
+  const [rateDialogOpen, setRateDialogOpen] = useState(false)
+  const [editRate, setEditRate] = useState<Rate | null>(null)
 
   const { data: ratesData } = useQuery({
     queryKey: ["admin", "shipping", "zones", zone.id, "rates"],
@@ -46,8 +170,11 @@ function ZoneCard({ zone }: { zone: Zone }) {
     enabled: open,
   })
 
-  const rates: Rate[] =
-    (ratesData as { data?: { content?: Rate[] } } | undefined)?.data?.content ?? []
+  const rates: Rate[] = (ratesData as { data?: Rate[] } | undefined)?.data ?? []
+
+  function invalidateRates() {
+    qc.invalidateQueries({ queryKey: ["admin", "shipping", "zones", zone.id, "rates"] })
+  }
 
   const createRateMutation = useMutation({
     mutationFn: async (body: CreateRate) => {
@@ -59,11 +186,26 @@ function ZoneCard({ zone }: { zone: Zone }) {
     },
     onSuccess: () => {
       toast.success("Rate added")
-      qc.invalidateQueries({ queryKey: ["admin", "shipping", "zones", zone.id, "rates"] })
-      setRateOpen(false)
-      setForm({})
+      invalidateRates()
+      setRateDialogOpen(false)
     },
     onError: () => toast.error("Failed to add rate"),
+  })
+
+  const updateRateMutation = useMutation({
+    mutationFn: async ({ rateId, body }: { rateId: string; body: UpdateRate }) => {
+      const { error } = await apiClient.PUT(
+        "/api/v1/admin/shipping/zones/{zoneId}/rates/{rateId}",
+        { params: { path: { zoneId: zone.id!, rateId } }, body }
+      )
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Rate updated")
+      invalidateRates()
+      setEditRate(null)
+    },
+    onError: () => toast.error("Failed to update rate"),
   })
 
   const deleteRateMutation = useMutation({
@@ -76,7 +218,7 @@ function ZoneCard({ zone }: { zone: Zone }) {
     },
     onSuccess: () => {
       toast.success("Rate deleted")
-      qc.invalidateQueries({ queryKey: ["admin", "shipping", "zones", zone.id, "rates"] })
+      invalidateRates()
     },
     onError: () => toast.error("Failed to delete rate"),
   })
@@ -94,13 +236,27 @@ function ZoneCard({ zone }: { zone: Zone }) {
             </div>
             <div className="flex items-center gap-2">
               {zone.countryCodes?.map((c) => (
-                <Badge key={c} variant="outline" className="text-xs">
-                  {c}
-                </Badge>
+                <Badge key={c} variant="outline" className="text-xs">{c}</Badge>
               ))}
               <Badge variant={zone.isActive ? "default" : "secondary"}>
                 {zone.isActive ? "Active" : "Inactive"}
               </Badge>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7"
+                onClick={(e) => { e.stopPropagation(); onEdit(zone) }}
+              >
+                <Pencil className="size-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 text-destructive"
+                onClick={(e) => { e.stopPropagation(); onDelete(zone.id!) }}
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
               <ChevronDown
                 className={`size-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
               />
@@ -112,7 +268,7 @@ function ZoneCard({ zone }: { zone: Zone }) {
           <CardContent className="pt-0 space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">Rates</p>
-              <Button size="sm" variant="outline" onClick={() => setRateOpen(true)}>
+              <Button size="sm" variant="outline" onClick={() => setRateDialogOpen(true)}>
                 <Plus className="size-3.5 mr-1.5" />
                 Add rate
               </Button>
@@ -139,8 +295,16 @@ function ZoneCard({ zone }: { zone: Zone }) {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <span className="font-medium">${(r.price ?? 0).toFixed(2)}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7"
+                      onClick={() => setEditRate(r)}
+                    >
+                      <Pencil className="size-3.5" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -157,103 +321,123 @@ function ZoneCard({ zone }: { zone: Zone }) {
         </CollapsibleContent>
       </Collapsible>
 
-      <Dialog open={rateOpen} onOpenChange={setRateOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Add rate to {zone.name}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Rate name</Label>
-              <Input
-                placeholder="Standard shipping"
-                value={form.name ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Price ($)</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={form.price ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, price: Number(e.target.value) }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Carrier</Label>
-                <Input
-                  placeholder="UPS"
-                  value={form.carrier ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, carrier: e.target.value }))}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Min days</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={form.estimatedDaysMin ?? ""}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, estimatedDaysMin: Number(e.target.value) }))
-                  }
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Max days</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  value={form.estimatedDaysMax ?? ""}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, estimatedDaysMax: Number(e.target.value) }))
-                  }
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Min order amount ($)</Label>
-              <Input
-                type="number"
-                min={0}
-                placeholder="0.00"
-                value={form.minOrderAmount ?? ""}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, minOrderAmount: Number(e.target.value) }))
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRateOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (!form.name || form.price == null) {
-                  toast.error("Name and price are required")
-                  return
-                }
-                createRateMutation.mutate({ name: form.name, price: form.price, ...form } as CreateRate)
-              }}
-              disabled={createRateMutation.isPending}
-            >
-              Add rate
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RateDialog
+        open={rateDialogOpen}
+        onClose={() => setRateDialogOpen(false)}
+        zoneName={zone.name ?? ""}
+        onSave={(form) => createRateMutation.mutate(form as CreateRate)}
+        isPending={createRateMutation.isPending}
+      />
+
+      <RateDialog
+        open={!!editRate}
+        onClose={() => setEditRate(null)}
+        zoneName={zone.name ?? ""}
+        existing={editRate}
+        onSave={(form) =>
+          updateRateMutation.mutate({ rateId: editRate!.id!, body: form as UpdateRate })
+        }
+        isPending={updateRateMutation.isPending}
+      />
     </Card>
   )
 }
 
+// ── Zone dialog ───────────────────────────────────────────────────────────────
+
+function ZoneDialog({
+  open,
+  onClose,
+  existing,
+  onSave,
+  isPending,
+}: {
+  open: boolean
+  onClose: () => void
+  existing?: Zone | null
+  onSave: (form: Partial<CreateZone & UpdateZone>) => void
+  isPending: boolean
+}) {
+  const [form, setForm] = useState<Partial<CreateZone & UpdateZone>>(
+    existing
+      ? {
+          name: existing.name ?? "",
+          description: existing.description ?? "",
+          countryCodes: existing.countryCodes ?? [],
+          isActive: existing.isActive ?? true,
+        }
+      : { isActive: true }
+  )
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{existing ? "Edit zone" : "Create shipping zone"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>Zone name</Label>
+            <Input
+              placeholder="Domestic"
+              value={form.name ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Description</Label>
+            <Input
+              placeholder="Optional"
+              value={form.description ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Country codes (comma-separated)</Label>
+            <Input
+              placeholder="US, CA, MX"
+              value={form.countryCodes?.join(", ") ?? ""}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  countryCodes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                }))
+              }
+            />
+          </div>
+          {existing && (
+            <div className="flex items-center justify-between">
+              <Label>Active</Label>
+              <Switch
+                checked={form.isActive ?? true}
+                onCheckedChange={(v) => setForm((f) => ({ ...f, isActive: v }))}
+              />
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button
+            onClick={() => {
+              if (!form.name) { toast.error("Name is required"); return }
+              onSave(form)
+            }}
+            disabled={isPending}
+          >
+            {existing ? "Save" : "Create"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export function ShippingPage() {
   const qc = useQueryClient()
-  const [open, setOpen] = useState(false)
-  const [form, setForm] = useState<Partial<CreateZone>>({})
+  const [createOpen, setCreateOpen] = useState(false)
+  const [editZone, setEditZone] = useState<Zone | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "shipping", "zones"],
@@ -267,6 +451,10 @@ export function ShippingPage() {
   const zones: Zone[] =
     (data as { data?: { content?: Zone[] } } | undefined)?.data?.content ?? []
 
+  function invalidateZones() {
+    qc.invalidateQueries({ queryKey: ["admin", "shipping", "zones"] })
+  }
+
   const createMutation = useMutation({
     mutationFn: async (body: CreateZone) => {
       const { error } = await apiClient.POST("/api/v1/admin/shipping/zones", { body })
@@ -274,11 +462,40 @@ export function ShippingPage() {
     },
     onSuccess: () => {
       toast.success("Shipping zone created")
-      qc.invalidateQueries({ queryKey: ["admin", "shipping", "zones"] })
-      setOpen(false)
-      setForm({})
+      invalidateZones()
+      setCreateOpen(false)
     },
     onError: () => toast.error("Failed to create zone"),
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, body }: { id: string; body: UpdateZone }) => {
+      const { error } = await apiClient.PUT("/api/v1/admin/shipping/zones/{id}", {
+        params: { path: { id } },
+        body,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Zone updated")
+      invalidateZones()
+      setEditZone(null)
+    },
+    onError: () => toast.error("Failed to update zone"),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await apiClient.DELETE("/api/v1/admin/shipping/zones/{id}", {
+        params: { path: { id } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Zone deleted")
+      invalidateZones()
+    },
+    onError: () => toast.error("Failed to delete zone"),
   })
 
   return (
@@ -290,7 +507,7 @@ export function ShippingPage() {
             Define zones and rates for shipping.
           </p>
         </div>
-        <Button size="sm" onClick={() => setOpen(true)}>
+        <Button size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="size-4 mr-2" />
           Add zone
         </Button>
@@ -300,7 +517,12 @@ export function ShippingPage() {
 
       <div className="space-y-3">
         {zones.map((z) => (
-          <ZoneCard key={z.id} zone={z} />
+          <ZoneCard
+            key={z.id}
+            zone={z}
+            onEdit={setEditZone}
+            onDelete={(id) => deleteMutation.mutate(id)}
+          />
         ))}
         {!isLoading && zones.length === 0 && (
           <div className="rounded-lg border bg-card p-8 text-center text-muted-foreground text-sm">
@@ -309,58 +531,20 @@ export function ShippingPage() {
         )}
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Create shipping zone</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Zone name</Label>
-              <Input
-                placeholder="Domestic"
-                value={form.name ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Description</Label>
-              <Input
-                placeholder="Optional"
-                value={form.description ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Country codes (comma-separated)</Label>
-              <Input
-                placeholder="US, CA, MX"
-                value={form.countryCodes?.join(", ") ?? ""}
-                onChange={(e) =>
-                  setForm((f) => ({
-                    ...f,
-                    countryCodes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
-                  }))
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (!form.name) { toast.error("Name is required"); return }
-                createMutation.mutate({ name: form.name, ...form } as CreateZone)
-              }}
-              disabled={createMutation.isPending}
-            >
-              Create
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ZoneDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSave={(form) => createMutation.mutate(form as CreateZone)}
+        isPending={createMutation.isPending}
+      />
+
+      <ZoneDialog
+        open={!!editZone}
+        onClose={() => setEditZone(null)}
+        existing={editZone}
+        onSave={(form) => updateMutation.mutate({ id: editZone!.id!, body: form as UpdateZone })}
+        isPending={updateMutation.isPending}
+      />
     </div>
   )
 }

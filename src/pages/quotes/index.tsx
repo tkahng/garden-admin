@@ -1,6 +1,5 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -9,13 +8,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 import type { components } from "@/schema"
 import { DataPagination } from "@/components/ui/data-pagination"
+import { cn } from "@/lib/utils"
 
 type QuoteStatus = components["schemas"]["QuoteRequestResponse"]["status"]
+
+const STATUS_TABS: { label: string; value: QuoteStatus | undefined }[] = [
+  { label: "All", value: undefined },
+  { label: "Pending", value: "PENDING" },
+  { label: "Assigned", value: "ASSIGNED" },
+  { label: "Draft", value: "DRAFT" },
+  { label: "Sent", value: "SENT" },
+  { label: "Pending approval", value: "PENDING_APPROVAL" },
+  { label: "Accepted", value: "ACCEPTED" },
+  { label: "Paid", value: "PAID" },
+  { label: "Rejected", value: "REJECTED" },
+  { label: "Expired", value: "EXPIRED" },
+  { label: "Cancelled", value: "CANCELLED" },
+]
 
 const PAGE_SIZE = 20
 
@@ -43,28 +56,32 @@ export function QuotesPage() {
     void navigate({ to: "/quotes", search: { page: newPage, status }, replace: true })
   }
 
+  function setStatus(newStatus: QuoteStatus | undefined) {
+    void navigate({ to: "/quotes", search: { page: 0, status: newStatus }, replace: true })
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Quotes</h1>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Filter by status..."
-            className="pl-9"
-            value={status ?? ""}
-            onChange={(e) => {
-              void navigate({
-                to: "/quotes",
-                search: { page: 0, status: e.target.value || undefined },
-                replace: true,
-              })
-            }}
-          />
-        </div>
+      {/* Status tabs */}
+      <div className="flex gap-1 border-b overflow-x-auto">
+        {STATUS_TABS.map((tab) => (
+          <button
+            key={tab.label}
+            onClick={() => setStatus(tab.value)}
+            className={cn(
+              "px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap shrink-0",
+              (status ?? undefined) === tab.value
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="rounded-lg border bg-card">

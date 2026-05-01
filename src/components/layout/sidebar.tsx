@@ -17,6 +17,7 @@ import {
   Tag,
   Gift,
   Truck,
+  Webhook,
 } from "lucide-react"
 import { useState } from "react"
 
@@ -102,6 +103,11 @@ const settingsItems: NavItem[] = [
     label: "Users & permissions",
     href: "/settings/permissions",
     icon: ShieldCheck,
+  },
+  {
+    label: "Webhooks",
+    href: "/settings/webhooks",
+    icon: Webhook,
   },
 ]
 

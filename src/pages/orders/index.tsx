@@ -3,7 +3,8 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Download } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Download, Search } from "lucide-react"
 import { downloadCsv } from "@/lib/download"
 import { bulkCancelOrders } from "@/lib/bulk-api"
 import {
@@ -60,7 +61,7 @@ function statusLabel(status: string) {
 }
 
 export function OrdersPage() {
-  const { page: rawPage, status } = useSearch({ from: "/_authenticated/orders" })
+  const { page: rawPage, status, userId, from, to } = useSearch({ from: "/_authenticated/orders" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -72,6 +73,9 @@ export function OrdersPage() {
     try {
       const params = new URLSearchParams()
       if (status) params.set("status", status)
+      if (userId) params.set("userId", userId)
+      if (from) params.set("from", from)
+      if (to) params.set("to", to)
       const qs = params.toString()
       await downloadCsv(`/api/v1/admin/orders/export${qs ? `?${qs}` : ""}`, "orders.csv")
     } finally {
@@ -80,10 +84,10 @@ export function OrdersPage() {
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "orders", page, status],
+    queryKey: ["admin", "orders", page, status, userId, from, to],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/orders", {
-        params: { query: { page, size: PAGE_SIZE, status: status as OrderStatus } },
+        params: { query: { page, size: PAGE_SIZE, status: status as OrderStatus, userId, from, to } },
       })
       if (error) throw error
       return data
@@ -126,12 +130,21 @@ export function OrdersPage() {
 
   function setPage(newPage: number) {
     setSelectedIds(new Set())
-    void navigate({ to: "/orders", search: { page: newPage, status }, replace: true })
+    void navigate({ to: "/orders", search: { page: newPage, status, userId, from, to }, replace: true })
   }
 
   function setStatus(newStatus: string | undefined) {
     setSelectedIds(new Set())
-    void navigate({ to: "/orders", search: { page: 0, status: newStatus }, replace: true })
+    void navigate({ to: "/orders", search: { page: 0, status: newStatus, userId, from, to }, replace: true })
+  }
+
+  function setFilter(patch: { userId?: string; from?: string; to?: string }) {
+    setSelectedIds(new Set())
+    void navigate({
+      to: "/orders",
+      search: { page: 0, status, userId: patch.userId ?? userId, from: patch.from ?? from, to: patch.to ?? to },
+      replace: true,
+    })
   }
 
   const allChecked = orders.length > 0 && selectedIds.size === orders.length
@@ -163,6 +176,42 @@ export function OrdersPage() {
             {tab.label}
           </button>
         ))}
+      </div>
+
+      {/* Secondary filters: customer ID + date range */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Customer ID..."
+            className="pl-9 w-56"
+            value={userId ?? ""}
+            onChange={(e) => setFilter({ userId: e.target.value || undefined })}
+          />
+        </div>
+        <Input
+          type="date"
+          className="w-40"
+          value={from ? from.slice(0, 10) : ""}
+          onChange={(e) => setFilter({ from: e.target.value ? `${e.target.value}T00:00:00Z` : undefined })}
+          title="From date"
+        />
+        <Input
+          type="date"
+          className="w-40"
+          value={to ? to.slice(0, 10) : ""}
+          onChange={(e) => setFilter({ to: e.target.value ? `${e.target.value}T23:59:59Z` : undefined })}
+          title="To date"
+        />
+        {(userId || from || to) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void navigate({ to: "/orders", search: { page: 0, status }, replace: true })}
+          >
+            Clear
+          </Button>
+        )}
       </div>
 
       {/* Bulk action toolbar */}

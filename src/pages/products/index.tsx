@@ -47,7 +47,7 @@ function statusVariant(status: string | undefined) {
 }
 
 export function ProductsPage() {
-  const { page: rawPage, titleContains, status } = useSearch({ from: "/_authenticated/products/" })
+  const { page: rawPage, titleContains, status, vendor, productType } = useSearch({ from: "/_authenticated/products/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -55,7 +55,7 @@ export function ProductsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "products", page, titleContains, status],
+    queryKey: ["admin", "products", page, titleContains, status, vendor, productType],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/products", {
         params: {
@@ -64,6 +64,8 @@ export function ProductsPage() {
             size: PAGE_SIZE,
             titleContains: titleContains || undefined,
             status: (status as "DRAFT" | "ACTIVE" | "ARCHIVED" | undefined) || undefined,
+            vendor: vendor || undefined,
+            productType: productType || undefined,
           },
         },
       })
@@ -108,12 +110,12 @@ export function ProductsPage() {
 
   function setPage(newPage: number) {
     setSelectedIds(new Set())
-    void navigate({ to: "/products", search: { page: newPage, titleContains, status }, replace: true })
+    void navigate({ to: "/products", search: { page: newPage, titleContains, status, vendor, productType }, replace: true })
   }
 
   function setStatus(newStatus: string | undefined) {
     setSelectedIds(new Set())
-    void navigate({ to: "/products", search: { page: 0, titleContains, status: newStatus }, replace: true })
+    void navigate({ to: "/products", search: { page: 0, titleContains, status: newStatus, vendor, productType }, replace: true })
   }
 
   const allChecked = products.length > 0 && selectedIds.size === products.length
@@ -150,7 +152,7 @@ export function ProductsPage() {
         ))}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -160,12 +162,36 @@ export function ProductsPage() {
             onChange={(e) => {
               void navigate({
                 to: "/products",
-                search: { page: 0, titleContains: e.target.value || undefined, status },
+                search: { page: 0, titleContains: e.target.value || undefined, status, vendor, productType },
                 replace: true,
               })
             }}
           />
         </div>
+        <Input
+          placeholder="Vendor…"
+          className="w-36"
+          value={vendor ?? ""}
+          onChange={(e) => {
+            void navigate({
+              to: "/products",
+              search: { page: 0, titleContains, status, vendor: e.target.value || undefined, productType },
+              replace: true,
+            })
+          }}
+        />
+        <Input
+          placeholder="Product type…"
+          className="w-40"
+          value={productType ?? ""}
+          onChange={(e) => {
+            void navigate({
+              to: "/products",
+              search: { page: 0, titleContains, status, vendor, productType: e.target.value || undefined },
+              replace: true,
+            })
+          }}
+        />
       </div>
 
       {/* Bulk action toolbar */}
