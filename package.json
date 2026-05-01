@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "generate:schema": "openapi-typescript http://localhost:8080/v3/api-docs -o ./src/schema.d.ts",
-    "test": "vitest",
+    "test": "tsc --noEmit && vitest",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
