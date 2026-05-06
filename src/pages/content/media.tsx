@@ -59,6 +59,24 @@ function MediaIcon({ contentType, className }: { contentType?: string; className
   return <File className={className} />
 }
 
+function PdfCard({ size = "lg" }: { size?: "sm" | "lg" }) {
+  const isLg = size === "lg"
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-white dark:bg-muted">
+      <div className={cn(
+        "flex flex-col items-center justify-center rounded-md border-2 border-muted-foreground/20 bg-background shadow-sm",
+        isLg ? "w-16 h-20" : "w-11 h-14",
+      )}>
+        <FileText className={cn("text-muted-foreground/40", isLg ? "size-7" : "size-5")} />
+        <span className={cn(
+          "font-bold tracking-wider text-red-500",
+          isLg ? "text-[11px] mt-1" : "text-[9px] mt-0.5",
+        )}>PDF</span>
+      </div>
+    </div>
+  )
+}
+
 function MediaThumbnail({ blob, selected, onSelect, onClick, onPreview }: {
   blob: BlobResponse
   selected: boolean
@@ -68,6 +86,7 @@ function MediaThumbnail({ blob, selected, onSelect, onClick, onPreview }: {
 }) {
   const isImage = blob.contentType?.startsWith("image/")
   const isVideo = blob.contentType?.startsWith("video/")
+  const isPdf = blob.contentType === "application/pdf"
 
   return (
     <div
@@ -100,6 +119,8 @@ function MediaThumbnail({ blob, selected, onSelect, onClick, onPreview }: {
               </div>
             </div>
           </div>
+        ) : isPdf ? (
+          <PdfCard size="lg" />
         ) : (
           <MediaIcon contentType={blob.contentType} className="size-10 text-muted-foreground" />
         )}
@@ -153,6 +174,7 @@ function DetailPanel({ blob, onClose, onDeleted }: {
   const [copied, setCopied] = useState(false)
   const isImage = blob.contentType?.startsWith("image/")
   const isVideo = blob.contentType?.startsWith("video/")
+  const isPdf = blob.contentType === "application/pdf"
   const replaceInputRef = useRef<HTMLInputElement>(null)
 
   async function copyUrl() {
@@ -244,6 +266,14 @@ function DetailPanel({ blob, onClose, onDeleted }: {
               preload="metadata"
               className="w-full rounded-lg bg-black"
             />
+          ) : isPdf && blob.url ? (
+            <div className="w-full rounded-lg overflow-hidden border bg-white" style={{ height: 280 }}>
+              <iframe
+                src={`${blob.url}#toolbar=0&navpanes=0&scrollbar=0`}
+                className="w-full h-full"
+                title={blob.filename ?? "PDF preview"}
+              />
+            </div>
           ) : (
             <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center">
               {isImage && blob.url ? (
@@ -615,6 +645,7 @@ function Lightbox({
   const total = blobs.length
   const isImage = blob?.contentType?.startsWith("image/")
   const isVideo = blob?.contentType?.startsWith("video/")
+  const isPdf = blob?.contentType === "application/pdf"
 
   const prev = useCallback(() => setIndex((i) => (i - 1 + total) % total), [total])
   const next = useCallback(() => setIndex((i) => (i + 1) % total), [total])
@@ -686,6 +717,13 @@ function Lightbox({
               controls
               autoPlay
               className="max-w-full max-h-full rounded shadow-2xl"
+            />
+          ) : isPdf && blob.url ? (
+            <iframe
+              key={blob.id}
+              src={blob.url}
+              className="w-full h-full rounded shadow-2xl bg-white"
+              title={blob.filename ?? "PDF"}
             />
           ) : (
             <div className="flex flex-col items-center gap-4 text-white/40">

@@ -9,6 +9,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { DataPagination } from "@/components/ui/data-pagination"
 import { cn } from "@/lib/utils"
 import { Search, Upload, Image, FileText, Film, File, Play } from "lucide-react"
+
+function PdfCard() {
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-white dark:bg-muted">
+      <div className="flex flex-col items-center justify-center rounded-md border-2 border-muted-foreground/20 bg-background shadow-sm w-11 h-14">
+        <FileText className="size-5 text-muted-foreground/40" />
+        <span className="text-[9px] font-bold tracking-wider text-red-500 mt-0.5">PDF</span>
+      </div>
+    </div>
+  )
+}
 import { toast } from "sonner"
 
 type BlobResponse = components["schemas"]["BlobResponse"]
@@ -34,6 +45,7 @@ function PickerThumbnail({
 }) {
   const isImage = blob.contentType?.startsWith("image/")
   const isVideo = blob.contentType?.startsWith("video/")
+  const isPdf = blob.contentType === "application/pdf"
   return (
     <button
       type="button"
@@ -63,6 +75,8 @@ function PickerThumbnail({
               </div>
             </div>
           </div>
+        ) : isPdf ? (
+          <PdfCard />
         ) : (
           <MediaIcon contentType={blob.contentType} className="size-8 text-muted-foreground" />
         )}
