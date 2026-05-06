@@ -3012,6 +3012,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/blobs/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStats_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/blobs/folders": {
         parameters: {
             query?: never;
@@ -5427,6 +5443,16 @@ export interface components {
             entityType?: string;
             /** Format: uuid */
             entityId?: string;
+        };
+        ApiResponseBlobStatsResponse: {
+            data?: components["schemas"]["BlobStatsResponse"];
+            meta?: unknown;
+        };
+        BlobStatsResponse: {
+            /** Format: int64 */
+            totalFiles?: number;
+            /** Format: int64 */
+            totalBytes?: number;
         };
         ApiResponseListAddressResponse: {
             data?: components["schemas"]["AddressResponse"][];
@@ -11632,6 +11658,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseListBlobUsageResponse"];
+                };
+            };
+        };
+    };
+    getStats_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBlobStatsResponse"];
                 };
             };
         };

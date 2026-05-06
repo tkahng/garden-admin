@@ -967,6 +967,15 @@ export function MediaPage() {
   })
   const folders = foldersData ?? []
 
+  const { data: statsData } = useQuery({
+    queryKey: ["admin", "blobs", "stats"],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/blobs/stats")
+      if (error) throw error
+      return data?.data
+    },
+  })
+
   const moveMutation = useMutation({
     mutationFn: async ({ ids, folder }: { ids: string[]; folder: string | null }) => {
       const { error } = await apiClient.POST("/api/v1/admin/blobs/move", {
@@ -1077,7 +1086,16 @@ export function MediaPage() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
         <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
-          <h1 className="text-2xl font-semibold">Media library</h1>
+          <div className="flex items-baseline gap-3">
+            <h1 className="text-2xl font-semibold">Media library</h1>
+            {statsData && (
+              <span className="text-sm text-muted-foreground">
+                {statsData.totalFiles.toLocaleString()} file{statsData.totalFiles !== 1 ? "s" : ""}
+                {" · "}
+                {formatBytes(statsData.totalBytes)}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             {selectedIds.size > 0 && (
               <>
