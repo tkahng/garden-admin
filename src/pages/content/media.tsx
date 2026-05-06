@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { DataPagination } from "@/components/ui/data-pagination"
 import { cn } from "@/lib/utils"
 import {
@@ -23,6 +24,7 @@ import {
   ExternalLink,
   Copy,
   Check,
+  Pencil,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -292,6 +294,116 @@ function DetailPanel({ blob, onClose, onDeleted }: {
   )
 }
 
+function BulkAltDialog({
+  open,
+  onOpenChange,
+  blobs,
+  onSaved,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  blobs: BlobResponse[]
+  onSaved: () => void
+}) {
+  const [alts, setAlts] = useState<Record<string, string>>({})
+  const [applyAll, setApplyAll] = useState("")
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (open) {
+      setAlts(Object.fromEntries(blobs.map((b) => [b.id!, b.alt ?? ""])))
+      setApplyAll("")
+    }
+  }, [open, blobs])
+
+  function applyToAll() {
+    setAlts(Object.fromEntries(blobs.map((b) => [b.id!, applyAll])))
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    let ok = 0
+    let fail = 0
+    for (const blob of blobs) {
+      const alt = alts[blob.id!] ?? ""
+      if (alt === (blob.alt ?? "")) continue
+      try {
+        const { error } = await apiClient.PATCH("/api/v1/admin/blobs/{id}", {
+          params: { path: { id: blob.id! } },
+          body: { alt, title: blob.title ?? undefined },
+        })
+        if (error) fail++
+        else ok++
+      } catch {
+        fail++
+      }
+    }
+    setSaving(false)
+    if (ok > 0) toast.success(`Updated ${ok} file${ok > 1 ? "s" : ""}`)
+    if (fail > 0) toast.error(`${fail} update${fail > 1 ? "s" : ""} failed`)
+    if (ok > 0) onSaved()
+    onOpenChange(false)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl flex flex-col max-h-[80vh]">
+        <DialogHeader className="shrink-0">
+          <DialogTitle>Edit alt text ({blobs.length} image{blobs.length !== 1 ? "s" : ""})</DialogTitle>
+        </DialogHeader>
+
+        {/* Apply to all */}
+        <div className="shrink-0 flex gap-2 items-center border-b pb-4">
+          <Input
+            placeholder="Apply same alt text to all…"
+            value={applyAll}
+            onChange={(e) => setApplyAll(e.target.value)}
+            className="flex-1"
+          />
+          <Button variant="outline" size="sm" onClick={applyToAll} disabled={!applyAll}>
+            Apply to all
+          </Button>
+        </div>
+
+        {/* Per-image rows */}
+        <div className="flex-1 overflow-y-auto min-h-0 space-y-3 py-1">
+          {blobs.map((blob) => (
+            <div key={blob.id} className="flex items-center gap-3">
+              <div className="size-12 shrink-0 rounded-md overflow-hidden bg-muted">
+                {blob.url ? (
+                  <img src={blob.url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Image className="size-5 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground truncate mb-1">{blob.filename}</p>
+                <Input
+                  value={alts[blob.id!] ?? ""}
+                  onChange={(e) =>
+                    setAlts((prev) => ({ ...prev, [blob.id!]: e.target.value }))
+                  }
+                  placeholder="Alt text…"
+                  className="text-sm h-8"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <DialogFooter className="shrink-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSave} disabled={saving}>
+            {saving ? "Saving…" : "Save"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function DropZone({ onUpload }: { onUpload: (files: File[]) => void }) {
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -345,6 +457,7 @@ export function MediaPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [activeBlob, setActiveBlob] = useState<BlobResponse | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [bulkAltOpen, setBulkAltOpen] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "blobs", page, contentType, q],
@@ -367,6 +480,9 @@ export function MediaPage() {
   })
 
   const blobs = data?.data?.content ?? []
+  const selectedImageBlobs = blobs.filter(
+    (b) => selectedIds.has(b.id!) && b.contentType?.startsWith("image/"),
+  )
   const total = data?.data?.meta?.total ?? 0
   const totalPages = Math.ceil(total / PAGE_SIZE) || 1
 
@@ -445,6 +561,12 @@ export function MediaPage() {
             {selectedIds.size > 0 && (
               <>
                 <span className="text-sm text-muted-foreground">{selectedIds.size} selected</span>
+                {selectedImageBlobs.length > 0 && (
+                  <Button variant="outline" size="sm" onClick={() => setBulkAltOpen(true)}>
+                    <Pencil className="size-4 mr-2" />
+                    Edit alt text
+                  </Button>
+                )}
                 <Button
                   variant="destructive"
                   size="sm"
@@ -567,6 +689,13 @@ export function MediaPage() {
           }}
         />
       )}
+
+      <BulkAltDialog
+        open={bulkAltOpen}
+        onOpenChange={setBulkAltOpen}
+        blobs={selectedImageBlobs}
+        onSaved={() => void queryClient.invalidateQueries({ queryKey: ["admin", "blobs"] })}
+      />
     </div>
   )
 }
