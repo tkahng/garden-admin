@@ -26,6 +26,9 @@ import {
   Check,
   Pencil,
   RefreshCw,
+  Maximize2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -51,11 +54,12 @@ function MediaIcon({ contentType, className }: { contentType?: string; className
   return <File className={className} />
 }
 
-function MediaThumbnail({ blob, selected, onSelect, onClick }: {
+function MediaThumbnail({ blob, selected, onSelect, onClick, onPreview }: {
   blob: BlobResponse
   selected: boolean
   onSelect: (id: string, checked: boolean) => void
   onClick: (blob: BlobResponse) => void
+  onPreview: (blob: BlobResponse) => void
 }) {
   const isImage = blob.contentType?.startsWith("image/")
 
@@ -96,6 +100,18 @@ function MediaThumbnail({ blob, selected, onSelect, onClick }: {
           className="bg-white border-white shadow"
         />
       </div>
+
+      {/* Zoom / preview button */}
+      <button
+        type="button"
+        className="absolute top-2 right-2 p-1 rounded bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+        onClick={(e) => {
+          e.stopPropagation()
+          onPreview(blob)
+        }}
+      >
+        <Maximize2 className="size-3" />
+      </button>
 
       {/* Filename */}
       <div className="px-2 py-1.5 bg-card">
@@ -337,6 +353,134 @@ function DetailPanel({ blob, onClose, onDeleted }: {
   )
 }
 
+function Lightbox({
+  blobs,
+  index: initialIndex,
+  onClose,
+}: {
+  blobs: BlobResponse[]
+  index: number
+  onClose: () => void
+}) {
+  const [index, setIndex] = useState(initialIndex)
+  const blob = blobs[index]
+  const total = blobs.length
+  const isImage = blob?.contentType?.startsWith("image/")
+  const isVideo = blob?.contentType?.startsWith("video/")
+
+  const prev = useCallback(() => setIndex((i) => (i - 1 + total) % total), [total])
+  const next = useCallback(() => setIndex((i) => (i + 1) % total), [total])
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose()
+      if (e.key === "ArrowLeft") prev()
+      if (e.key === "ArrowRight") next()
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [onClose, prev, next])
+
+  if (!blob) return null
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-black/95"
+      onClick={onClose}
+    >
+      {/* Top bar */}
+      <div
+        className="shrink-0 flex items-center justify-between px-4 py-3"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="text-sm text-white/80 truncate max-w-md">{blob.filename}</p>
+        <div className="flex items-center gap-3">
+          {total > 1 && (
+            <span className="text-xs text-white/50">{index + 1} / {total}</span>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-white/60 hover:text-white transition-colors p-1"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Media area */}
+      <div
+        className="flex-1 flex items-center min-h-0 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {total > 1 && (
+          <button
+            type="button"
+            onClick={prev}
+            className="absolute left-3 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+          >
+            <ChevronLeft className="size-6" />
+          </button>
+        )}
+
+        <div className="flex-1 flex items-center justify-center p-6 min-h-0 h-full">
+          {isImage && blob.url ? (
+            <img
+              key={blob.id}
+              src={blob.url}
+              alt={blob.alt ?? blob.filename ?? ""}
+              className="max-w-full max-h-full object-contain rounded shadow-2xl"
+            />
+          ) : isVideo && blob.url ? (
+            <video
+              key={blob.id}
+              src={blob.url}
+              controls
+              className="max-w-full max-h-full rounded shadow-2xl"
+            />
+          ) : (
+            <div className="flex flex-col items-center gap-4 text-white/40">
+              <MediaIcon contentType={blob.contentType} className="size-24" />
+              <p className="text-sm">{blob.filename}</p>
+            </div>
+          )}
+        </div>
+
+        {total > 1 && (
+          <button
+            type="button"
+            onClick={next}
+            className="absolute right-3 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+          >
+            <ChevronRight className="size-6" />
+          </button>
+        )}
+      </div>
+
+      {/* Bottom metadata bar */}
+      <div
+        className="shrink-0 flex items-center gap-4 px-4 py-3 text-xs text-white/40"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {blob.contentType && <span>{blob.contentType}</span>}
+        {blob.size != null && <span>{formatBytes(blob.size)}</span>}
+        {blob.width && blob.height && <span>{blob.width} × {blob.height} px</span>}
+        {blob.createdAt && <span>{formatDate(blob.createdAt)}</span>}
+        {blob.url && (
+          <a
+            href={blob.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto flex items-center gap-1 hover:text-white/80 transition-colors"
+          >
+            Open original <ExternalLink className="size-3" />
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function BulkAltDialog({
   open,
   onOpenChange,
@@ -501,6 +645,7 @@ export function MediaPage() {
   const [activeBlob, setActiveBlob] = useState<BlobResponse | null>(null)
   const [uploading, setUploading] = useState(false)
   const [bulkAltOpen, setBulkAltOpen] = useState(false)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "blobs", page, contentType, q],
@@ -695,13 +840,14 @@ export function MediaPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {blobs.map((blob) => (
+              {blobs.map((blob, i) => (
                 <MediaThumbnail
                   key={blob.id}
                   blob={blob}
                   selected={selectedIds.has(blob.id!)}
                   onSelect={toggleSelect}
                   onClick={(b) => setActiveBlob(activeBlob?.id === b.id ? null : b)}
+                  onPreview={() => setLightboxIndex(i)}
                 />
               ))}
             </div>
@@ -739,6 +885,14 @@ export function MediaPage() {
         blobs={selectedImageBlobs}
         onSaved={() => void queryClient.invalidateQueries({ queryKey: ["admin", "blobs"] })}
       />
+
+      {lightboxIndex !== null && (
+        <Lightbox
+          blobs={blobs}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
+      )}
     </div>
   )
 }
