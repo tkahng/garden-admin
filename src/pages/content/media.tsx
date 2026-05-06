@@ -29,6 +29,10 @@ import {
   Maximize2,
   ChevronLeft,
   ChevronRight,
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  FolderInput,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -232,6 +236,12 @@ function DetailPanel({ blob, onClose, onDeleted }: {
             {blob.size != null && <p>{formatBytes(blob.size)}</p>}
             {blob.width && blob.height && <p>{blob.width} × {blob.height} px</p>}
             {blob.createdAt && <p>{formatDate(blob.createdAt)}</p>}
+            {blob.folder && (
+              <p className="flex items-center gap-1">
+                <Folder className="size-3 shrink-0" />
+                {blob.folder}
+              </p>
+            )}
           </div>
           {blob.url && (
             <div className="flex items-center gap-2 mt-1">
@@ -350,6 +360,217 @@ function DetailPanel({ blob, onClose, onDeleted }: {
         </Button>
       </div>
     </div>
+  )
+}
+
+function FolderSidebar({
+  folders,
+  activeFolder,
+  unorganized,
+  onSelect,
+  onCreateFolder,
+}: {
+  folders: string[]
+  activeFolder: string | undefined
+  unorganized: boolean | undefined
+  onSelect: (folder: string | undefined, unorganized?: boolean) => void
+  onCreateFolder: (name: string) => void
+}) {
+  const [creating, setCreating] = useState(false)
+  const [newName, setNewName] = useState("")
+
+  function submit() {
+    const name = newName.trim()
+    if (!name) return
+    onCreateFolder(name)
+    setNewName("")
+    setCreating(false)
+  }
+
+  return (
+    <div className="w-52 shrink-0 border-r bg-muted/30 flex flex-col overflow-y-auto">
+      <div className="px-3 py-3 border-b flex items-center justify-between">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Folders</span>
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          title="New folder"
+        >
+          <FolderPlus className="size-3.5" />
+        </button>
+      </div>
+
+      <nav className="flex-1 py-1">
+        {/* All files */}
+        <button
+          type="button"
+          onClick={() => onSelect(undefined, false)}
+          className={cn(
+            "w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-sm transition-colors text-left",
+            !activeFolder && !unorganized
+              ? "bg-primary/10 text-primary font-medium"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted",
+          )}
+        >
+          <Folder className="size-3.5 shrink-0" />
+          All files
+        </button>
+
+        {/* Unorganized */}
+        <button
+          type="button"
+          onClick={() => onSelect(undefined, true)}
+          className={cn(
+            "w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-sm transition-colors text-left",
+            unorganized
+              ? "bg-primary/10 text-primary font-medium"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted",
+          )}
+        >
+          <File className="size-3.5 shrink-0" />
+          Unorganized
+        </button>
+
+        {folders.length > 0 && <div className="mx-3 my-1.5 border-t" />}
+
+        {/* Named folders */}
+        {folders.map((f) => (
+          <button
+            key={f}
+            type="button"
+            onClick={() => onSelect(f)}
+            className={cn(
+              "w-full flex items-center gap-2 px-3 py-1.5 text-sm rounded-sm transition-colors text-left",
+              activeFolder === f
+                ? "bg-primary/10 text-primary font-medium"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted",
+            )}
+          >
+            {activeFolder === f
+              ? <FolderOpen className="size-3.5 shrink-0" />
+              : <Folder className="size-3.5 shrink-0" />}
+            <span className="truncate">{f}</span>
+          </button>
+        ))}
+
+        {/* New folder input */}
+        {creating && (
+          <div className="px-3 py-1.5 flex items-center gap-1.5">
+            <Folder className="size-3.5 shrink-0 text-muted-foreground" />
+            <Input
+              autoFocus
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submit()
+                if (e.key === "Escape") { setCreating(false); setNewName("") }
+              }}
+              placeholder="Folder name…"
+              className="h-6 text-xs px-1.5"
+            />
+          </div>
+        )}
+      </nav>
+    </div>
+  )
+}
+
+function MoveToFolderDialog({
+  open,
+  onOpenChange,
+  selectedCount,
+  folders,
+  onMove,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  selectedCount: number
+  folders: string[]
+  onMove: (folder: string | null) => void
+}) {
+  const [target, setTarget] = useState("")
+  const [newFolder, setNewFolder] = useState("")
+  const [mode, setMode] = useState<"existing" | "new">("existing")
+
+  useEffect(() => {
+    if (open) { setTarget(""); setNewFolder(""); setMode(folders.length > 0 ? "existing" : "new") }
+  }, [open, folders.length])
+
+  function handleMove() {
+    const folder = mode === "new" ? newFolder.trim() : target || null
+    onMove(folder || null)
+    onOpenChange(false)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Move {selectedCount} file{selectedCount !== 1 ? "s" : ""} to folder</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-3 py-2">
+          {folders.length > 0 && (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={mode === "existing" ? "default" : "outline"}
+                onClick={() => setMode("existing")}
+              >Existing</Button>
+              <Button
+                size="sm"
+                variant={mode === "new" ? "default" : "outline"}
+                onClick={() => setMode("new")}
+              >New folder</Button>
+            </div>
+          )}
+
+          {mode === "existing" && folders.length > 0 ? (
+            <div className="space-y-1 max-h-48 overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => setTarget("")}
+                className={cn(
+                  "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md text-left transition-colors",
+                  target === "" ? "bg-primary/10 text-primary" : "hover:bg-muted",
+                )}
+              >
+                <File className="size-3.5 shrink-0 text-muted-foreground" />
+                Unorganized (remove from folder)
+              </button>
+              {folders.map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setTarget(f)}
+                  className={cn(
+                    "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md text-left transition-colors",
+                    target === f ? "bg-primary/10 text-primary" : "hover:bg-muted",
+                  )}
+                >
+                  <Folder className="size-3.5 shrink-0 text-muted-foreground" />
+                  {f}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <Input
+              autoFocus
+              value={newFolder}
+              onChange={(e) => setNewFolder(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleMove()}
+              placeholder="e.g. products/banners"
+            />
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleMove}>Move</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -635,7 +856,7 @@ function DropZone({ onUpload }: { onUpload: (files: File[]) => void }) {
 }
 
 export function MediaPage() {
-  const { page: rawPage, contentType: rawContentType, q } = useSearch({ from: "/_authenticated/media" })
+  const { page: rawPage, contentType: rawContentType, q, folder: activeFolder, unorganized } = useSearch({ from: "/_authenticated/media" })
   const page = rawPage ?? 0
   const contentType = rawContentType ?? ""
   const navigate = useNavigate()
@@ -646,9 +867,10 @@ export function MediaPage() {
   const [uploading, setUploading] = useState(false)
   const [bulkAltOpen, setBulkAltOpen] = useState(false)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const [moveOpen, setMoveOpen] = useState(false)
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "blobs", page, contentType, q],
+    queryKey: ["admin", "blobs", page, contentType, q, activeFolder, unorganized],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/blobs", {
         params: {
@@ -657,6 +879,8 @@ export function MediaPage() {
             size: PAGE_SIZE,
             contentType: contentType || undefined,
             filenameContains: q || undefined,
+            folder: activeFolder || undefined,
+            unorganized: unorganized || undefined,
             sortBy: "createdAt",
             sortDir: "desc",
           },
@@ -665,6 +889,31 @@ export function MediaPage() {
       if (error) throw error
       return data
     },
+  })
+
+  const { data: foldersData } = useQuery({
+    queryKey: ["admin", "blobs", "folders"],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/blobs/folders")
+      if (error) throw error
+      return data?.data ?? []
+    },
+  })
+  const folders = foldersData ?? []
+
+  const moveMutation = useMutation({
+    mutationFn: async ({ ids, folder }: { ids: string[]; folder: string | null }) => {
+      const { error } = await apiClient.POST("/api/v1/admin/blobs/move", {
+        body: { ids: ids as unknown as string[], folder: folder ?? undefined },
+      })
+      if (error) throw error
+    },
+    onSuccess: (_, { ids, folder }) => {
+      toast.success(folder ? `Moved ${ids.length} file${ids.length > 1 ? "s" : ""} to "${folder}"` : `Removed ${ids.length} file${ids.length > 1 ? "s" : ""} from folder`)
+      setSelectedIds(new Set())
+      void queryClient.invalidateQueries({ queryKey: ["admin", "blobs"] })
+    },
+    onError: () => toast.error("Move failed"),
   })
 
   const blobs = data?.data?.content ?? []
@@ -736,12 +985,30 @@ export function MediaPage() {
   }
 
   function setPage(newPage: number) {
-    void navigate({ to: "/media", search: { page: newPage, contentType: contentType || undefined, q: q || undefined }, replace: true })
+    void navigate({ to: "/media", search: { page: newPage, contentType: contentType || undefined, q: q || undefined, folder: activeFolder, unorganized: unorganized || undefined }, replace: true })
+  }
+
+  function navigateFolder(folder: string | undefined, isUnorganized?: boolean) {
+    void navigate({ to: "/media", search: { page: 0, contentType: contentType || undefined, q: q || undefined, folder, unorganized: isUnorganized || undefined }, replace: true })
+  }
+
+  function handleCreateFolder(name: string) {
+    if (selectedIds.size > 0) {
+      moveMutation.mutate({ ids: Array.from(selectedIds), folder: name })
+    }
+    navigateFolder(name)
   }
 
   return (
     <div className="flex h-full overflow-hidden">
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <FolderSidebar
+        folders={folders}
+        activeFolder={activeFolder}
+        unorganized={unorganized}
+        onSelect={(folder, isUnorganized) => navigateFolder(folder, isUnorganized)}
+        onCreateFolder={handleCreateFolder}
+      />
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
         <div className="px-6 py-4 border-b flex items-center justify-between shrink-0">
           <h1 className="text-2xl font-semibold">Media library</h1>
@@ -755,6 +1022,10 @@ export function MediaPage() {
                     Edit alt text
                   </Button>
                 )}
+                <Button variant="outline" size="sm" onClick={() => setMoveOpen(true)}>
+                  <FolderInput className="size-4 mr-2" />
+                  Move to folder
+                </Button>
                 <Button
                   variant="destructive"
                   size="sm"
@@ -884,6 +1155,14 @@ export function MediaPage() {
         onOpenChange={setBulkAltOpen}
         blobs={selectedImageBlobs}
         onSaved={() => void queryClient.invalidateQueries({ queryKey: ["admin", "blobs"] })}
+      />
+
+      <MoveToFolderDialog
+        open={moveOpen}
+        onOpenChange={setMoveOpen}
+        selectedCount={selectedIds.size}
+        folders={folders}
+        onMove={(folder) => moveMutation.mutate({ ids: Array.from(selectedIds), folder })}
       />
 
       {lightboxIndex !== null && (

@@ -1780,6 +1780,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/blobs/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["move"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/account/wishlist/items": {
         parameters: {
             query?: never;
@@ -2996,6 +3012,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/blobs/folders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listFolders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/account/wishlist": {
         parameters: {
             query?: never;
@@ -3967,6 +3999,7 @@ export interface components {
             width?: number;
             /** Format: int32 */
             height?: number;
+            folder?: string;
             /** Format: date-time */
             createdAt?: string;
         };
@@ -4647,6 +4680,10 @@ export interface components {
             data?: components["schemas"]["ArticleImageResponse"];
             meta?: unknown;
         };
+        MoveToFolderRequest: {
+            ids?: string[];
+            folder?: string;
+        };
         AddWishlistItemRequest: {
             /** Format: uuid */
             productId: string;
@@ -4782,6 +4819,7 @@ export interface components {
         UpdateBlobRequest: {
             alt?: string;
             title?: string;
+            folder?: string;
         };
         ApiResponseListShippingRateResponse: {
             data?: components["schemas"]["ShippingRateResponse"][];
@@ -9370,6 +9408,8 @@ export interface operations {
             query?: {
                 contentType?: string;
                 filenameContains?: string;
+                folder?: string;
+                unorganized?: boolean;
                 sortBy?: string;
                 sortDir?: string;
                 page?: number;
@@ -9429,6 +9469,28 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["BulkDeleteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    move: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveToFolderRequest"];
             };
         };
         responses: {
@@ -11570,6 +11632,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseListBlobUsageResponse"];
+                };
+            };
+        };
+    };
+    listFolders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListString"];
                 };
             };
         };
