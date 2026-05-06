@@ -21,6 +21,8 @@ import {
   Film,
   File,
   ExternalLink,
+  Copy,
+  Check,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -108,7 +110,15 @@ function DetailPanel({ blob, onClose, onDeleted }: {
   const queryClient = useQueryClient()
   const [alt, setAlt] = useState(blob.alt ?? "")
   const [title, setTitle] = useState(blob.title ?? "")
+  const [copied, setCopied] = useState(false)
   const isImage = blob.contentType?.startsWith("image/")
+
+  async function copyUrl() {
+    if (!blob.url) return
+    await navigator.clipboard.writeText(blob.url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const updateMutation = useMutation({
     mutationFn: async () => {
@@ -183,14 +193,27 @@ function DetailPanel({ blob, onClose, onDeleted }: {
             {blob.createdAt && <p>{formatDate(blob.createdAt)}</p>}
           </div>
           {blob.url && (
-            <a
-              href={blob.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1"
-            >
-              Open original <ExternalLink className="size-3" />
-            </a>
+            <div className="flex items-center gap-2 mt-1">
+              <a
+                href={blob.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+              >
+                Open original <ExternalLink className="size-3" />
+              </a>
+              <button
+                type="button"
+                onClick={copyUrl}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {copied ? (
+                  <><Check className="size-3 text-green-500" /> Copied</>
+                ) : (
+                  <><Copy className="size-3" /> Copy URL</>
+                )}
+              </button>
+            </div>
           )}
         </div>
 
