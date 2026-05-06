@@ -587,11 +587,9 @@ export function PriceListsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/v1/companies", {
-        params: { query: { user: {} } },
-      })
+      const { data, error } = await apiClient.GET("/api/v1/companies")
       if (error) throw error
-      return (data as { content?: Company[] } | undefined)?.content ?? []
+      return data?.data ?? []
     },
   })
 

@@ -67,7 +67,7 @@ export function InvoicesPage() {
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/companies")
       if (error) throw error
-      return (data as { data?: Company[] } | undefined)?.data ?? []
+      return data?.data ?? []
     },
   })
   const companies: Company[] = companiesData ?? []
