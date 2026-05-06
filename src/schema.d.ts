@@ -596,6 +596,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/blobs/{id}/replace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["replace"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/account": {
         parameters: {
             query?: never;
@@ -3932,6 +3948,28 @@ export interface components {
             /** Format: int32 */
             position?: number;
         };
+        ApiResponseBlobResponse: {
+            data?: components["schemas"]["BlobResponse"];
+            meta?: unknown;
+        };
+        BlobResponse: {
+            /** Format: uuid */
+            id?: string;
+            key?: string;
+            filename?: string;
+            contentType?: string;
+            /** Format: int64 */
+            size?: number;
+            url?: string;
+            alt?: string;
+            title?: string;
+            /** Format: int32 */
+            width?: number;
+            /** Format: int32 */
+            height?: number;
+            /** Format: date-time */
+            createdAt?: string;
+        };
         UpdateAccountRequest: {
             firstName?: string;
             lastName?: string;
@@ -4608,28 +4646,6 @@ export interface components {
         ApiResponseArticleImageResponse: {
             data?: components["schemas"]["ArticleImageResponse"];
             meta?: unknown;
-        };
-        ApiResponseBlobResponse: {
-            data?: components["schemas"]["BlobResponse"];
-            meta?: unknown;
-        };
-        BlobResponse: {
-            /** Format: uuid */
-            id?: string;
-            key?: string;
-            filename?: string;
-            contentType?: string;
-            /** Format: int64 */
-            size?: number;
-            url?: string;
-            alt?: string;
-            title?: string;
-            /** Format: int32 */
-            width?: number;
-            /** Format: int32 */
-            height?: number;
-            /** Format: date-time */
-            createdAt?: string;
         };
         AddWishlistItemRequest: {
             /** Format: uuid */
@@ -6997,6 +7013,35 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    replace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBlobResponse"];
+                };
             };
         };
     };

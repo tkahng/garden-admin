@@ -25,6 +25,7 @@ import {
   Copy,
   Check,
   Pencil,
+  RefreshCw,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -114,6 +115,7 @@ function DetailPanel({ blob, onClose, onDeleted }: {
   const [title, setTitle] = useState(blob.title ?? "")
   const [copied, setCopied] = useState(false)
   const isImage = blob.contentType?.startsWith("image/")
+  const replaceInputRef = useRef<HTMLInputElement>(null)
 
   async function copyUrl() {
     if (!blob.url) return
@@ -136,6 +138,27 @@ function DetailPanel({ blob, onClose, onDeleted }: {
       void queryClient.invalidateQueries({ queryKey: ["admin", "blobs"] })
     },
     onError: () => toast.error("Failed to update file"),
+  })
+
+  const replaceMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const { data, error } = await apiClient.PUT("/api/v1/admin/blobs/{id}/replace", {
+        params: { path: { id: blob.id! } },
+        body: { file: file as unknown as string },
+        bodySerializer: () => {
+          const fd = new FormData()
+          fd.append("file", file)
+          return fd
+        },
+      })
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      toast.success("File replaced — URL unchanged")
+      void queryClient.invalidateQueries({ queryKey: ["admin", "blobs"] })
+    },
+    onError: () => toast.error("Replace failed"),
   })
 
   const deleteMutation = useMutation({
@@ -273,8 +296,28 @@ function DetailPanel({ blob, onClose, onDeleted }: {
         )}
       </div>
 
-      {/* Delete */}
-      <div className="px-4 py-3 border-t">
+      {/* Replace / Delete */}
+      <div className="px-4 py-3 border-t space-y-2">
+        <input
+          ref={replaceInputRef}
+          type="file"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) replaceMutation.mutate(file)
+            e.target.value = ""
+          }}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={() => replaceInputRef.current?.click()}
+          disabled={replaceMutation.isPending}
+        >
+          <RefreshCw className={cn("size-4 mr-2", replaceMutation.isPending && "animate-spin")} />
+          {replaceMutation.isPending ? "Replacing…" : "Replace file"}
+        </Button>
         <Button
           variant="destructive"
           size="sm"
