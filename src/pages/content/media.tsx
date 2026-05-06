@@ -33,6 +33,7 @@ import {
   FolderOpen,
   FolderPlus,
   FolderInput,
+  Play,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -66,6 +67,7 @@ function MediaThumbnail({ blob, selected, onSelect, onClick, onPreview }: {
   onPreview: (blob: BlobResponse) => void
 }) {
   const isImage = blob.contentType?.startsWith("image/")
+  const isVideo = blob.contentType?.startsWith("video/")
 
   return (
     <div
@@ -83,6 +85,21 @@ function MediaThumbnail({ blob, selected, onSelect, onClick, onPreview }: {
             alt={blob.alt ?? blob.filename ?? ""}
             className="w-full h-full object-cover"
           />
+        ) : isVideo && blob.url ? (
+          <div className="relative w-full h-full">
+            <video
+              src={blob.url}
+              preload="metadata"
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="size-8 rounded-full bg-black/60 flex items-center justify-center">
+                <Play className="size-4 text-white fill-white ml-0.5" />
+              </div>
+            </div>
+          </div>
         ) : (
           <MediaIcon contentType={blob.contentType} className="size-10 text-muted-foreground" />
         )}
@@ -135,6 +152,7 @@ function DetailPanel({ blob, onClose, onDeleted }: {
   const [title, setTitle] = useState(blob.title ?? "")
   const [copied, setCopied] = useState(false)
   const isImage = blob.contentType?.startsWith("image/")
+  const isVideo = blob.contentType?.startsWith("video/")
   const replaceInputRef = useRef<HTMLInputElement>(null)
 
   async function copyUrl() {
@@ -219,13 +237,22 @@ function DetailPanel({ blob, onClose, onDeleted }: {
       <div className="flex-1 overflow-y-auto">
         {/* Preview */}
         <div className="p-4 border-b">
-          <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-            {isImage && blob.url ? (
-              <img src={blob.url} alt={blob.alt ?? ""} className="w-full h-full object-contain" />
-            ) : (
-              <MediaIcon contentType={blob.contentType} className="size-16 text-muted-foreground" />
-            )}
-          </div>
+          {isVideo && blob.url ? (
+            <video
+              src={blob.url}
+              controls
+              preload="metadata"
+              className="w-full rounded-lg bg-black"
+            />
+          ) : (
+            <div className="aspect-square rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+              {isImage && blob.url ? (
+                <img src={blob.url} alt={blob.alt ?? ""} className="w-full h-full object-contain" />
+              ) : (
+                <MediaIcon contentType={blob.contentType} className="size-16 text-muted-foreground" />
+              )}
+            </div>
+          )}
         </div>
 
         {/* Meta */}
@@ -657,6 +684,7 @@ function Lightbox({
               key={blob.id}
               src={blob.url}
               controls
+              autoPlay
               className="max-w-full max-h-full rounded shadow-2xl"
             />
           ) : (

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { DataPagination } from "@/components/ui/data-pagination"
 import { cn } from "@/lib/utils"
-import { Search, Upload, Image, FileText, Film, File } from "lucide-react"
+import { Search, Upload, Image, FileText, Film, File, Play } from "lucide-react"
 import { toast } from "sonner"
 
 type BlobResponse = components["schemas"]["BlobResponse"]
@@ -33,6 +33,7 @@ function PickerThumbnail({
   onToggle: () => void
 }) {
   const isImage = blob.contentType?.startsWith("image/")
+  const isVideo = blob.contentType?.startsWith("video/")
   return (
     <button
       type="button"
@@ -47,6 +48,21 @@ function PickerThumbnail({
       <div className="w-full h-full bg-muted flex items-center justify-center">
         {isImage && blob.url ? (
           <img src={blob.url} alt={blob.alt ?? blob.filename ?? ""} className="w-full h-full object-cover" />
+        ) : isVideo && blob.url ? (
+          <div className="relative w-full h-full">
+            <video
+              src={blob.url}
+              preload="metadata"
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="size-6 rounded-full bg-black/60 flex items-center justify-center">
+                <Play className="size-3 text-white fill-white ml-0.5" />
+              </div>
+            </div>
+          </div>
         ) : (
           <MediaIcon contentType={blob.contentType} className="size-8 text-muted-foreground" />
         )}
