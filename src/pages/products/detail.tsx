@@ -41,7 +41,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { ArrowLeft, ChevronDown, ChevronUp, ImageIcon, Pencil, Plus, Search, Star, Trash2, X } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronUp, ImageIcon, Pencil, Plus, Star, Trash2, X } from "lucide-react"
+import { MediaPickerDialog } from "@/components/MediaPickerDialog"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
@@ -95,8 +96,6 @@ export function ProductDetailPage({ id }: { id: string }) {
 
   // Image picker
   const [imagePickerOpen, setImagePickerOpen] = useState(false)
-  const [pickerSearch, setPickerSearch] = useState("")
-  const [pickerSelectedIds, setPickerSelectedIds] = useState<Set<string>>(new Set())
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin", "products", id] })
 
@@ -304,15 +303,11 @@ export function ProductDetailPage({ id }: { id: string }) {
     onError: () => toast.error("Failed to reorder images"),
   })
 
-  async function addPickedImages() {
-    const ids = Array.from(pickerSelectedIds)
-    for (const blobId of ids) {
-      await addImageMutation.mutateAsync(blobId)
+  async function addPickedImages(blobs: { id?: string }[]) {
+    for (const blob of blobs) {
+      if (blob.id) await addImageMutation.mutateAsync(blob.id)
     }
-    toast.success(`Added ${ids.length} image${ids.length > 1 ? "s" : ""}`)
-    setImagePickerOpen(false)
-    setPickerSelectedIds(new Set())
-    setPickerSearch("")
+    toast.success(`Added ${blobs.length} image${blobs.length !== 1 ? "s" : ""}`)
   }
 
   function moveImage(imgId: string, dir: "up" | "down") {
@@ -1138,135 +1133,13 @@ export function ProductDetailPage({ id }: { id: string }) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Image picker dialog */}
-      <Dialog
+      <MediaPickerDialog
         open={imagePickerOpen}
-        onOpenChange={(o) => {
-          setImagePickerOpen(o)
-          if (!o) { setPickerSelectedIds(new Set()); setPickerSearch("") }
-        }}
-      >
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Add images from media library</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search by filename..."
-                className="pl-9"
-                value={pickerSearch}
-                onChange={(e) => setPickerSearch(e.target.value)}
-              />
-            </div>
-            <BlobPickerGrid
-              search={pickerSearch}
-              selectedIds={pickerSelectedIds}
-              onToggle={(blobId) => {
-                setPickerSelectedIds((prev) => {
-                  const next = new Set(prev)
-                  if (next.has(blobId)) next.delete(blobId)
-                  else next.add(blobId)
-                  return next
-                })
-              }}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setImagePickerOpen(false)}>Cancel</Button>
-            <Button
-              onClick={addPickedImages}
-              disabled={pickerSelectedIds.size === 0 || addImageMutation.isPending}
-            >
-              Add {pickerSelectedIds.size > 0 ? `${pickerSelectedIds.size} ` : ""}image{pickerSelectedIds.size !== 1 ? "s" : ""}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  )
-}
-
-// ── Blob picker grid (image-only) ─────────────────────────────────────────────
-
-function BlobPickerGrid({
-  search,
-  selectedIds,
-  onToggle,
-}: {
-  search: string
-  selectedIds: Set<string>
-  onToggle: (id: string) => void
-}) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin", "blobs", "picker", search],
-    queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/v1/admin/blobs", {
-        params: {
-          query: {
-            page: 0,
-            size: 48,
-            contentType: "image/",
-            filenameContains: search || undefined,
-            sortBy: "createdAt",
-            sortDir: "desc",
-          },
-        },
-      })
-      if (error) throw error
-      return data?.data?.content ?? []
-    },
-  })
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-4 gap-2 h-72 overflow-y-auto">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="aspect-square rounded bg-muted animate-pulse" />
-        ))}
-      </div>
-    )
-  }
-
-  if (!data?.length) {
-    return (
-      <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">
-        No images found. Upload images in the Media library first.
-      </div>
-    )
-  }
-
-  return (
-    <div className="grid grid-cols-4 gap-2 max-h-72 overflow-y-auto pr-1">
-      {data.map((blob) => {
-        const selected = selectedIds.has(blob.id!)
-        return (
-          <button
-            key={blob.id}
-            onClick={() => onToggle(blob.id!)}
-            className={cn(
-              "relative aspect-square rounded-md overflow-hidden border-2 transition-all",
-              selected ? "border-primary ring-2 ring-primary/20" : "border-transparent hover:border-muted-foreground/30"
-            )}
-          >
-            {blob.url ? (
-              <img src={blob.url} alt={blob.alt ?? ""} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center">
-                <ImageIcon className="size-6 text-muted-foreground" />
-              </div>
-            )}
-            {selected && (
-              <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                <div className="size-6 rounded-full bg-primary flex items-center justify-center">
-                  <X className="size-3 text-primary-foreground rotate-45" />
-                </div>
-              </div>
-            )}
-          </button>
-        )
-      })}
+        onOpenChange={setImagePickerOpen}
+        accept="image/"
+        title="Add images from media library"
+        onConfirm={addPickedImages}
+      />
     </div>
   )
 }
