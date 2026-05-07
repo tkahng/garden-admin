@@ -653,6 +653,12 @@ export function OrderDetailPage({ id }: { id: string }) {
                   {o.currency ?? "$"}{Number(o.totalAmount ?? 0).toFixed(2)}
                 </span>
               </div>
+              {o.poNumber && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">PO number</span>
+                  <span className="font-mono text-xs">{o.poNumber}</span>
+                </div>
+              )}
               {o.discountAmount != null && o.discountAmount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Discount</span>
