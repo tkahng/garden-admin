@@ -42,7 +42,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, Ban, ImageIcon, Pencil, RefreshCcw, Plus, Package, FileText } from "lucide-react"
+import { ArrowLeft, Ban, ImageIcon, Pencil, RefreshCcw, Plus, Package, FileText, CheckCheck, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 
@@ -52,6 +52,7 @@ type Fulfillment = components["schemas"]["FulfillmentResponse"]
 type OrderEvent = components["schemas"]["OrderEventResponse"]
 type CreateFulfillment = components["schemas"]["CreateFulfillmentRequest"]
 type UpdateFulfillment = components["schemas"]["UpdateFulfillmentRequest"]
+type DraftItem = { variantId: string; quantity: number; unitPrice: string }
 
 const EVENT_LABELS: Record<string, string> = {
   ORDER_PLACED: "Order placed",
@@ -115,6 +116,10 @@ export function OrderDetailPage({ id }: { id: string }) {
   const [invoiceOpen, setInvoiceOpen] = useState(false)
   const [invoiceCompanyId, setInvoiceCompanyId] = useState("")
   const [invoiceTerms, setInvoiceTerms] = useState(30)
+
+  // Draft items editing
+  const [draftItems, setDraftItems] = useState<DraftItem[]>([])
+  const [draftItemsInit, setDraftItemsInit] = useState(false)
 
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: ["admin", "orders", id] })
@@ -297,6 +302,40 @@ export function OrderDetailPage({ id }: { id: string }) {
     onError: () => toast.error("Failed to create invoice"),
   })
 
+  const updateDraftItemsMutation = useMutation({
+    mutationFn: async (items: DraftItem[]) => {
+      const { error } = await apiClient.PUT("/api/v1/admin/orders/{id}/draft/items", {
+        params: { path: { id } },
+        body: items.map((it) => ({
+          variantId: it.variantId,
+          quantity: it.quantity,
+          unitPrice: it.unitPrice ? Number(it.unitPrice) : undefined,
+        })),
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Draft items saved")
+      invalidate()
+    },
+    onError: () => toast.error("Failed to save draft items"),
+  })
+
+  const completeDraftMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await apiClient.POST("/api/v1/admin/orders/{id}/draft/complete", {
+        params: { path: { id } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Draft completed")
+      invalidate()
+      void qc.invalidateQueries({ queryKey: ["admin", "orders", id, "events"] })
+    },
+    onError: () => toast.error("Failed to complete draft"),
+  })
+
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   function openCreateFulfillment() {
@@ -332,10 +371,23 @@ export function OrderDetailPage({ id }: { id: string }) {
 
   const o = order
   const items: OrderItem[] = o.items ?? []
+  const isDraft = o.status === "DRAFT"
   const canCancel = o.status !== "CANCELLED" && o.status !== "REFUNDED"
   const canRefund = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED" || o.status === "FULFILLED"
   const canFulfill = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED"
-  const canInvoice = o.status !== "CANCELLED" && o.status !== "REFUNDED"
+  const canInvoice = o.status !== "CANCELLED" && o.status !== "REFUNDED" && !isDraft
+
+  // Initialise editable draft items once the order loads
+  if (isDraft && !draftItemsInit) {
+    setDraftItems(
+      items.map((it) => ({
+        variantId: it.variantId ?? "",
+        quantity: it.quantity ?? 1,
+        unitPrice: it.unitPrice != null ? String(it.unitPrice) : "",
+      }))
+    )
+    setDraftItemsInit(true)
+  }
 
   const subtotal = items.reduce((sum, i) => sum + (i.unitPrice ?? 0) * (i.quantity ?? 0), 0)
 
@@ -360,6 +412,16 @@ export function OrderDetailPage({ id }: { id: string }) {
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
+          {isDraft && (
+            <Button
+              size="sm"
+              onClick={() => completeDraftMutation.mutate()}
+              disabled={completeDraftMutation.isPending || items.length === 0}
+            >
+              <CheckCheck className="size-4 mr-2" />
+              Complete order
+            </Button>
+          )}
           {canFulfill && (
             <Button size="sm" onClick={openCreateFulfillment}>
               <Package className="size-4 mr-2" />
@@ -391,13 +453,104 @@ export function OrderDetailPage({ id }: { id: string }) {
         {/* Left: items + fulfillments + timeline */}
         <div className="lg:col-span-2 space-y-6">
 
-          {/* Order items */}
+          {/* Order items — editable when DRAFT, read-only otherwise */}
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Items ({items.length})</CardTitle>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base">Items ({isDraft ? draftItems.length : items.length})</CardTitle>
+              {isDraft && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setDraftItems((prev) => [...prev, { variantId: "", quantity: 1, unitPrice: "" }])}
+                >
+                  <Plus className="size-3.5 mr-1.5" />Add item
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="p-0">
-              {items.length === 0 ? (
+              {isDraft ? (
+                <div className="space-y-0">
+                  {draftItems.length === 0 ? (
+                    <p className="text-sm text-muted-foreground px-6 pb-6">No items. Add at least one item.</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Variant ID</TableHead>
+                          <TableHead className="w-24">Qty</TableHead>
+                          <TableHead className="w-32">Unit price</TableHead>
+                          <TableHead className="w-10" />
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {draftItems.map((item, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell>
+                              <Input
+                                placeholder="Variant UUID"
+                                value={item.variantId}
+                                onChange={(e) =>
+                                  setDraftItems((prev) =>
+                                    prev.map((it, i) => i === idx ? { ...it, variantId: e.target.value } : it)
+                                  )
+                                }
+                                className="h-8 text-xs font-mono"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min={1}
+                                value={item.quantity}
+                                onChange={(e) =>
+                                  setDraftItems((prev) =>
+                                    prev.map((it, i) => i === idx ? { ...it, quantity: Math.max(1, Number(e.target.value)) } : it)
+                                  )
+                                }
+                                className="h-8 text-sm w-20"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                placeholder="auto"
+                                value={item.unitPrice}
+                                onChange={(e) =>
+                                  setDraftItems((prev) =>
+                                    prev.map((it, i) => i === idx ? { ...it, unitPrice: e.target.value } : it)
+                                  )
+                                }
+                                className="h-8 text-sm w-28"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-7 text-destructive"
+                                onClick={() => setDraftItems((prev) => prev.filter((_, i) => i !== idx))}
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                  <div className="px-6 py-3 border-t flex justify-end">
+                    <Button
+                      size="sm"
+                      disabled={updateDraftItemsMutation.isPending || draftItems.some((it) => !it.variantId.trim())}
+                      onClick={() => updateDraftItemsMutation.mutate(draftItems)}
+                    >
+                      {updateDraftItemsMutation.isPending ? "Saving…" : "Save items"}
+                    </Button>
+                  </div>
+                </div>
+              ) : items.length === 0 ? (
                 <p className="text-sm text-muted-foreground px-6 pb-6">No items.</p>
               ) : (
                 <>
