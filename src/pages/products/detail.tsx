@@ -519,6 +519,7 @@ export function ProductDetailPage({ id }: { id: string }) {
                       <TableHead>Title / Options</TableHead>
                       <TableHead>SKU</TableHead>
                       <TableHead>Price</TableHead>
+                      <TableHead className="w-24">Min qty</TableHead>
                       <TableHead>Fulfillment</TableHead>
                       <TableHead />
                     </TableRow>
@@ -544,6 +545,12 @@ export function ProductDetailPage({ id }: { id: string }) {
                               ${Number(v.compareAtPrice).toFixed(2)}
                             </span>
                           )}
+                        </TableCell>
+                        <TableCell className="text-sm tabular-nums">
+                          {(v.minimumOrderQty ?? 1) > 1
+                            ? <span className="font-medium">≥ {v.minimumOrderQty}</span>
+                            : <span className="text-muted-foreground">—</span>
+                          }
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {v.fulfillmentType ?? "IN_STOCK"}
