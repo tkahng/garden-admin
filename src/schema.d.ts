@@ -3393,6 +3393,8 @@ export interface components {
             quantity?: number;
             unitPrice?: number;
             product?: components["schemas"]["CartItemProductInfo"];
+            /** Format: int32 */
+            minimumOrderQty?: number;
         };
         CartResponse: {
             /** Format: uuid */
