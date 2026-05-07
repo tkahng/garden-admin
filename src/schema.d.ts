@@ -820,6 +820,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/newsletter/subscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["subscribe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/invitations/{token}/accept": {
         parameters: {
             query?: never;
@@ -2300,6 +2316,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getByHandle"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/products/{handle}/tiers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getVariantTiers"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4129,6 +4161,18 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        SubscribeRequest: {
+            /** Format: email */
+            email: string;
+            source?: string;
+        };
+        ApiResponseSubscribeResponse: {
+            data?: components["schemas"]["SubscribeResponse"];
+            meta?: unknown;
+        };
+        SubscribeResponse: {
+            alreadySubscribed?: boolean;
+        };
         ApiResponseInvitationResponse: {
             data?: components["schemas"]["InvitationResponse"];
             meta?: unknown;
@@ -5004,6 +5048,20 @@ export interface components {
             averageRating?: number;
             /** Format: int64 */
             reviewCount?: number;
+        };
+        ApiResponseListVariantPriceTiersResponse: {
+            data?: components["schemas"]["VariantPriceTiersResponse"][];
+            meta?: unknown;
+        };
+        PriceTierEntry: {
+            /** Format: int32 */
+            minQty?: number;
+            price?: number;
+        };
+        VariantPriceTiersResponse: {
+            /** Format: uuid */
+            variantId?: string;
+            tiers?: components["schemas"]["PriceTierEntry"][];
         };
         ApiResponseListProductSummaryResponse: {
             data?: components["schemas"]["ProductSummaryResponse"][];
@@ -7495,6 +7553,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseReviewResponse"];
+                };
+            };
+        };
+    };
+    subscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscribeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseSubscribeResponse"];
                 };
             };
         };
@@ -10547,6 +10629,7 @@ export interface operations {
                 titleContains?: string;
                 vendor?: string;
                 productType?: string;
+                sortBy?: string;
                 page?: number;
                 size?: number;
             };
@@ -10585,6 +10668,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseProductDetailResponse"];
+                };
+            };
+        };
+    };
+    getVariantTiers: {
+        parameters: {
+            query: {
+                companyId: string;
+            };
+            header?: never;
+            path: {
+                handle: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListVariantPriceTiersResponse"];
                 };
             };
         };
@@ -10912,6 +11019,8 @@ export interface operations {
             query?: {
                 page?: number;
                 size?: number;
+                sortBy?: string;
+                sortDir?: string;
             };
             header?: never;
             path: {
