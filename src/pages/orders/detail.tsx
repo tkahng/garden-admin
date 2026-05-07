@@ -42,7 +42,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, Ban, ImageIcon, Pencil, RefreshCcw, Plus, Package, FileText, CheckCheck, Trash2 } from "lucide-react"
+import { ArrowLeft, Ban, ImageIcon, Pencil, RefreshCcw, Plus, Package, FileText, CheckCheck, Trash2, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 
 
@@ -53,6 +53,7 @@ type OrderEvent = components["schemas"]["OrderEventResponse"]
 type CreateFulfillment = components["schemas"]["CreateFulfillmentRequest"]
 type UpdateFulfillment = components["schemas"]["UpdateFulfillmentRequest"]
 type DraftItem = { variantId: string; quantity: number; unitPrice: string }
+type Invoice = components["schemas"]["InvoiceResponse"]
 
 const EVENT_LABELS: Record<string, string> = {
   ORDER_PLACED: "Order placed",
@@ -174,6 +175,19 @@ export function OrderDetailPage({ id }: { id: string }) {
       return data
     },
     enabled: invoiceOpen,
+  })
+
+  const { data: linkedInvoice } = useQuery<Invoice | null>({
+    queryKey: ["admin", "orders", id, "invoice"],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/invoices", {
+        params: { query: { orderId: id, size: 1 } },
+      })
+      if (error) return null
+      const items = (data as { data?: { content?: Invoice[] } } | undefined)?.data?.content ?? []
+      return items[0] ?? null
+    },
+    enabled: !!id,
   })
   const companies = (companiesData as { content?: { id: string; name: string }[] } | undefined)?.content ?? []
 
@@ -822,6 +836,18 @@ export function OrderDetailPage({ id }: { id: string }) {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Gift card</span>
                   <span className="text-green-600 tabular-nums">−${Number(o.giftCardAmount).toFixed(2)}</span>
+                </div>
+              )}
+              {o.status === "INVOICED" && linkedInvoice && (
+                <div className="pt-1 border-t">
+                  <Link
+                    to="/invoices/$invoiceId"
+                    params={{ invoiceId: linkedInvoice.id! }}
+                    className="text-primary text-xs hover:underline flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    View invoice →
+                  </Link>
                 </div>
               )}
             </CardContent>

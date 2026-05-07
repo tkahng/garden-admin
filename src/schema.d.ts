@@ -11725,6 +11725,7 @@ export interface operations {
             query?: {
                 companyId?: string;
                 status?: "ISSUED" | "PARTIAL" | "PAID" | "OVERDUE" | "VOID";
+                orderId?: string;
                 page?: number;
                 size?: number;
             };
