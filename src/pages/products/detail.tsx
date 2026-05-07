@@ -340,6 +340,7 @@ export function ProductDetailPage({ id }: { id: string }) {
       fulfillmentType: v.fulfillmentType,
       inventoryPolicy: v.inventoryPolicy,
       leadTimeDays: v.leadTimeDays,
+      minimumOrderQty: v.minimumOrderQty ?? 1,
     })
     setVariantOpen(true)
   }
@@ -1045,6 +1046,14 @@ export function ProductDetailPage({ id }: { id: string }) {
                 />
               </div>
             ) : null}
+            <div className="space-y-1.5">
+              <Label>Minimum order quantity</Label>
+              <Input
+                type="number" min={1}
+                value={variantForm.minimumOrderQty ?? 1}
+                onChange={(e) => setVariantForm((f) => ({ ...f, minimumOrderQty: Number(e.target.value) }))}
+              />
+            </div>
             {options.length > 0 && (
               <div className="space-y-1.5">
                 <Label>Option values</Label>

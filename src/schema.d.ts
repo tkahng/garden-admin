@@ -3676,6 +3676,8 @@ export interface components {
             inventoryPolicy?: "DENY" | "CONTINUE";
             /** Format: int32 */
             leadTimeDays?: number;
+            /** Format: int32 */
+            minimumOrderQty?: number;
             /** Format: date-time */
             deletedAt?: string;
         };
@@ -4812,6 +4814,8 @@ export interface components {
             inventoryPolicy?: "DENY" | "CONTINUE";
             /** Format: int32 */
             leadTimeDays?: number;
+            /** Format: int32 */
+            minimumOrderQty?: number;
         };
         ProductStatusRequest: {
             /** @enum {string} */
@@ -5059,6 +5063,8 @@ export interface components {
             inventoryPolicy?: "DENY" | "CONTINUE";
             /** Format: int32 */
             leadTimeDays?: number;
+            /** Format: int32 */
+            minimumOrderQty?: number;
         };
         ReviewSummaryResponse: {
             averageRating?: number;
