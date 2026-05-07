@@ -33,7 +33,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, ChevronDown, ChevronRight, Plus, Pencil, Trash2, ShieldCheck } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronRight, Plus, Pencil, Trash2, ShieldCheck, UserCheck, X } from "lucide-react"
 import { toast } from "sonner"
 
 type Company = components["schemas"]["CompanyResponse"]
@@ -46,6 +46,7 @@ type UpsertEntry = components["schemas"]["UpsertPriceListEntryRequest"]
 type CreditAccount = components["schemas"]["CreditAccountResponse"]
 type CreateCreditAccount = components["schemas"]["CreateCreditAccountRequest"]
 type UpdateCreditAccount = components["schemas"]["UpdateCreditAccountRequest"]
+type AdminUser = components["schemas"]["AdminUserResponse"]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -833,6 +834,142 @@ function TaxExemptSection({ company, onUpdated }: { company: Company; onUpdated:
   )
 }
 
+// ─── SalesRepSection ──────────────────────────────────────────────────────────
+
+function SalesRepSection({ company, onUpdated }: { company: Company; onUpdated: () => void }) {
+  const [emailSearch, setEmailSearch] = useState("")
+  const [searchResults, setSearchResults] = useState<AdminUser[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+
+  const { data: currentRep } = useQuery<AdminUser | null>({
+    queryKey: ["admin", "user", company.salesRepUserId],
+    enabled: !!company.salesRepUserId,
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/users/{id}", {
+        params: { path: { id: company.salesRepUserId! } },
+      })
+      if (error) return null
+      return (data as { data?: AdminUser } | undefined)?.data ?? null
+    },
+  })
+
+  const assignMutation = useMutation({
+    mutationFn: async (salesRepUserId: string | null) => {
+      const { error } = await apiClient.PUT("/api/v1/admin/companies/{id}", {
+        params: { path: { id: company.id! } },
+        body: {
+          name: company.name!,
+          taxId: company.taxId ?? undefined,
+          phone: company.phone ?? undefined,
+          billingAddressLine1: company.billingAddressLine1 ?? undefined,
+          billingAddressLine2: company.billingAddressLine2 ?? undefined,
+          billingCity: company.billingCity ?? undefined,
+          billingState: company.billingState ?? undefined,
+          billingPostalCode: company.billingPostalCode ?? undefined,
+          billingCountry: company.billingCountry ?? undefined,
+          taxExempt: company.taxExempt ?? false,
+          salesRepUserId: salesRepUserId ?? undefined,
+        },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Sales rep updated")
+      setEmailSearch("")
+      setSearchResults([])
+      onUpdated()
+    },
+    onError: () => toast.error("Failed to update sales rep"),
+  })
+
+  async function handleSearch() {
+    if (!emailSearch.trim()) return
+    setIsSearching(true)
+    try {
+      const { data } = await apiClient.GET("/api/v1/admin/users", {
+        params: { query: { email: emailSearch.trim(), size: 10 } },
+      })
+      const users = (data as { data?: { content?: AdminUser[] } } | undefined)?.data?.content ?? []
+      setSearchResults(users)
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  function repName(rep: AdminUser) {
+    const name = [rep.firstName, rep.lastName].filter(Boolean).join(" ")
+    return name || rep.email || rep.id
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">Sales rep</h2>
+        {company.salesRepUserId && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-destructive border-destructive/40 hover:bg-destructive/10"
+            onClick={() => assignMutation.mutate(null)}
+            disabled={assignMutation.isPending}
+          >
+            <X className="size-3.5 mr-1.5" />
+            Remove
+          </Button>
+        )}
+      </div>
+
+      {company.salesRepUserId ? (
+        <div className="flex items-center gap-3 rounded-lg border px-4 py-3">
+          <UserCheck className="size-4 text-green-600 shrink-0" />
+          <div>
+            <p className="text-sm font-medium">{currentRep ? repName(currentRep) : "Loading…"}</p>
+            {currentRep?.email && (
+              <p className="text-xs text-muted-foreground">{currentRep.email}</p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">No sales rep assigned.</p>
+      )}
+
+      {/* Search to assign */}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Search by email…"
+          value={emailSearch}
+          onChange={(e) => setEmailSearch(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") void handleSearch() }}
+          className="max-w-xs"
+        />
+        <Button size="sm" variant="outline" onClick={() => void handleSearch()} disabled={isSearching}>
+          Search
+        </Button>
+      </div>
+
+      {searchResults.length > 0 && (
+        <div className="rounded-lg border bg-card divide-y">
+          {searchResults.map((u) => (
+            <div key={u.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+              <div>
+                <p className="font-medium">{repName(u)}</p>
+                {u.email && <p className="text-xs text-muted-foreground">{u.email}</p>}
+              </div>
+              <Button
+                size="sm"
+                disabled={u.id === company.salesRepUserId || assignMutation.isPending}
+                onClick={() => u.id && assignMutation.mutate(u.id)}
+              >
+                {u.id === company.salesRepUserId ? "Assigned" : "Assign"}
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── CatalogSection ───────────────────────────────────────────────────────────
 
 function CatalogSection({ companyId }: { companyId: string }) {
@@ -1071,6 +1208,14 @@ export function CompanyDetailPage({ id }: { id: string }) {
       {/* Tax exemption */}
       {company && (
         <TaxExemptSection
+          company={company}
+          onUpdated={() => qc.invalidateQueries({ queryKey: ["company", id] })}
+        />
+      )}
+
+      {/* Sales rep */}
+      {company && (
+        <SalesRepSection
           company={company}
           onUpdated={() => qc.invalidateQueries({ queryKey: ["company", id] })}
         />

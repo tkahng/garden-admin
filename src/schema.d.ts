@@ -11170,6 +11170,7 @@ export interface operations {
                 size?: number;
                 sortBy?: string;
                 sortDir?: string;
+                companyId?: string;
             };
             header?: never;
             path: {
