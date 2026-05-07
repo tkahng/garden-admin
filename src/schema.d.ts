@@ -1684,6 +1684,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/companies/{id}/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCatalog"];
+        put?: never;
+        post: operations["addToCatalog"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/collections": {
         parameters: {
             query?: never;
@@ -3188,6 +3204,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/companies/{id}/catalog/{productId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["removeFromCatalog"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/collections/{id}/rules/{ruleId}": {
         parameters: {
             query?: never;
@@ -4652,6 +4684,10 @@ export interface components {
             paymentTermsDays?: number;
             currency?: string;
         };
+        AddCatalogProductRequest: {
+            /** Format: uuid */
+            productId: string;
+        };
         CreateCollectionRequest: {
             title: string;
             handle?: string;
@@ -5480,6 +5516,10 @@ export interface components {
         PagedResultDiscountResponse: {
             content?: components["schemas"]["DiscountResponse"][];
             meta?: components["schemas"]["PageMeta"];
+        };
+        ApiResponseListUUID: {
+            data?: string[];
+            meta?: unknown;
         };
         AdminCollectionSummaryResponse: {
             /** Format: uuid */
@@ -9267,6 +9307,52 @@ export interface operations {
             };
         };
     };
+    getCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListUUID"];
+                };
+            };
+        };
+    };
+    addToCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddCatalogProductRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     list_11: {
         parameters: {
             query?: {
@@ -10668,6 +10754,7 @@ export interface operations {
                 vendor?: string;
                 productType?: string;
                 sortBy?: string;
+                companyId?: string;
                 page?: number;
                 size?: number;
             };
@@ -11984,6 +12071,27 @@ export interface operations {
             path: {
                 id: string;
                 permissionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    removeFromCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                productId: string;
             };
             cookie?: never;
         };

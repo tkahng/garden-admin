@@ -37,6 +37,7 @@ import { ArrowLeft, ChevronDown, ChevronRight, Plus, Pencil, Trash2, ShieldCheck
 import { toast } from "sonner"
 
 type Company = components["schemas"]["CompanyResponse"]
+type ProductSummary = components["schemas"]["ProductSummaryResponse"]
 type PriceList = components["schemas"]["PriceListResponse"]
 type PriceListEntry = components["schemas"]["PriceListEntryResponse"]
 type CreatePriceList = components["schemas"]["CreatePriceListRequest"]
@@ -832,6 +833,159 @@ function TaxExemptSection({ company, onUpdated }: { company: Company; onUpdated:
   )
 }
 
+// ─── CatalogSection ───────────────────────────────────────────────────────────
+
+function CatalogSection({ companyId }: { companyId: string }) {
+  const qc = useQueryClient()
+  const [search, setSearch] = useState("")
+  const [searchResults, setSearchResults] = useState<ProductSummary[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+
+  const { data: catalogProductIds = [] } = useQuery<string[]>({
+    queryKey: ["admin", "company-catalog", companyId],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/companies/{id}/catalog", {
+        params: { path: { id: companyId } },
+      })
+      if (error) throw error
+      return ((data as { data?: string[] } | undefined)?.data ?? []) as string[]
+    },
+  })
+
+  const { data: catalogProducts = [] } = useQuery<ProductSummary[]>({
+    queryKey: ["admin", "company-catalog-products", companyId, catalogProductIds],
+    enabled: catalogProductIds.length > 0,
+    queryFn: async () => {
+      const all: ProductSummary[] = []
+      for (const productId of catalogProductIds) {
+        const { data } = await apiClient.GET("/api/v1/admin/products/{id}", {
+          params: { path: { id: productId } },
+        })
+        const p = (data as { data?: ProductSummary } | undefined)?.data
+        if (p) all.push(p)
+      }
+      return all
+    },
+  })
+
+  const addMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const { error } = await apiClient.POST("/api/v1/admin/companies/{id}/catalog", {
+        params: { path: { id: companyId } },
+        body: { productId },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Product added to catalog")
+      setSearch("")
+      setSearchResults([])
+      qc.invalidateQueries({ queryKey: ["admin", "company-catalog", companyId] })
+      qc.invalidateQueries({ queryKey: ["admin", "company-catalog-products", companyId] })
+    },
+    onError: () => toast.error("Failed to add product"),
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const { error } = await apiClient.DELETE("/api/v1/admin/companies/{id}/catalog/{productId}", {
+        params: { path: { id: companyId, productId } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Product removed from catalog")
+      qc.invalidateQueries({ queryKey: ["admin", "company-catalog", companyId] })
+      qc.invalidateQueries({ queryKey: ["admin", "company-catalog-products", companyId] })
+    },
+    onError: () => toast.error("Failed to remove product"),
+  })
+
+  async function handleSearch() {
+    if (!search.trim()) return
+    setIsSearching(true)
+    try {
+      const { data } = await apiClient.GET("/api/v1/admin/products", {
+        params: { query: { titleContains: search, size: 10 } },
+      })
+      const results = (data as { data?: { content?: ProductSummary[] } } | undefined)?.data?.content ?? []
+      setSearchResults(results)
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-base font-semibold">Product catalog</h2>
+      <p className="text-sm text-muted-foreground">
+        Products added here are only visible to members of this company. Products not in any catalog are visible to everyone.
+      </p>
+
+      {/* Search to add */}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Search products by title…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') void handleSearch() }}
+          className="max-w-xs"
+        />
+        <Button size="sm" variant="outline" onClick={() => void handleSearch()} disabled={isSearching}>
+          Search
+        </Button>
+      </div>
+
+      {searchResults.length > 0 && (
+        <div className="rounded-lg border bg-card divide-y">
+          {searchResults.map((p) => {
+            const inCatalog = catalogProductIds.includes(p.id ?? '')
+            return (
+              <div key={p.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                <span>{p.title}</span>
+                <Button
+                  size="sm"
+                  variant={inCatalog ? "outline" : "default"}
+                  disabled={inCatalog || addMutation.isPending}
+                  onClick={() => p.id && addMutation.mutate(p.id)}
+                >
+                  {inCatalog ? "Already added" : "Add"}
+                </Button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Current catalog */}
+      {catalogProducts.length > 0 && (
+        <div className="rounded-lg border bg-card divide-y">
+          {catalogProducts.map((p) => (
+            <div key={p.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+              <span>{p.title}</span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-destructive hover:bg-destructive/10"
+                disabled={removeMutation.isPending}
+                onClick={() => p.id && removeMutation.mutate(p.id)}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {catalogProducts.length === 0 && (
+        <p className="text-sm text-muted-foreground py-2">
+          No products in this company's catalog. Add products above to restrict visibility.
+        </p>
+      )}
+    </div>
+  )
+}
+
 // ─── Company detail page ──────────────────────────────────────────────────────
 
 export function CompanyDetailPage({ id }: { id: string }) {
@@ -924,6 +1078,9 @@ export function CompanyDetailPage({ id }: { id: string }) {
 
       {/* Credit account */}
       <CreditAccountSection companyId={id} />
+
+      {/* Catalog section */}
+      <CatalogSection companyId={id} />
 
       {/* Price lists section */}
       <div className="space-y-3">
