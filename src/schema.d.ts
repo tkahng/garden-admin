@@ -2356,6 +2356,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/products/variants/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["lookupBySku"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/pages": {
         parameters: {
             query?: never;
@@ -5066,6 +5082,22 @@ export interface components {
         ApiResponseListProductSummaryResponse: {
             data?: components["schemas"]["ProductSummaryResponse"][];
             meta?: unknown;
+        };
+        ApiResponseVariantLookupResponse: {
+            data?: components["schemas"]["VariantLookupResponse"];
+            meta?: unknown;
+        };
+        VariantLookupResponse: {
+            /** Format: uuid */
+            variantId?: string;
+            /** Format: uuid */
+            productId?: string;
+            productTitle?: string;
+            productHandle?: string;
+            variantTitle?: string;
+            sku?: string;
+            price?: number;
+            featuredImageUrl?: string;
         };
         ApiResponsePagedResultPageResponse: {
             data?: components["schemas"]["PagedResultPageResponse"];
@@ -10716,6 +10748,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseListProductSummaryResponse"];
+                };
+            };
+        };
+    };
+    lookupBySku: {
+        parameters: {
+            query: {
+                sku: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVariantLookupResponse"];
                 };
             };
         };
