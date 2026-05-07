@@ -1,49 +1,36 @@
-import { getAuthToken } from "@/api/client"
+import { apiClient } from "@/api/client"
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
-
-async function bulkPost(path: string, body: object): Promise<void> {
-  const token = getAuthToken()
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
+export async function bulkChangeProductStatus(ids: string[], status: "DRAFT" | "ACTIVE" | "ARCHIVED") {
+  const { error } = await apiClient.PATCH("/api/v1/admin/products/bulk/status", {
+    body: { ids, status },
   })
-  if (!res.ok) throw new Error(`Bulk action failed: HTTP ${res.status}`)
+  if (error) throw new Error(`Bulk action failed`)
 }
 
-async function bulkPatch(path: string, body: object): Promise<void> {
-  const token = getAuthToken()
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
+export async function bulkDeleteProducts(ids: string[]) {
+  const { error } = await apiClient.POST("/api/v1/admin/products/bulk/delete", {
+    body: { ids },
   })
-  if (!res.ok) throw new Error(`Bulk action failed: HTTP ${res.status}`)
+  if (error) throw new Error(`Bulk action failed`)
 }
 
-export function bulkChangeProductStatus(ids: string[], status: string) {
-  return bulkPatch("/api/v1/admin/products/bulk/status", { ids, status })
+export async function bulkCancelOrders(ids: string[]) {
+  const { error } = await apiClient.POST("/api/v1/admin/orders/bulk/cancel", {
+    body: { ids },
+  })
+  if (error) throw new Error(`Bulk action failed`)
 }
 
-export function bulkDeleteProducts(ids: string[]) {
-  return bulkPost("/api/v1/admin/products/bulk/delete", { ids })
+export async function bulkSuspendUsers(ids: string[]) {
+  const { error } = await apiClient.POST("/api/v1/admin/users/bulk/suspend", {
+    body: { ids },
+  })
+  if (error) throw new Error(`Bulk action failed`)
 }
 
-export function bulkCancelOrders(ids: string[]) {
-  return bulkPost("/api/v1/admin/orders/bulk/cancel", { ids })
-}
-
-export function bulkSuspendUsers(ids: string[]) {
-  return bulkPost("/api/v1/admin/users/bulk/suspend", { ids })
-}
-
-export function bulkReactivateUsers(ids: string[]) {
-  return bulkPost("/api/v1/admin/users/bulk/reactivate", { ids })
+export async function bulkReactivateUsers(ids: string[]) {
+  const { error } = await apiClient.POST("/api/v1/admin/users/bulk/reactivate", {
+    body: { ids },
+  })
+  if (error) throw new Error(`Bulk action failed`)
 }

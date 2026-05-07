@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient, getAuthToken } from "@/api/client"
+import { apiClient } from "@/api/client"
 import type { components } from "@/schema"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -45,7 +45,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, Ban, ImageIcon, Pencil, RefreshCcw, Plus, Package, FileText } from "lucide-react"
 import { toast } from "sonner"
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
 
 type Order = components["schemas"]["OrderResponse"]
 type OrderItem = components["schemas"]["OrderItemResponse"]
@@ -282,19 +281,11 @@ export function OrderDetailPage({ id }: { id: string }) {
 
   const createInvoiceMutation = useMutation({
     mutationFn: async ({ companyId, paymentTermsDays }: { companyId: string; paymentTermsDays: number }) => {
-      const token = getAuthToken()
-      const res = await fetch(`${BASE_URL}/api/v1/admin/invoices/from-order/${id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ companyId, paymentTermsDays }),
+      const { error } = await apiClient.POST("/api/v1/admin/invoices/from-order/{orderId}", {
+        params: { path: { orderId: id } },
+        body: { companyId, paymentTermsDays },
       })
-      if (!res.ok) {
-        const text = await res.text().catch(() => "")
-        throw new Error(`HTTP ${res.status}: ${text}`)
-      }
+      if (error) throw error
     },
     onSuccess: () => {
       toast.success("Invoice created")

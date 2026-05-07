@@ -3,7 +3,7 @@ import { ShoppingCart, Users, TrendingUp, BarChart3, ArrowUpRight, ArrowDownRigh
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useQuery } from "@tanstack/react-query"
-import { apiClient, getAuthToken } from "@/api/client"
+import { apiClient } from "@/api/client"
 import {
   LineChart,
   Line,
@@ -15,7 +15,6 @@ import {
 } from "recharts"
 import { cn } from "@/lib/utils"
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
 
 // ── Date range presets ────────────────────────────────────────────────────────
 
@@ -71,15 +70,6 @@ function pctDelta(current: number | null | undefined, prev: number | null | unde
   return ((current - prev) / prev) * 100
 }
 
-async function fetchJson<T>(path: string): Promise<T> {
-  const token = getAuthToken()
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const json = await res.json() as { data: T }
-  return json.data
-}
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
 
@@ -160,17 +150,35 @@ export function DashboardPage() {
 
   const { data: timeSeries, isLoading: tsLoading } = useQuery<TsPoint[]>({
     queryKey: ["admin", "stats", "timeSeries", fromIso, toIso],
-    queryFn: () => fetchJson<TsPoint[]>(`/api/v1/admin/stats/time-series?from=${fromIso}&to=${toIso}`),
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/stats/time-series", {
+        params: { query: { from: fromIso, to: toIso } },
+      })
+      if (error) throw error
+      return (data as { data?: TsPoint[] } | undefined)?.data ?? []
+    },
   })
 
   const { data: topProducts, isLoading: tpLoading } = useQuery<TopProduct[]>({
     queryKey: ["admin", "stats", "topProducts", fromIso, toIso],
-    queryFn: () => fetchJson<TopProduct[]>(`/api/v1/admin/stats/top-products?from=${fromIso}&to=${toIso}&limit=5`),
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/stats/top-products", {
+        params: { query: { from: fromIso, to: toIso, limit: 5 } },
+      })
+      if (error) throw error
+      return (data as { data?: TopProduct[] } | undefined)?.data ?? []
+    },
   })
 
   const { data: topCustomers, isLoading: tcLoading } = useQuery<TopCustomer[]>({
     queryKey: ["admin", "stats", "topCustomers", fromIso, toIso],
-    queryFn: () => fetchJson<TopCustomer[]>(`/api/v1/admin/stats/top-customers?from=${fromIso}&to=${toIso}&limit=5`),
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/stats/top-customers", {
+        params: { query: { from: fromIso, to: toIso, limit: 5 } },
+      })
+      if (error) throw error
+      return (data as { data?: TopCustomer[] } | undefined)?.data ?? []
+    },
   })
 
   const orderCount = curr?.orderCount as number | undefined

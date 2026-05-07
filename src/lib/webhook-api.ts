@@ -1,29 +1,4 @@
-import { getAuthToken } from "@/api/client"
-
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
-
-function authHeaders(): Record<string, string> {
-  const token = getAuthToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
-async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...authHeaders(),
-      ...init?.headers,
-    },
-  })
-  if (!res.ok) {
-    const text = await res.text().catch(() => "")
-    throw new Error(`HTTP ${res.status}: ${text}`)
-  }
-  if (res.status === 204) return undefined as T
-  const json = await res.json()
-  return json.data as T
-}
+import { apiClient } from "@/api/client"
 
 export interface WebhookEndpoint {
   id: string
@@ -70,29 +45,47 @@ export interface PagedResult<T> {
 }
 
 export const webhookApi = {
-  listEventTypes: () =>
-    apiFetch<string[]>("/api/v1/admin/webhooks/events"),
+  listEventTypes: async () => {
+    const { data, error } = await apiClient.GET("/api/v1/admin/webhooks/events")
+    if (error) throw error
+    return (data as { data?: string[] } | undefined)?.data ?? []
+  },
 
-  list: () =>
-    apiFetch<WebhookEndpoint[]>("/api/v1/admin/webhooks"),
+  list: async () => {
+    const { data, error } = await apiClient.GET("/api/v1/admin/webhooks")
+    if (error) throw error
+    return (data as { data?: WebhookEndpoint[] } | undefined)?.data ?? []
+  },
 
-  create: (body: CreateWebhookEndpointRequest) =>
-    apiFetch<WebhookEndpoint>("/api/v1/admin/webhooks", {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
+  create: async (body: CreateWebhookEndpointRequest) => {
+    const { data, error } = await apiClient.POST("/api/v1/admin/webhooks", {
+      body: body as never,
+    })
+    if (error) throw error
+    return (data as { data?: WebhookEndpoint } | undefined)?.data as WebhookEndpoint
+  },
 
-  update: (id: string, body: UpdateWebhookEndpointRequest) =>
-    apiFetch<WebhookEndpoint>(`/api/v1/admin/webhooks/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(body),
-    }),
+  update: async (id: string, body: UpdateWebhookEndpointRequest) => {
+    const { data, error } = await apiClient.PUT("/api/v1/admin/webhooks/{id}", {
+      params: { path: { id } },
+      body: body as never,
+    })
+    if (error) throw error
+    return (data as { data?: WebhookEndpoint } | undefined)?.data as WebhookEndpoint
+  },
 
-  delete: (id: string) =>
-    apiFetch<void>(`/api/v1/admin/webhooks/${id}`, { method: "DELETE" }),
+  delete: async (id: string) => {
+    const { error } = await apiClient.DELETE("/api/v1/admin/webhooks/{id}", {
+      params: { path: { id } },
+    })
+    if (error) throw error
+  },
 
-  listDeliveries: (id: string, page = 0, size = 20) =>
-    apiFetch<PagedResult<WebhookDelivery>>(
-      `/api/v1/admin/webhooks/${id}/deliveries?page=${page}&size=${size}`
-    ),
+  listDeliveries: async (id: string, page = 0, size = 20) => {
+    const { data, error } = await apiClient.GET("/api/v1/admin/webhooks/{id}/deliveries", {
+      params: { path: { id }, query: { page, size } },
+    })
+    if (error) throw error
+    return (data as { data?: PagedResult<WebhookDelivery> } | undefined)?.data as PagedResult<WebhookDelivery>
+  },
 }
