@@ -36,6 +36,7 @@ import {
 import { DataPagination } from "@/components/ui/data-pagination"
 import { cn } from "@/lib/utils"
 import { ArrowLeft, Plus, Pencil, Trash2, Globe, EyeOff, X, Image } from "lucide-react"
+import { MediaPickerDialog } from "@/components/MediaPickerDialog"
 import { toast } from "sonner"
 
 type Blog = components["schemas"]["AdminBlogResponse"]
@@ -262,24 +263,20 @@ function ArticleImagesDialog({
   onOpenChange: (v: boolean) => void
 }) {
   const qc = useQueryClient()
-  const [blobId, setBlobId] = useState("")
-  const [altText, setAltText] = useState("")
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   const addMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({ blobId, altText }: { blobId: string; altText?: string }) => {
       const { error } = await apiClient.POST(
         "/api/v1/admin/blogs/{id}/articles/{articleId}/images",
         {
           params: { path: { id: blogId, articleId: article.id! } },
-          body: { blobId, altText: altText || undefined },
+          body: { blobId, altText },
         },
       )
       if (error) throw error
     },
     onSuccess: () => {
-      toast.success("Image added")
-      setBlobId("")
-      setAltText("")
       void qc.invalidateQueries({ queryKey: ["admin", "blog", blogId, "articles"] })
     },
     onError: () => toast.error("Failed to add image"),
@@ -300,78 +297,75 @@ function ArticleImagesDialog({
     onError: () => toast.error("Failed to remove image"),
   })
 
+  async function handlePickerConfirm(blobs: { id?: string; alt?: string }[]) {
+    for (const blob of blobs) {
+      if (blob.id) await addMutation.mutateAsync({ blobId: blob.id, altText: blob.alt })
+    }
+    toast.success(`Added ${blobs.length} image${blobs.length !== 1 ? "s" : ""}`)
+  }
+
   const images: ArticleImage[] = article.images ?? []
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Images — {article.title}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 py-2">
-          {/* Existing images */}
-          {images.length > 0 ? (
-            <div className="grid grid-cols-3 gap-2">
-              {images.map((img) => (
-                <div key={img.id} className="group relative rounded-lg overflow-hidden border bg-muted aspect-square">
-                  {img.url ? (
-                    <img src={img.url} alt={img.altText ?? ""} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <Image className="size-8 text-muted-foreground" />
-                    </div>
-                  )}
-                  <button
-                    onClick={() => deleteMutation.mutate(img.id!)}
-                    disabled={deleteMutation.isPending}
-                    className="absolute top-1 right-1 rounded-full bg-black/60 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label="Remove image"
-                  >
-                    <X className="size-3 text-white" />
-                  </button>
-                  {img.altText && (
-                    <p className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-1.5 py-0.5 truncate">
-                      {img.altText}
-                    </p>
-                  )}
-                </div>
-              ))}
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Images — {article.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {images.length > 0 ? (
+              <div className="grid grid-cols-3 gap-2">
+                {images.map((img) => (
+                  <div key={img.id} className="group relative rounded-lg overflow-hidden border bg-muted aspect-square">
+                    {img.url ? (
+                      <img src={img.url} alt={img.altText ?? ""} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <Image className="size-8 text-muted-foreground" />
+                      </div>
+                    )}
+                    <button
+                      onClick={() => deleteMutation.mutate(img.id!)}
+                      disabled={deleteMutation.isPending}
+                      className="absolute top-1 right-1 rounded-full bg-black/60 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      aria-label="Remove image"
+                    >
+                      <X className="size-3 text-white" />
+                    </button>
+                    {img.altText && (
+                      <p className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs px-1.5 py-0.5 truncate">
+                        {img.altText}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">No images yet.</p>
+            )}
+            <div className="border-t pt-3">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setPickerOpen(true)}
+              >
+                <Plus className="size-3.5 mr-1.5" />
+                Add images
+              </Button>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">No images yet.</p>
-          )}
-
-          {/* Add image by blob ID */}
-          <div className="border-t pt-3 space-y-2">
-            <p className="text-xs font-medium">Add image by blob ID</p>
-            <div className="space-y-1.5">
-              <Input
-                placeholder="Blob UUID from media library"
-                value={blobId}
-                onChange={(e) => setBlobId(e.target.value)}
-                className="text-sm font-mono"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Input
-                placeholder="Alt text (optional)"
-                value={altText}
-                onChange={(e) => setAltText(e.target.value)}
-                className="text-sm"
-              />
-            </div>
-            <Button
-              size="sm"
-              onClick={() => addMutation.mutate()}
-              disabled={!blobId.trim() || addMutation.isPending}
-            >
-              <Plus className="size-3.5 mr-1.5" />
-              Add image
-            </Button>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <MediaPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        accept="image/"
+        title="Add images to article"
+        onConfirm={handlePickerConfirm}
+      />
+    </>
   )
 }
 

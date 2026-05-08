@@ -33,9 +33,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowLeft, Pencil, Trash2, Plus, Send, UserCheck, Ban, Check } from "lucide-react"
+import { ArrowLeft, Pencil, Trash2, Plus, Send, UserCheck, Ban, Check, Download } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { downloadPdf } from "@/lib/download"
 
 type Quote = components["schemas"]["QuoteRequestResponse"]
 type QuoteItem = components["schemas"]["QuoteItemResponse"]
@@ -459,6 +460,15 @@ export function QuoteDetailPage({ id }: { id: string }) {
   const canAssign = canEdit
   const canCancel = canEdit || status === "SENT"
   const isTerminal = status === "ACCEPTED" || status === "PAID" || status === "REJECTED" || status === "EXPIRED" || status === "CANCELLED"
+  const hasPdf = !!quote.pdfBlobId
+
+  async function handleDownloadPdf() {
+    try {
+      await downloadPdf(`/api/v1/admin/quotes/${id}/pdf`, `quote-${id.slice(0, 8)}.pdf`)
+    } catch {
+      toast.error("Failed to download PDF")
+    }
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -574,34 +584,45 @@ export function QuoteDetailPage({ id }: { id: string }) {
         <div className="space-y-4">
 
           {/* Actions */}
-          {!isTerminal && (
-            <div className="rounded-lg border bg-card p-4 space-y-2">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-3">Actions</p>
-              {canSend && (
-                <Button className="w-full" size="sm" onClick={() => setSendOpen(true)}>
-                  <Send className="size-4 mr-2" />
-                  Send to customer
-                </Button>
-              )}
-              {canAssign && (
-                <Button className="w-full" variant="outline" size="sm" onClick={() => setAssignOpen(true)}>
-                  <UserCheck className="size-4 mr-2" />
-                  {quote.assignedStaffId ? "Reassign" : "Assign staff"}
-                </Button>
-              )}
-              {canCancel && (
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCancelOpen(true)}
-                >
-                  <Ban className="size-4 mr-2" />
-                  Cancel quote
-                </Button>
-              )}
-            </div>
-          )}
+          <div className="rounded-lg border bg-card p-4 space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-3">Actions</p>
+            {hasPdf && (
+              <Button className="w-full" variant="outline" size="sm" onClick={() => void handleDownloadPdf()}>
+                <Download className="size-4 mr-2" />
+                Download PDF
+              </Button>
+            )}
+            {!isTerminal && (
+              <>
+                {canSend && (
+                  <Button className="w-full" size="sm" onClick={() => setSendOpen(true)}>
+                    <Send className="size-4 mr-2" />
+                    Send to customer
+                  </Button>
+                )}
+                {canAssign && (
+                  <Button className="w-full" variant="outline" size="sm" onClick={() => setAssignOpen(true)}>
+                    <UserCheck className="size-4 mr-2" />
+                    {quote.assignedStaffId ? "Reassign" : "Assign staff"}
+                  </Button>
+                )}
+                {canCancel && (
+                  <Button
+                    className="w-full"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCancelOpen(true)}
+                  >
+                    <Ban className="size-4 mr-2" />
+                    Cancel quote
+                  </Button>
+                )}
+              </>
+            )}
+            {!hasPdf && isTerminal && (
+              <p className="text-xs text-muted-foreground text-center py-1">No actions available</p>
+            )}
+          </div>
 
           {/* Details */}
           <div className="rounded-lg border bg-card divide-y text-sm">

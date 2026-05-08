@@ -33,10 +33,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react"
+import { ArrowLeft, ChevronDown, ChevronRight, Plus, Pencil, Trash2, ShieldCheck, UserCheck, X } from "lucide-react"
 import { toast } from "sonner"
 
 type Company = components["schemas"]["CompanyResponse"]
+type ProductSummary = components["schemas"]["ProductSummaryResponse"]
 type PriceList = components["schemas"]["PriceListResponse"]
 type PriceListEntry = components["schemas"]["PriceListEntryResponse"]
 type CreatePriceList = components["schemas"]["CreatePriceListRequest"]
@@ -45,6 +46,7 @@ type UpsertEntry = components["schemas"]["UpsertPriceListEntryRequest"]
 type CreditAccount = components["schemas"]["CreditAccountResponse"]
 type CreateCreditAccount = components["schemas"]["CreateCreditAccountRequest"]
 type UpdateCreditAccount = components["schemas"]["UpdateCreditAccountRequest"]
+type AdminUser = components["schemas"]["AdminUserResponse"]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -255,18 +257,44 @@ function CreditAccountSection({ companyId }: { companyId: string }) {
         <div className="h-24 w-full bg-muted animate-pulse rounded-lg" />
       ) : account ? (
         <Card>
-          <CardContent className="pt-4 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              ["Credit limit", fmtCurrency(account.creditLimit, account.currency)],
-              ["Available", fmtCurrency(account.availableCredit, account.currency)],
-              ["Outstanding", fmtCurrency(account.outstandingBalance, account.currency)],
-              ["Payment terms", account.paymentTermsDays != null ? `NET ${account.paymentTermsDays}` : "—"],
-            ].map(([label, value]) => (
-              <div key={label}>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">{label}</p>
-                <p className="text-sm font-semibold">{value}</p>
+          <CardContent className="pt-4 pb-4 space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                ["Credit limit", fmtCurrency(account.creditLimit, account.currency)],
+                ["Available", fmtCurrency(account.availableCredit, account.currency)],
+                ["Outstanding", fmtCurrency(account.outstandingBalance, account.currency)],
+                ["Payment terms", account.paymentTermsDays != null ? `NET ${account.paymentTermsDays}` : "—"],
+              ].map(([label, value]) => (
+                <div key={label}>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">{label}</p>
+                  <p className="text-sm font-semibold">{value}</p>
+                </div>
+              ))}
+            </div>
+            {account.creditLimit != null && account.creditLimit > 0 && (
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Credit utilization</span>
+                  <span>
+                    {Math.round(((account.outstandingBalance ?? 0) / account.creditLimit) * 100)}%
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      (account.outstandingBalance ?? 0) / account.creditLimit > 0.8
+                        ? "bg-destructive"
+                        : (account.outstandingBalance ?? 0) / account.creditLimit > 0.5
+                          ? "bg-yellow-500"
+                          : "bg-primary"
+                    }`}
+                    style={{
+                      width: `${Math.min(100, Math.round(((account.outstandingBalance ?? 0) / account.creditLimit) * 100))}%`,
+                    }}
+                  />
+                </div>
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -535,6 +563,11 @@ function PriceListRow({
         </TableCell>
         <TableCell className="text-muted-foreground text-sm">{pl.currency ?? "USD"}</TableCell>
         <TableCell className="text-muted-foreground text-sm">{pl.priority ?? 0}</TableCell>
+        <TableCell className="text-muted-foreground text-sm">
+          {pl.adjustmentType
+            ? `${pl.adjustmentType === "PERCENTAGE_OFF" ? "-" : "+"}${pl.adjustmentValue}%`
+            : "—"}
+        </TableCell>
         <TableCell>{statusBadge(pl)}</TableCell>
         <TableCell className="text-muted-foreground text-sm">{fmt(pl.startsAt)}</TableCell>
         <TableCell className="text-muted-foreground text-sm">{fmt(pl.endsAt)}</TableCell>
@@ -561,7 +594,7 @@ function PriceListRow({
       </TableRow>
       {expanded && (
         <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={7} className="p-0">
+          <TableCell colSpan={8} className="p-0">
             <PriceListEntries priceListId={pl.id!} />
           </TableCell>
         </TableRow>
@@ -742,6 +775,744 @@ function PriceListDialog({
   )
 }
 
+// ─── Tax exempt section ───────────────────────────────────────────────────────
+
+function TaxExemptSection({ company, onUpdated }: { company: Company; onUpdated: () => void }) {
+  const [pending, setPending] = useState(false)
+
+  const mutation = useMutation({
+    mutationFn: async (taxExempt: boolean) => {
+      const { error } = await apiClient.PUT("/api/v1/admin/companies/{id}", {
+        params: { path: { id: company.id! } },
+        body: {
+          name: company.name!,
+          taxId: company.taxId ?? undefined,
+          phone: company.phone ?? undefined,
+          billingAddressLine1: company.billingAddressLine1 ?? undefined,
+          billingAddressLine2: company.billingAddressLine2 ?? undefined,
+          billingCity: company.billingCity ?? undefined,
+          billingState: company.billingState ?? undefined,
+          billingPostalCode: company.billingPostalCode ?? undefined,
+          billingCountry: company.billingCountry ?? undefined,
+          taxExempt,
+        },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Tax exemption updated")
+      onUpdated()
+    },
+    onError: () => toast.error("Failed to update tax exemption"),
+    onSettled: () => setPending(false),
+  })
+
+  function toggle() {
+    setPending(true)
+    mutation.mutate(!company.taxExempt)
+  }
+
+  const exempt = company.taxExempt ?? false
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+      <div className="flex items-center gap-2.5">
+        <ShieldCheck className={`size-4 ${exempt ? "text-green-600" : "text-muted-foreground"}`} />
+        <div>
+          <p className="text-sm font-medium">Tax exempt</p>
+          <p className="text-xs text-muted-foreground">
+            {exempt
+              ? "This company is tax exempt. Tax will not be collected at checkout."
+              : "Tax will be collected at checkout."}
+          </p>
+        </div>
+      </div>
+      <Button
+        size="sm"
+        variant={exempt ? "destructive" : "outline"}
+        onClick={toggle}
+        disabled={pending || mutation.isPending}
+      >
+        {exempt ? "Remove exemption" : "Mark exempt"}
+      </Button>
+    </div>
+  )
+}
+
+// ─── SalesRepSection ──────────────────────────────────────────────────────────
+
+function SalesRepSection({ company, onUpdated }: { company: Company; onUpdated: () => void }) {
+  const [emailSearch, setEmailSearch] = useState("")
+  const [searchResults, setSearchResults] = useState<AdminUser[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+
+  const { data: currentRep } = useQuery<AdminUser | null>({
+    queryKey: ["admin", "user", company.salesRepUserId],
+    enabled: !!company.salesRepUserId,
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/users/{id}", {
+        params: { path: { id: company.salesRepUserId! } },
+      })
+      if (error) return null
+      return (data as { data?: AdminUser } | undefined)?.data ?? null
+    },
+  })
+
+  const assignMutation = useMutation({
+    mutationFn: async (salesRepUserId: string | null) => {
+      const { error } = await apiClient.PUT("/api/v1/admin/companies/{id}", {
+        params: { path: { id: company.id! } },
+        body: {
+          name: company.name!,
+          taxId: company.taxId ?? undefined,
+          phone: company.phone ?? undefined,
+          billingAddressLine1: company.billingAddressLine1 ?? undefined,
+          billingAddressLine2: company.billingAddressLine2 ?? undefined,
+          billingCity: company.billingCity ?? undefined,
+          billingState: company.billingState ?? undefined,
+          billingPostalCode: company.billingPostalCode ?? undefined,
+          billingCountry: company.billingCountry ?? undefined,
+          taxExempt: company.taxExempt ?? false,
+          salesRepUserId: salesRepUserId ?? undefined,
+        },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Sales rep updated")
+      setEmailSearch("")
+      setSearchResults([])
+      onUpdated()
+    },
+    onError: () => toast.error("Failed to update sales rep"),
+  })
+
+  async function handleSearch() {
+    if (!emailSearch.trim()) return
+    setIsSearching(true)
+    try {
+      const { data } = await apiClient.GET("/api/v1/admin/users", {
+        params: { query: { email: emailSearch.trim(), size: 10 } },
+      })
+      const users = (data as { data?: { content?: AdminUser[] } } | undefined)?.data?.content ?? []
+      setSearchResults(users)
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  function repName(rep: AdminUser) {
+    const name = [rep.firstName, rep.lastName].filter(Boolean).join(" ")
+    return name || rep.email || rep.id
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">Sales rep</h2>
+        {company.salesRepUserId && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-destructive border-destructive/40 hover:bg-destructive/10"
+            onClick={() => assignMutation.mutate(null)}
+            disabled={assignMutation.isPending}
+          >
+            <X className="size-3.5 mr-1.5" />
+            Remove
+          </Button>
+        )}
+      </div>
+
+      {company.salesRepUserId ? (
+        <div className="flex items-center gap-3 rounded-lg border px-4 py-3">
+          <UserCheck className="size-4 text-green-600 shrink-0" />
+          <div>
+            <p className="text-sm font-medium">{currentRep ? repName(currentRep) : "Loading…"}</p>
+            {currentRep?.email && (
+              <p className="text-xs text-muted-foreground">{currentRep.email}</p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">No sales rep assigned.</p>
+      )}
+
+      {/* Search to assign */}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Search by email…"
+          value={emailSearch}
+          onChange={(e) => setEmailSearch(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") void handleSearch() }}
+          className="max-w-xs"
+        />
+        <Button size="sm" variant="outline" onClick={() => void handleSearch()} disabled={isSearching}>
+          Search
+        </Button>
+      </div>
+
+      {searchResults.length > 0 && (
+        <div className="rounded-lg border bg-card divide-y">
+          {searchResults.map((u) => (
+            <div key={u.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+              <div>
+                <p className="font-medium">{repName(u)}</p>
+                {u.email && <p className="text-xs text-muted-foreground">{u.email}</p>}
+              </div>
+              <Button
+                size="sm"
+                disabled={u.id === company.salesRepUserId || assignMutation.isPending}
+                onClick={() => u.id && assignMutation.mutate(u.id)}
+              >
+                {u.id === company.salesRepUserId ? "Assigned" : "Assign"}
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Members & invitations ────────────────────────────────────────────────────
+
+type CompanyMember = components["schemas"]["CompanyMemberResponse"]
+type CreateInvitation = components["schemas"]["CreateInvitationRequest"]
+
+function MembersSection({ companyId }: { companyId: string }) {
+  const qc = useQueryClient()
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteRole, setInviteRole] = useState<"MANAGER" | "MEMBER">("MEMBER")
+  const [inviteOpen, setInviteOpen] = useState(false)
+
+  const { data: members = [], isLoading } = useQuery<CompanyMember[]>({
+    queryKey: ["admin", "company-members", companyId],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/companies/{id}/members", {
+        params: { path: { id: companyId } },
+      })
+      if (error) throw error
+      return (data as { data?: CompanyMember[] } | undefined)?.data ?? []
+    },
+  })
+
+  const inviteMutation = useMutation({
+    mutationFn: async (body: CreateInvitation) => {
+      const { error } = await apiClient.POST("/api/v1/companies/{id}/invitations", {
+        params: { path: { id: companyId } },
+        body,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Invitation sent")
+      setInviteEmail("")
+      setInviteOpen(false)
+      void qc.invalidateQueries({ queryKey: ["admin", "company-members", companyId] })
+    },
+    onError: () => toast.error("Failed to send invitation"),
+  })
+
+  function handleInvite() {
+    if (!inviteEmail.trim()) { toast.error("Email required"); return }
+    inviteMutation.mutate({ email: inviteEmail.trim(), role: inviteRole })
+  }
+
+  function roleBadge(role: string | undefined) {
+    if (role === "OWNER") return <Badge variant="default" className="text-xs">Owner</Badge>
+    if (role === "MANAGER") return <Badge variant="secondary" className="text-xs">Manager</Badge>
+    return <Badge variant="outline" className="text-xs">Member</Badge>
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">Members ({members.length})</h2>
+        <Button size="sm" onClick={() => setInviteOpen((v) => !v)}>
+          <Plus className="size-4 mr-2" />
+          Invite member
+        </Button>
+      </div>
+
+      {inviteOpen && (
+        <div className="rounded-lg border px-4 py-3 space-y-3 bg-muted/20">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Send invitation</p>
+          <div className="flex gap-2">
+            <Input
+              placeholder="email@company.com"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              className="flex-1 h-8 text-sm"
+              onKeyDown={(e) => { if (e.key === "Enter") handleInvite() }}
+            />
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as "MANAGER" | "MEMBER")}
+              className="rounded-md border border-input bg-background px-2 py-1 text-sm"
+            >
+              <option value="MEMBER">Member</option>
+              <option value="MANAGER">Manager</option>
+            </select>
+            <Button size="sm" className="h-8" onClick={handleInvite} disabled={inviteMutation.isPending}>
+              Send
+            </Button>
+            <Button size="sm" variant="outline" className="h-8" onClick={() => setInviteOpen(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="h-16 w-full bg-muted animate-pulse rounded-lg" />
+      ) : members.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No members yet.</p>
+      ) : (
+        <div className="rounded-lg border divide-y">
+          {members.map((m) => (
+            <div key={m.membershipId} className="flex items-center justify-between px-4 py-2.5 text-sm">
+              <div className="flex flex-col gap-0.5">
+                <span className="font-medium">
+                  {[m.firstName, m.lastName].filter(Boolean).join(" ") || m.email}
+                </span>
+                {(m.firstName || m.lastName) && (
+                  <span className="text-xs text-muted-foreground">{m.email}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {m.spendingLimit != null && (
+                  <span className="text-xs text-muted-foreground">
+                    Limit: {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(m.spendingLimit)}
+                  </span>
+                )}
+                {roleBadge(m.role)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Shipping addresses ───────────────────────────────────────────────────────
+
+type CompanyAddress = components["schemas"]["CompanyAddressResponse"]
+type CompanyAddressReq = components["schemas"]["CompanyAddressRequest"]
+
+function AddressDialog({
+  open,
+  onOpenChange,
+  companyId,
+  editing,
+  onSuccess,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  companyId: string
+  editing: CompanyAddress | null
+  onSuccess: () => void
+}) {
+  const emptyForm = (): Partial<CompanyAddressReq> => ({ country: "US" })
+  const [form, setForm] = useState<Partial<CompanyAddressReq>>(emptyForm())
+
+  useEffect(() => {
+    if (open) {
+      setForm(editing
+        ? {
+            label: editing.label ?? undefined,
+            firstName: editing.firstName ?? "",
+            lastName: editing.lastName ?? "",
+            company: editing.company ?? undefined,
+            address1: editing.address1 ?? "",
+            address2: editing.address2 ?? undefined,
+            city: editing.city ?? "",
+            province: editing.province ?? undefined,
+            zip: editing.zip ?? "",
+            country: editing.country ?? "US",
+            isDefault: editing.isDefault ?? false,
+          }
+        : emptyForm(),
+      )
+    }
+  }, [open, editing])
+
+  const saveMutation = useMutation({
+    mutationFn: async (body: CompanyAddressReq) => {
+      if (editing?.id) {
+        const { error } = await apiClient.PUT("/api/v1/companies/{id}/addresses/{addressId}", {
+          params: { path: { id: companyId, addressId: editing.id } },
+          body,
+        })
+        if (error) throw error
+      } else {
+        const { error } = await apiClient.POST("/api/v1/companies/{id}/addresses", {
+          params: { path: { id: companyId } },
+          body,
+        })
+        if (error) throw error
+      }
+    },
+    onSuccess: () => { toast.success(editing ? "Address updated" : "Address added"); onSuccess() },
+    onError: () => toast.error("Failed to save address"),
+  })
+
+  function handleSubmit() {
+    if (!form.firstName?.trim() || !form.lastName?.trim() || !form.address1?.trim() || !form.city?.trim() || !form.zip?.trim() || !form.country?.trim()) {
+      toast.error("Name, address, city, zip, and country are required")
+      return
+    }
+    saveMutation.mutate(form as CompanyAddressReq)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{editing ? "Edit address" : "Add address"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>First name</Label>
+              <Input value={form.firstName ?? ""} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Last name</Label>
+              <Input value={form.lastName ?? ""} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Label (optional)</Label>
+            <Input placeholder="Warehouse, HQ…" value={form.label ?? ""} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value || undefined }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Address line 1</Label>
+            <Input value={form.address1 ?? ""} onChange={(e) => setForm((f) => ({ ...f, address1: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Address line 2</Label>
+            <Input value={form.address2 ?? ""} onChange={(e) => setForm((f) => ({ ...f, address2: e.target.value || undefined }))} />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5 col-span-1">
+              <Label>City</Label>
+              <Input value={form.city ?? ""} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>State</Label>
+              <Input value={form.province ?? ""} onChange={(e) => setForm((f) => ({ ...f, province: e.target.value || undefined }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>ZIP</Label>
+              <Input value={form.zip ?? ""} onChange={(e) => setForm((f) => ({ ...f, zip: e.target.value }))} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Country</Label>
+            <Input value={form.country ?? "US"} onChange={(e) => setForm((f) => ({ ...f, country: e.target.value.toUpperCase() }))} maxLength={2} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={saveMutation.isPending}>
+            {editing ? "Save" : "Add"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function ShippingAddressSection({ companyId }: { companyId: string }) {
+  const qc = useQueryClient()
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editing, setEditing] = useState<CompanyAddress | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+
+  const { data: addresses = [], isLoading } = useQuery<CompanyAddress[]>({
+    queryKey: ["admin", "company-addresses", companyId],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/companies/{id}/addresses", {
+        params: { path: { id: companyId } },
+      })
+      if (error) throw error
+      return (data as { data?: CompanyAddress[] } | undefined)?.data ?? []
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (addressId: string) => {
+      const { error } = await apiClient.DELETE("/api/v1/companies/{id}/addresses/{addressId}", {
+        params: { path: { id: companyId, addressId } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Address removed")
+      setDeleteTarget(null)
+      void qc.invalidateQueries({ queryKey: ["admin", "company-addresses", companyId] })
+    },
+    onError: () => toast.error("Failed to remove address"),
+  })
+
+  const setDefaultMutation = useMutation({
+    mutationFn: async (addressId: string) => {
+      const { error } = await apiClient.PUT("/api/v1/companies/{id}/addresses/{addressId}/default", {
+        params: { path: { id: companyId, addressId } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Default address updated")
+      void qc.invalidateQueries({ queryKey: ["admin", "company-addresses", companyId] })
+    },
+    onError: () => toast.error("Failed to update default address"),
+  })
+
+  function onSuccess() {
+    setDialogOpen(false)
+    setEditing(null)
+    void qc.invalidateQueries({ queryKey: ["admin", "company-addresses", companyId] })
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">Shipping addresses</h2>
+        <Button size="sm" onClick={() => { setEditing(null); setDialogOpen(true) }}>
+          <Plus className="size-4 mr-2" />
+          Add address
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="h-16 w-full bg-muted animate-pulse rounded-lg" />
+      ) : addresses.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No shipping addresses saved.</p>
+      ) : (
+        <div className="space-y-2">
+          {addresses.map((addr) => (
+            <div key={addr.id} className="flex items-start justify-between rounded-lg border px-4 py-3 gap-3">
+              <div className="flex flex-col gap-0.5 text-sm">
+                {addr.label && <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{addr.label}</span>}
+                <span className="font-medium">{[addr.firstName, addr.lastName].filter(Boolean).join(" ")}</span>
+                <span className="text-muted-foreground">{addr.address1}{addr.address2 ? `, ${addr.address2}` : ""}</span>
+                <span className="text-muted-foreground">{[addr.city, addr.province, addr.zip, addr.country].filter(Boolean).join(", ")}</span>
+                {addr.isDefault && <Badge variant="secondary" className="w-fit text-xs">Default</Badge>}
+              </div>
+              <div className="flex gap-1 shrink-0">
+                {!addr.isDefault && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => addr.id && setDefaultMutation.mutate(addr.id)}
+                    disabled={setDefaultMutation.isPending}
+                  >
+                    Set default
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" className="size-7" onClick={() => { setEditing(addr); setDialogOpen(true) }}>
+                  <Pencil className="size-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 text-destructive"
+                  onClick={() => addr.id && setDeleteTarget(addr.id)}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <AddressDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        companyId={companyId}
+        editing={editing}
+        onSuccess={onSuccess}
+      />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove address?</AlertDialogTitle>
+            <AlertDialogDescription>This address will be permanently removed.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget)}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}
+
+// ─── CatalogSection ───────────────────────────────────────────────────────────
+
+function CatalogSection({ companyId }: { companyId: string }) {
+  const qc = useQueryClient()
+  const [search, setSearch] = useState("")
+  const [searchResults, setSearchResults] = useState<ProductSummary[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+
+  const { data: catalogProductIds = [] } = useQuery<string[]>({
+    queryKey: ["admin", "company-catalog", companyId],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/companies/{id}/catalog", {
+        params: { path: { id: companyId } },
+      })
+      if (error) throw error
+      return ((data as { data?: string[] } | undefined)?.data ?? []) as string[]
+    },
+  })
+
+  const { data: catalogProducts = [] } = useQuery<ProductSummary[]>({
+    queryKey: ["admin", "company-catalog-products", companyId, catalogProductIds],
+    enabled: catalogProductIds.length > 0,
+    queryFn: async () => {
+      const all: ProductSummary[] = []
+      for (const productId of catalogProductIds) {
+        const { data } = await apiClient.GET("/api/v1/admin/products/{id}", {
+          params: { path: { id: productId } },
+        })
+        const p = (data as { data?: ProductSummary } | undefined)?.data
+        if (p) all.push(p)
+      }
+      return all
+    },
+  })
+
+  const addMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const { error } = await apiClient.POST("/api/v1/admin/companies/{id}/catalog", {
+        params: { path: { id: companyId } },
+        body: { productId },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Product added to catalog")
+      setSearch("")
+      setSearchResults([])
+      qc.invalidateQueries({ queryKey: ["admin", "company-catalog", companyId] })
+      qc.invalidateQueries({ queryKey: ["admin", "company-catalog-products", companyId] })
+    },
+    onError: () => toast.error("Failed to add product"),
+  })
+
+  const removeMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const { error } = await apiClient.DELETE("/api/v1/admin/companies/{id}/catalog/{productId}", {
+        params: { path: { id: companyId, productId } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Product removed from catalog")
+      qc.invalidateQueries({ queryKey: ["admin", "company-catalog", companyId] })
+      qc.invalidateQueries({ queryKey: ["admin", "company-catalog-products", companyId] })
+    },
+    onError: () => toast.error("Failed to remove product"),
+  })
+
+  async function handleSearch() {
+    if (!search.trim()) return
+    setIsSearching(true)
+    try {
+      const { data } = await apiClient.GET("/api/v1/admin/products", {
+        params: { query: { titleContains: search, size: 10 } },
+      })
+      const results = (data as { data?: { content?: ProductSummary[] } } | undefined)?.data?.content ?? []
+      setSearchResults(results)
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-base font-semibold">Product catalog</h2>
+      <p className="text-sm text-muted-foreground">
+        Products added here are only visible to members of this company. Products not in any catalog are visible to everyone.
+      </p>
+
+      {/* Search to add */}
+      <div className="flex gap-2">
+        <Input
+          placeholder="Search products by title…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') void handleSearch() }}
+          className="max-w-xs"
+        />
+        <Button size="sm" variant="outline" onClick={() => void handleSearch()} disabled={isSearching}>
+          Search
+        </Button>
+      </div>
+
+      {searchResults.length > 0 && (
+        <div className="rounded-lg border bg-card divide-y">
+          {searchResults.map((p) => {
+            const inCatalog = catalogProductIds.includes(p.id ?? '')
+            return (
+              <div key={p.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                <span>{p.title}</span>
+                <Button
+                  size="sm"
+                  variant={inCatalog ? "outline" : "default"}
+                  disabled={inCatalog || addMutation.isPending}
+                  onClick={() => p.id && addMutation.mutate(p.id)}
+                >
+                  {inCatalog ? "Already added" : "Add"}
+                </Button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Current catalog */}
+      {catalogProducts.length > 0 && (
+        <div className="rounded-lg border bg-card divide-y">
+          {catalogProducts.map((p) => (
+            <div key={p.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+              <span>{p.title}</span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-destructive hover:bg-destructive/10"
+                disabled={removeMutation.isPending}
+                onClick={() => p.id && removeMutation.mutate(p.id)}
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {catalogProducts.length === 0 && (
+        <p className="text-sm text-muted-foreground py-2">
+          No products in this company's catalog. Add products above to restrict visibility.
+        </p>
+      )}
+    </div>
+  )
+}
+
 // ─── Company detail page ──────────────────────────────────────────────────────
 
 export function CompanyDetailPage({ id }: { id: string }) {
@@ -824,8 +1595,33 @@ export function CompanyDetailPage({ id }: { id: string }) {
         )}
       </div>
 
+      {/* Tax exemption */}
+      {company && (
+        <TaxExemptSection
+          company={company}
+          onUpdated={() => qc.invalidateQueries({ queryKey: ["company", id] })}
+        />
+      )}
+
+      {/* Sales rep */}
+      {company && (
+        <SalesRepSection
+          company={company}
+          onUpdated={() => qc.invalidateQueries({ queryKey: ["company", id] })}
+        />
+      )}
+
       {/* Credit account */}
       <CreditAccountSection companyId={id} />
+
+      {/* Members */}
+      <MembersSection companyId={id} />
+
+      {/* Shipping addresses */}
+      <ShippingAddressSection companyId={id} />
+
+      {/* Catalog section */}
+      <CatalogSection companyId={id} />
 
       {/* Price lists section */}
       <div className="space-y-3">
@@ -844,6 +1640,7 @@ export function CompanyDetailPage({ id }: { id: string }) {
                 <TableHead>Name</TableHead>
                 <TableHead className="w-20">Currency</TableHead>
                 <TableHead className="w-20">Priority</TableHead>
+                <TableHead className="w-28">Adjustment</TableHead>
                 <TableHead className="w-28">Status</TableHead>
                 <TableHead className="w-28">Starts</TableHead>
                 <TableHead className="w-28">Ends</TableHead>
@@ -853,14 +1650,14 @@ export function CompanyDetailPage({ id }: { id: string }) {
             <TableBody>
               {listsLoading && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
                     Loading…
                   </TableCell>
                 </TableRow>
               )}
               {!listsLoading && priceLists.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
                     No price lists yet.
                   </TableCell>
                 </TableRow>

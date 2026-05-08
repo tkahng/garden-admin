@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedReturnsRouteImport } from './routes/_authenticated/returns'
 import { Route as AuthenticatedQuotesRouteImport } from './routes/_authenticated/quotes'
 import { Route as AuthenticatedProductsRouteImport } from './routes/_authenticated/products'
 import { Route as AuthenticatedPriceListsRouteImport } from './routes/_authenticated/price-lists'
@@ -73,6 +74,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedReturnsRoute = AuthenticatedReturnsRouteImport.update({
+  id: '/returns',
+  path: '/returns',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedQuotesRoute = AuthenticatedQuotesRouteImport.update({
@@ -263,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/price-lists': typeof AuthenticatedPriceListsRoute
   '/products': typeof AuthenticatedProductsRouteWithChildren
   '/quotes': typeof AuthenticatedQuotesRouteWithChildren
+  '/returns': typeof AuthenticatedReturnsRoute
   '/blogs/$blogId': typeof AuthenticatedBlogsBlogIdRoute
   '/collections/$collectionId': typeof AuthenticatedCollectionsCollectionIdRoute
   '/collections/new': typeof AuthenticatedCollectionsNewRoute
@@ -298,6 +305,7 @@ export interface FileRoutesByTo {
   '/pages': typeof AuthenticatedPagesRoute
   '/price-lists': typeof AuthenticatedPriceListsRoute
   '/quotes': typeof AuthenticatedQuotesRouteWithChildren
+  '/returns': typeof AuthenticatedReturnsRoute
   '/': typeof AuthenticatedIndexRoute
   '/blogs/$blogId': typeof AuthenticatedBlogsBlogIdRoute
   '/collections/$collectionId': typeof AuthenticatedCollectionsCollectionIdRoute
@@ -337,6 +345,7 @@ export interface FileRoutesById {
   '/_authenticated/price-lists': typeof AuthenticatedPriceListsRoute
   '/_authenticated/products': typeof AuthenticatedProductsRouteWithChildren
   '/_authenticated/quotes': typeof AuthenticatedQuotesRouteWithChildren
+  '/_authenticated/returns': typeof AuthenticatedReturnsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/blogs/$blogId': typeof AuthenticatedBlogsBlogIdRoute
   '/_authenticated/collections/$collectionId': typeof AuthenticatedCollectionsCollectionIdRoute
@@ -377,6 +386,7 @@ export interface FileRouteTypes {
     | '/price-lists'
     | '/products'
     | '/quotes'
+    | '/returns'
     | '/blogs/$blogId'
     | '/collections/$collectionId'
     | '/collections/new'
@@ -412,6 +422,7 @@ export interface FileRouteTypes {
     | '/pages'
     | '/price-lists'
     | '/quotes'
+    | '/returns'
     | '/'
     | '/blogs/$blogId'
     | '/collections/$collectionId'
@@ -450,6 +461,7 @@ export interface FileRouteTypes {
     | '/_authenticated/price-lists'
     | '/_authenticated/products'
     | '/_authenticated/quotes'
+    | '/_authenticated/returns'
     | '/_authenticated/'
     | '/_authenticated/blogs/$blogId'
     | '/_authenticated/collections/$collectionId'
@@ -519,6 +531,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/returns': {
+      id: '/_authenticated/returns'
+      path: '/returns'
+      fullPath: '/returns'
+      preLoaderRoute: typeof AuthenticatedReturnsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/quotes': {
@@ -873,6 +892,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPriceListsRoute: typeof AuthenticatedPriceListsRoute
   AuthenticatedProductsRoute: typeof AuthenticatedProductsRouteWithChildren
   AuthenticatedQuotesRoute: typeof AuthenticatedQuotesRouteWithChildren
+  AuthenticatedReturnsRoute: typeof AuthenticatedReturnsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedSettingsLocationsRoute: typeof AuthenticatedSettingsLocationsRoute
   AuthenticatedSettingsPermissionsRoute: typeof AuthenticatedSettingsPermissionsRoute
@@ -895,6 +915,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPriceListsRoute: AuthenticatedPriceListsRoute,
   AuthenticatedProductsRoute: AuthenticatedProductsRouteWithChildren,
   AuthenticatedQuotesRoute: AuthenticatedQuotesRouteWithChildren,
+  AuthenticatedReturnsRoute: AuthenticatedReturnsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedSettingsLocationsRoute: AuthenticatedSettingsLocationsRoute,
   AuthenticatedSettingsPermissionsRoute: AuthenticatedSettingsPermissionsRoute,

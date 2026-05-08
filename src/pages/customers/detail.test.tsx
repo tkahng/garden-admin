@@ -160,4 +160,40 @@ describe("CustomerDetailPage", () => {
       expect(screen.getByRole("button", { name: "Discard" })).toBeInTheDocument()
     })
   })
+
+  // ─── OrderHistory section ──────────────────────────────────────────────────
+
+  it("shows Order history section heading", async () => {
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByText("Order history")).toBeInTheDocument()
+    })
+  })
+
+  it("renders order row with PAID status badge", async () => {
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByText("PAID")).toBeInTheDocument()
+    })
+  })
+
+  it("shows lifetime spend summary", async () => {
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByText(/1 order/)).toBeInTheDocument()
+    })
+  })
+
+  it("shows 'No orders yet' when customer has no orders", async () => {
+    const { http, HttpResponse } = await import("msw")
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders", () =>
+        HttpResponse.json({ data: { content: [], meta: { total: 0, page: 0, size: 50 } } })
+      )
+    )
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByText("No orders yet.")).toBeInTheDocument()
+    })
+  })
 })

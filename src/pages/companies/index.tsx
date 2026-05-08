@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,35 +13,51 @@ import {
 import { Plus, Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
+import type { components } from "@/schema"
+import { useNavigate } from "@tanstack/react-router"
+
+type Company = components["schemas"]["CompanyResponse"]
 
 export function CompaniesPage() {
+  const [search, setSearch] = useState("")
+  const navigate = useNavigate()
+
   const { data, isLoading } = useQuery({
-    queryKey: ["companies"],
+    queryKey: ["admin", "companies"],
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/v1/companies", { params: { query: { user: {} } } })
+      const { data, error } = await apiClient.GET("/api/v1/companies", {})
       if (error) throw error
-      return data
+      return (data as { data?: Company[] } | undefined)?.data ?? []
     },
   })
 
-  const companies = (data as { content?: Record<string, unknown>[] } | undefined)?.content ?? []
+  const companies = data ?? []
+  const filtered = search
+    ? companies.filter((c) => c.name?.toLowerCase().includes(search.toLowerCase()))
+    : companies
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Companies</h1>
-        <Button asChild size="sm">
-          <Link to={"/companies/new" as string}>
-            <Plus className="size-4 mr-2" />
-            Add company
-          </Link>
+        <Button
+          size="sm"
+          onClick={() => void navigate({ to: "/companies/$companyId", params: { companyId: "new" } })}
+        >
+          <Plus className="size-4 mr-2" />
+          Add company
         </Button>
       </div>
 
       <div className="flex items-center gap-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search companies..." className="pl-9" />
+          <Input
+            placeholder="Search companies…"
+            className="pl-9"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
       </div>
 
@@ -49,35 +66,49 @@ export function CompaniesPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Company</TableHead>
-              <TableHead>Members</TableHead>
+              <TableHead>Tax ID</TableHead>
+              <TableHead>Tax exempt</TableHead>
               <TableHead>Created</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground py-12">
-                  Loading...
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
+                  Loading…
                 </TableCell>
               </TableRow>
             )}
-            {!isLoading && companies.length === 0 && (
+            {!isLoading && filtered.length === 0 && (
               <TableRow>
-                <TableCell colSpan={3} className="text-center text-muted-foreground py-12">
-                  No companies found
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
+                  {search ? "No companies match your search." : "No companies found."}
                 </TableCell>
               </TableRow>
             )}
-            {companies.map((c: Record<string, unknown>) => (
-              <TableRow key={String(c.id)}>
+            {filtered.map((c) => (
+              <TableRow key={c.id}>
                 <TableCell>
-                  <Link to={`/companies/${c.id}` as string} className="font-medium hover:underline">
-                    {String(c.name ?? "Unnamed")}
+                  <Link
+                    to="/companies/$companyId"
+                    params={{ companyId: c.id! }}
+                    className="font-medium hover:underline"
+                  >
+                    {c.name ?? "Unnamed"}
                   </Link>
                 </TableCell>
-                <TableCell className="text-muted-foreground">—</TableCell>
+                <TableCell className="text-muted-foreground text-sm font-mono">
+                  {c.taxId ?? "—"}
+                </TableCell>
+                <TableCell className="text-sm">
+                  {c.taxExempt ? (
+                    <span className="text-green-600 font-medium">Exempt</span>
+                  ) : (
+                    <span className="text-muted-foreground">No</span>
+                  )}
+                </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
-                  {c.createdAt ? new Date(c.createdAt as string).toLocaleDateString() : "—"}
+                  {c.createdAt ? new Date(c.createdAt).toLocaleDateString() : "—"}
                 </TableCell>
               </TableRow>
             ))}

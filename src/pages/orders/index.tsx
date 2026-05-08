@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Download, Search } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Download, Search, Plus, Trash2 } from "lucide-react"
 import { downloadCsv } from "@/lib/download"
 import { bulkCancelOrders } from "@/lib/bulk-api"
 import {
@@ -15,19 +16,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
 import type { components } from "@/schema"
 import { DataPagination } from "@/components/ui/data-pagination"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 type OrderStatus = components["schemas"]["OrderResponse"]["status"]
 type Order = components["schemas"]["OrderResponse"]
+type DraftLineItem = { variantId: string; quantity: number; unitPrice: string }
 
 const PAGE_SIZE = 20
 
 const STATUS_TABS: { label: string; value: OrderStatus | undefined }[] = [
   { label: "All", value: undefined },
+  { label: "Drafts", value: "DRAFT" },
   { label: "Pending payment", value: "PENDING_PAYMENT" },
   { label: "Paid", value: "PAID" },
   { label: "Partially fulfilled", value: "PARTIALLY_FULFILLED" },
@@ -50,6 +61,7 @@ function statusVariant(status: string) {
 
 function statusLabel(status: string) {
   switch (status) {
+    case "DRAFT": return "Draft"
     case "PENDING_PAYMENT": return "Pending payment"
     case "PAID": return "Paid"
     case "PARTIALLY_FULFILLED": return "Partially fulfilled"
@@ -60,6 +72,206 @@ function statusLabel(status: string) {
   }
 }
 
+// ─── CreateDraftDialog ────────────────────────────────────────────────────────
+
+function CreateDraftDialog({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  onCreated: (id: string) => void
+}) {
+  const [userId, setUserId] = useState("")
+  const [guestEmail, setGuestEmail] = useState("")
+  const [currency, setCurrency] = useState("USD")
+  const [poNumber, setPoNumber] = useState("")
+  const [companyId, setCompanyId] = useState("")
+  const [shippingAddress, setShippingAddress] = useState("")
+  const [lines, setLines] = useState<DraftLineItem[]>([{ variantId: "", quantity: 1, unitPrice: "" }])
+
+  function reset() {
+    setUserId("")
+    setGuestEmail("")
+    setCurrency("USD")
+    setPoNumber("")
+    setCompanyId("")
+    setShippingAddress("")
+    setLines([{ variantId: "", quantity: 1, unitPrice: "" }])
+  }
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await apiClient.POST("/api/v1/admin/orders/draft", {
+        body: {
+          userId: userId.trim() || undefined,
+          guestEmail: guestEmail.trim() || undefined,
+          currency: currency.trim() || "USD",
+          poNumber: poNumber.trim() || undefined,
+          companyId: companyId.trim() || undefined,
+          shippingAddress: shippingAddress.trim() || undefined,
+          items: lines.map((l) => ({
+            variantId: l.variantId.trim(),
+            quantity: l.quantity,
+            unitPrice: l.unitPrice ? Number(l.unitPrice) : undefined,
+          })),
+        },
+      })
+      if (error) throw error
+      return (data as { data?: { id?: string } } | undefined)?.data?.id
+    },
+    onSuccess: (newId) => {
+      toast.success("Draft order created")
+      reset()
+      onOpenChange(false)
+      if (newId) onCreated(newId)
+    },
+    onError: () => toast.error("Failed to create draft"),
+  })
+
+  function handleSubmit() {
+    if (lines.length === 0 || lines.some((l) => !l.variantId.trim())) {
+      toast.error("All items need a variant ID")
+      return
+    }
+    createMutation.mutate()
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v) }}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>New draft order</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-1">
+          {/* Customer */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>User ID (optional)</Label>
+              <Input
+                placeholder="UUID"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                className="font-mono text-xs"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Guest email (optional)</Label>
+              <Input
+                type="email"
+                placeholder="guest@example.com"
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Meta */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Currency</Label>
+              <Input
+                maxLength={3}
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>PO number</Label>
+              <Input value={poNumber} onChange={(e) => setPoNumber(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Company ID (optional)</Label>
+            <Input
+              placeholder="UUID"
+              value={companyId}
+              onChange={(e) => setCompanyId(e.target.value)}
+              className="font-mono text-xs"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Shipping address</Label>
+            <Input
+              placeholder="123 Main St, City, State"
+              value={shippingAddress}
+              onChange={(e) => setShippingAddress(e.target.value)}
+            />
+          </div>
+
+          {/* Line items */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Items</Label>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                onClick={() => setLines((prev) => [...prev, { variantId: "", quantity: 1, unitPrice: "" }])}
+              >
+                <Plus className="size-3 mr-1" />Add row
+              </Button>
+            </div>
+            <div className="rounded-md border divide-y">
+              <div className="grid grid-cols-[1fr_70px_90px_32px] gap-2 px-3 py-1.5 text-xs text-muted-foreground font-medium">
+                <span>Variant ID</span><span>Qty</span><span>Unit price</span><span />
+              </div>
+              {lines.map((line, idx) => (
+                <div key={idx} className="grid grid-cols-[1fr_70px_90px_32px] gap-2 px-3 py-2 items-center">
+                  <Input
+                    placeholder="UUID"
+                    value={line.variantId}
+                    onChange={(e) => setLines((prev) => prev.map((l, i) => i === idx ? { ...l, variantId: e.target.value } : l))}
+                    className="h-7 text-xs font-mono"
+                  />
+                  <Input
+                    type="number"
+                    min={1}
+                    value={line.quantity}
+                    onChange={(e) => setLines((prev) => prev.map((l, i) => i === idx ? { ...l, quantity: Math.max(1, Number(e.target.value)) } : l))}
+                    className="h-7 text-xs"
+                  />
+                  <Input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    placeholder="auto"
+                    value={line.unitPrice}
+                    onChange={(e) => setLines((prev) => prev.map((l, i) => i === idx ? { ...l, unitPrice: e.target.value } : l))}
+                    className="h-7 text-xs"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 text-destructive shrink-0"
+                    disabled={lines.length === 1}
+                    onClick={() => setLines((prev) => prev.filter((_, i) => i !== idx))}
+                  >
+                    <Trash2 className="size-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => { reset(); onOpenChange(false) }}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={createMutation.isPending}>
+            {createMutation.isPending ? "Creating…" : "Create draft"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export function OrdersPage() {
   const { page: rawPage, status, userId, from, to } = useSearch({ from: "/_authenticated/orders" })
   const page = rawPage ?? 0
@@ -67,6 +279,7 @@ export function OrdersPage() {
   const queryClient = useQueryClient()
   const [exporting, setExporting] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [draftDialogOpen, setDraftDialogOpen] = useState(false)
 
   async function handleExport() {
     setExporting(true)
@@ -154,10 +367,16 @@ export function OrdersPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Orders</h1>
-        <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
-          <Download className="mr-2 size-4" />
-          {exporting ? "Exporting…" : "Export CSV"}
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" onClick={() => setDraftDialogOpen(true)}>
+            <Plus className="mr-2 size-4" />
+            New draft order
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
+            <Download className="mr-2 size-4" />
+            {exporting ? "Exporting…" : "Export CSV"}
+          </Button>
+        </div>
       </div>
 
       {/* Status tabs */}
@@ -329,6 +548,15 @@ export function OrdersPage() {
           <DataPagination page={page} totalPages={totalPages} total={total} label="order" onPageChange={setPage} />
         )}
       </div>
+
+      <CreateDraftDialog
+        open={draftDialogOpen}
+        onOpenChange={setDraftDialogOpen}
+        onCreated={(newId) => {
+          void queryClient.invalidateQueries({ queryKey: ["admin", "orders"] })
+          void navigate({ to: "/orders/$orderId", params: { orderId: newId } })
+        }}
+      />
     </div>
   )
 }

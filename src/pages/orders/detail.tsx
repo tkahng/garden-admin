@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient, getAuthToken } from "@/api/client"
+import { apiClient } from "@/api/client"
 import type { components } from "@/schema"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -42,10 +42,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, Ban, ImageIcon, Pencil, RefreshCcw, Plus, Package, FileText } from "lucide-react"
+import { ArrowLeft, Ban, ImageIcon, Pencil, RefreshCcw, Plus, Package, FileText, CheckCheck, Trash2, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
 
 type Order = components["schemas"]["OrderResponse"]
 type OrderItem = components["schemas"]["OrderItemResponse"]
@@ -53,6 +52,8 @@ type Fulfillment = components["schemas"]["FulfillmentResponse"]
 type OrderEvent = components["schemas"]["OrderEventResponse"]
 type CreateFulfillment = components["schemas"]["CreateFulfillmentRequest"]
 type UpdateFulfillment = components["schemas"]["UpdateFulfillmentRequest"]
+type DraftItem = { variantId: string; quantity: number; unitPrice: string }
+type Invoice = components["schemas"]["InvoiceResponse"]
 
 const EVENT_LABELS: Record<string, string> = {
   ORDER_PLACED: "Order placed",
@@ -117,6 +118,10 @@ export function OrderDetailPage({ id }: { id: string }) {
   const [invoiceCompanyId, setInvoiceCompanyId] = useState("")
   const [invoiceTerms, setInvoiceTerms] = useState(30)
 
+  // Draft items editing
+  const [draftItems, setDraftItems] = useState<DraftItem[]>([])
+  const [draftItemsInit, setDraftItemsInit] = useState(false)
+
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: ["admin", "orders", id] })
   }
@@ -170,6 +175,19 @@ export function OrderDetailPage({ id }: { id: string }) {
       return data
     },
     enabled: invoiceOpen,
+  })
+
+  const { data: linkedInvoice } = useQuery<Invoice | null>({
+    queryKey: ["admin", "orders", id, "invoice"],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/invoices", {
+        params: { query: { orderId: id, size: 1 } },
+      })
+      if (error) return null
+      const items = (data as { data?: { content?: Invoice[] } } | undefined)?.data?.content ?? []
+      return items[0] ?? null
+    },
+    enabled: !!id,
   })
   const companies = (companiesData as { content?: { id: string; name: string }[] } | undefined)?.content ?? []
 
@@ -282,19 +300,11 @@ export function OrderDetailPage({ id }: { id: string }) {
 
   const createInvoiceMutation = useMutation({
     mutationFn: async ({ companyId, paymentTermsDays }: { companyId: string; paymentTermsDays: number }) => {
-      const token = getAuthToken()
-      const res = await fetch(`${BASE_URL}/api/v1/admin/invoices/from-order/${id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ companyId, paymentTermsDays }),
+      const { error } = await apiClient.POST("/api/v1/admin/invoices/from-order/{orderId}", {
+        params: { path: { orderId: id } },
+        body: { companyId, paymentTermsDays },
       })
-      if (!res.ok) {
-        const text = await res.text().catch(() => "")
-        throw new Error(`HTTP ${res.status}: ${text}`)
-      }
+      if (error) throw error
     },
     onSuccess: () => {
       toast.success("Invoice created")
@@ -304,6 +314,40 @@ export function OrderDetailPage({ id }: { id: string }) {
       setInvoiceTerms(30)
     },
     onError: () => toast.error("Failed to create invoice"),
+  })
+
+  const updateDraftItemsMutation = useMutation({
+    mutationFn: async (items: DraftItem[]) => {
+      const { error } = await apiClient.PUT("/api/v1/admin/orders/{id}/draft/items", {
+        params: { path: { id } },
+        body: items.map((it) => ({
+          variantId: it.variantId,
+          quantity: it.quantity,
+          unitPrice: it.unitPrice ? Number(it.unitPrice) : undefined,
+        })),
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Draft items saved")
+      invalidate()
+    },
+    onError: () => toast.error("Failed to save draft items"),
+  })
+
+  const completeDraftMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await apiClient.POST("/api/v1/admin/orders/{id}/draft/complete", {
+        params: { path: { id } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Draft completed")
+      invalidate()
+      void qc.invalidateQueries({ queryKey: ["admin", "orders", id, "events"] })
+    },
+    onError: () => toast.error("Failed to complete draft"),
   })
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -341,10 +385,23 @@ export function OrderDetailPage({ id }: { id: string }) {
 
   const o = order
   const items: OrderItem[] = o.items ?? []
+  const isDraft = o.status === "DRAFT"
   const canCancel = o.status !== "CANCELLED" && o.status !== "REFUNDED"
   const canRefund = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED" || o.status === "FULFILLED"
   const canFulfill = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED"
-  const canInvoice = o.status !== "CANCELLED" && o.status !== "REFUNDED"
+  const canInvoice = o.status !== "CANCELLED" && o.status !== "REFUNDED" && !isDraft
+
+  // Initialise editable draft items once the order loads
+  if (isDraft && !draftItemsInit) {
+    setDraftItems(
+      items.map((it) => ({
+        variantId: it.variantId ?? "",
+        quantity: it.quantity ?? 1,
+        unitPrice: it.unitPrice != null ? String(it.unitPrice) : "",
+      }))
+    )
+    setDraftItemsInit(true)
+  }
 
   const subtotal = items.reduce((sum, i) => sum + (i.unitPrice ?? 0) * (i.quantity ?? 0), 0)
 
@@ -369,6 +426,16 @@ export function OrderDetailPage({ id }: { id: string }) {
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
+          {isDraft && (
+            <Button
+              size="sm"
+              onClick={() => completeDraftMutation.mutate()}
+              disabled={completeDraftMutation.isPending || items.length === 0}
+            >
+              <CheckCheck className="size-4 mr-2" />
+              Complete order
+            </Button>
+          )}
           {canFulfill && (
             <Button size="sm" onClick={openCreateFulfillment}>
               <Package className="size-4 mr-2" />
@@ -400,13 +467,104 @@ export function OrderDetailPage({ id }: { id: string }) {
         {/* Left: items + fulfillments + timeline */}
         <div className="lg:col-span-2 space-y-6">
 
-          {/* Order items */}
+          {/* Order items — editable when DRAFT, read-only otherwise */}
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Items ({items.length})</CardTitle>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-base">Items ({isDraft ? draftItems.length : items.length})</CardTitle>
+              {isDraft && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setDraftItems((prev) => [...prev, { variantId: "", quantity: 1, unitPrice: "" }])}
+                >
+                  <Plus className="size-3.5 mr-1.5" />Add item
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="p-0">
-              {items.length === 0 ? (
+              {isDraft ? (
+                <div className="space-y-0">
+                  {draftItems.length === 0 ? (
+                    <p className="text-sm text-muted-foreground px-6 pb-6">No items. Add at least one item.</p>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Variant ID</TableHead>
+                          <TableHead className="w-24">Qty</TableHead>
+                          <TableHead className="w-32">Unit price</TableHead>
+                          <TableHead className="w-10" />
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {draftItems.map((item, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell>
+                              <Input
+                                placeholder="Variant UUID"
+                                value={item.variantId}
+                                onChange={(e) =>
+                                  setDraftItems((prev) =>
+                                    prev.map((it, i) => i === idx ? { ...it, variantId: e.target.value } : it)
+                                  )
+                                }
+                                className="h-8 text-xs font-mono"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min={1}
+                                value={item.quantity}
+                                onChange={(e) =>
+                                  setDraftItems((prev) =>
+                                    prev.map((it, i) => i === idx ? { ...it, quantity: Math.max(1, Number(e.target.value)) } : it)
+                                  )
+                                }
+                                className="h-8 text-sm w-20"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                placeholder="auto"
+                                value={item.unitPrice}
+                                onChange={(e) =>
+                                  setDraftItems((prev) =>
+                                    prev.map((it, i) => i === idx ? { ...it, unitPrice: e.target.value } : it)
+                                  )
+                                }
+                                className="h-8 text-sm w-28"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-7 text-destructive"
+                                onClick={() => setDraftItems((prev) => prev.filter((_, i) => i !== idx))}
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                  <div className="px-6 py-3 border-t flex justify-end">
+                    <Button
+                      size="sm"
+                      disabled={updateDraftItemsMutation.isPending || draftItems.some((it) => !it.variantId.trim())}
+                      onClick={() => updateDraftItemsMutation.mutate(draftItems)}
+                    >
+                      {updateDraftItemsMutation.isPending ? "Saving…" : "Save items"}
+                    </Button>
+                  </div>
+                </div>
+              ) : items.length === 0 ? (
                 <p className="text-sm text-muted-foreground px-6 pb-6">No items.</p>
               ) : (
                 <>
@@ -662,6 +820,12 @@ export function OrderDetailPage({ id }: { id: string }) {
                   {o.currency ?? "$"}{Number(o.totalAmount ?? 0).toFixed(2)}
                 </span>
               </div>
+              {o.poNumber && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">PO number</span>
+                  <span className="font-mono text-xs">{o.poNumber}</span>
+                </div>
+              )}
               {o.discountAmount != null && o.discountAmount > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Discount</span>
@@ -672,6 +836,18 @@ export function OrderDetailPage({ id }: { id: string }) {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Gift card</span>
                   <span className="text-green-600 tabular-nums">−${Number(o.giftCardAmount).toFixed(2)}</span>
+                </div>
+              )}
+              {o.status === "INVOICED" && linkedInvoice && (
+                <div className="pt-1 border-t">
+                  <Link
+                    to="/invoices/$invoiceId"
+                    params={{ invoiceId: linkedInvoice.id! }}
+                    className="text-primary text-xs hover:underline flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    View invoice →
+                  </Link>
                 </div>
               )}
             </CardContent>

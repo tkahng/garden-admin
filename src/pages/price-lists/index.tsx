@@ -259,6 +259,11 @@ function PriceListRow({
         </TableCell>
         <TableCell className="text-muted-foreground text-sm">{pl.currency ?? "USD"}</TableCell>
         <TableCell className="text-muted-foreground text-sm">{pl.priority ?? 0}</TableCell>
+        <TableCell className="text-muted-foreground text-sm">
+          {pl.adjustmentType
+            ? `${pl.adjustmentType === "PERCENTAGE_OFF" ? "-" : "+"}${pl.adjustmentValue}%`
+            : "—"}
+        </TableCell>
         <TableCell>{statusBadge(pl)}</TableCell>
         <TableCell className="text-muted-foreground text-sm">{fmt(pl.startsAt)}</TableCell>
         <TableCell className="text-muted-foreground text-sm">{fmt(pl.endsAt)}</TableCell>
@@ -280,7 +285,7 @@ function PriceListRow({
       </TableRow>
       {expanded && (
         <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={7} className="p-0">
+          <TableCell colSpan={8} className="p-0">
             <PriceListEntries priceListId={pl.id!} />
           </TableCell>
         </TableRow>
@@ -316,6 +321,8 @@ function PriceListDialog({
               priority: editing.priority ?? 0,
               startsAt: editing.startsAt,
               endsAt: editing.endsAt,
+              adjustmentType: editing.adjustmentType ?? undefined,
+              adjustmentValue: editing.adjustmentValue ?? undefined,
             }
           : { currency: "USD", priority: 0 },
       )
@@ -345,6 +352,9 @@ function PriceListDialog({
 
   function handleSubmit() {
     if (!form.name?.trim()) { toast.error("Name is required"); return }
+    const hasType = !!form.adjustmentType
+    const hasValue = form.adjustmentValue != null
+    if (hasType !== hasValue) { toast.error("Adjustment type and value must both be set or both empty"); return }
     if (editing) {
       updateMutation.mutate({
         id: editing.id!,
@@ -354,6 +364,8 @@ function PriceListDialog({
           priority: form.priority ?? 0,
           startsAt: form.startsAt || undefined,
           endsAt: form.endsAt || undefined,
+          adjustmentType: form.adjustmentType || undefined,
+          adjustmentValue: form.adjustmentValue || undefined,
         },
       })
     } else {
@@ -364,6 +376,8 @@ function PriceListDialog({
         priority: form.priority ?? 0,
         startsAt: form.startsAt || undefined,
         endsAt: form.endsAt || undefined,
+        adjustmentType: form.adjustmentType || undefined,
+        adjustmentValue: form.adjustmentValue || undefined,
       })
     }
   }
@@ -403,6 +417,36 @@ function PriceListDialog({
                 placeholder="0"
                 value={form.priority ?? ""}
                 onChange={(e) => setForm((f) => ({ ...f, priority: Number(e.target.value) }))}
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Adjustment rule</Label>
+            <div className="flex gap-2">
+              <select
+                value={form.adjustmentType ?? ""}
+                onChange={(e) => setForm((f) => ({
+                  ...f,
+                  adjustmentType: (e.target.value as CreatePriceList["adjustmentType"]) || undefined,
+                }))}
+                className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">None</option>
+                <option value="PERCENTAGE_OFF">% off</option>
+                <option value="MARKUP_PERCENTAGE">% markup</option>
+              </select>
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="Value %"
+                value={form.adjustmentValue ?? ""}
+                onChange={(e) => setForm((f) => ({
+                  ...f,
+                  adjustmentValue: e.target.value ? Number(e.target.value) : undefined,
+                }))}
+                className="w-28"
+                disabled={!form.adjustmentType}
               />
             </div>
           </div>
@@ -512,6 +556,7 @@ function CompanyPriceLists({ company }: { company: Company }) {
               <TableHead>Name</TableHead>
               <TableHead className="w-20">Currency</TableHead>
               <TableHead className="w-20">Priority</TableHead>
+              <TableHead className="w-28">Adjustment</TableHead>
               <TableHead className="w-28">Status</TableHead>
               <TableHead className="w-28">Starts</TableHead>
               <TableHead className="w-28">Ends</TableHead>
@@ -521,12 +566,12 @@ function CompanyPriceLists({ company }: { company: Company }) {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">Loading…</TableCell>
+                <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">Loading…</TableCell>
               </TableRow>
             )}
             {!isLoading && priceLists.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
                   No price lists. Click "New price list" to create one.
                 </TableCell>
               </TableRow>
@@ -587,11 +632,9 @@ export function PriceListsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/v1/companies", {
-        params: { query: { user: {} } },
-      })
+      const { data, error } = await apiClient.GET("/api/v1/companies")
       if (error) throw error
-      return (data as { content?: Company[] } | undefined)?.content ?? []
+      return data?.data ?? []
     },
   })
 

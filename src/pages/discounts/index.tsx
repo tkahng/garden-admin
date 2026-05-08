@@ -29,9 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Search, Trash2 } from "lucide-react"
+import { Plus, Search, Trash2, Zap } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
 import { toast } from "sonner"
 import { DataPagination } from "@/components/ui/data-pagination"
+import { cn } from "@/lib/utils"
 
 type Discount = components["schemas"]["DiscountResponse"]
 type CreateDiscount = components["schemas"]["CreateDiscountRequest"]
@@ -54,10 +56,13 @@ function valueDisplay(d: Discount) {
   return "—"
 }
 
+type AutomaticFilter = "all" | "automatic" | "code"
+
 export function DiscountsPage() {
   const qc = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState<Partial<CreateDiscount>>({ type: "PERCENTAGE" })
+  const [form, setForm] = useState<Partial<CreateDiscount>>({ type: "PERCENTAGE", automatic: false })
+  const [automaticFilter, setAutomaticFilter] = useState<AutomaticFilter>("all")
 
   const { page: rawPage, codeContains } = useSearch({ from: "/_authenticated/discounts" })
   const page = rawPage ?? 0
@@ -74,7 +79,12 @@ export function DiscountsPage() {
     },
   })
 
-  const discounts: Discount[] = data?.data?.content ?? []
+  const allDiscounts: Discount[] = data?.data?.content ?? []
+  const discounts = automaticFilter === "automatic"
+    ? allDiscounts.filter((d) => d.automatic)
+    : automaticFilter === "code"
+      ? allDiscounts.filter((d) => !d.automatic)
+      : allDiscounts
   const total = data?.data?.meta?.total ?? 0
   const totalPages = Math.ceil(total / PAGE_SIZE) || 1
 
@@ -91,7 +101,7 @@ export function DiscountsPage() {
       toast.success("Discount created")
       qc.invalidateQueries({ queryKey: ["admin", "discounts"] })
       setOpen(false)
-      setForm({ type: "PERCENTAGE" })
+      setForm({ type: "PERCENTAGE", automatic: false })
     },
     onError: () => toast.error("Failed to create discount"),
   })
@@ -111,8 +121,13 @@ export function DiscountsPage() {
   })
 
   function handleSubmit() {
-    if (!form.code || !form.type || form.value == null) {
-      toast.error("Code, type and value are required")
+    const isAutomatic = form.automatic ?? false
+    if (!isAutomatic && !form.code?.trim()) {
+      toast.error("Code is required for non-automatic discounts")
+      return
+    }
+    if (!form.type || form.value == null) {
+      toast.error("Type and value are required")
       return
     }
     createMutation.mutate(form as CreateDiscount)
@@ -126,6 +141,25 @@ export function DiscountsPage() {
           <Plus className="size-4 mr-2" />
           Create discount
         </Button>
+      </div>
+
+      {/* Type filter tabs */}
+      <div className="flex gap-1 border-b">
+        {(["all", "automatic", "code"] as AutomaticFilter[]).map((f) => (
+          <button
+            key={f}
+            onClick={() => setAutomaticFilter(f)}
+            className={cn(
+              "px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px flex items-center gap-1.5",
+              automaticFilter === f
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {f === "automatic" && <Zap className="size-3.5" />}
+            {f === "all" ? "All" : f === "automatic" ? "Automatic" : "Code-based"}
+          </button>
+        ))}
       </div>
 
       <div className="flex items-center gap-2">
@@ -150,7 +184,7 @@ export function DiscountsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Code</TableHead>
+              <TableHead>Code / Promotion</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Value</TableHead>
               <TableHead>Uses</TableHead>
@@ -177,7 +211,16 @@ export function DiscountsPage() {
             )}
             {discounts.map((d) => (
               <TableRow key={d.id}>
-                <TableCell className="font-mono font-medium">{d.code}</TableCell>
+                <TableCell>
+                  {d.automatic ? (
+                    <div className="flex items-center gap-1.5">
+                      <Zap className="size-3.5 text-yellow-500 shrink-0" />
+                      <span className="text-sm font-medium text-muted-foreground italic">Automatic</span>
+                    </div>
+                  ) : (
+                    <span className="font-mono font-medium">{d.code ?? "—"}</span>
+                  )}
+                </TableCell>
                 <TableCell>{typeLabel(d.type)}</TableCell>
                 <TableCell>{valueDisplay(d)}</TableCell>
                 <TableCell>
@@ -214,20 +257,43 @@ export function DiscountsPage() {
         )}
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setForm({ type: "PERCENTAGE", automatic: false }) }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create discount</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Code</Label>
-              <Input
-                placeholder="SUMMER20"
-                value={form.code ?? ""}
-                onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
+            {/* Automatic toggle */}
+            <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+              <div className="flex items-center gap-2.5">
+                <Zap className={`size-4 ${form.automatic ? "text-yellow-500" : "text-muted-foreground"}`} />
+                <div>
+                  <p className="text-sm font-medium">Automatic promotion</p>
+                  <p className="text-xs text-muted-foreground">
+                    Applied automatically at checkout — no code needed
+                  </p>
+                </div>
+              </div>
+              <Switch
+                checked={form.automatic ?? false}
+                onCheckedChange={(checked) =>
+                  setForm((f) => ({ ...f, automatic: checked, code: checked ? "" : f.code }))
+                }
               />
             </div>
+
+            {/* Code — hidden when automatic */}
+            {!form.automatic && (
+              <div className="space-y-1.5">
+                <Label>Code</Label>
+                <Input
+                  placeholder="SUMMER20"
+                  value={form.code ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
+                />
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label>Type</Label>
               <Select

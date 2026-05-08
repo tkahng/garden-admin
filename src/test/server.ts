@@ -6,6 +6,7 @@ import { orderHandlers } from "./handlers/orders"
 import { customerHandlers } from "./handlers/customers"
 import { pageHandlers } from "./handlers/pages"
 import { giftCardHandlers } from "./handlers/gift-cards"
+import { mediaHandlers } from "./handlers/media"
 
 export const server = setupServer(
   ...authHandlers,
@@ -15,4 +16,5 @@ export const server = setupServer(
   ...customerHandlers,
   ...pageHandlers,
   ...giftCardHandlers,
+  ...mediaHandlers,
 )
