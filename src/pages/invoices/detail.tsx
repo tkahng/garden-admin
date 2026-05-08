@@ -41,8 +41,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { ArrowLeft, AlertTriangle } from "lucide-react"
+import { ArrowLeft, AlertTriangle, Download } from "lucide-react"
 import { toast } from "sonner"
+import { downloadPdf } from "@/lib/download"
 
 type Invoice = components["schemas"]["InvoiceResponse"]
 type InvoiceStatus = NonNullable<Invoice["status"]>
@@ -271,6 +272,14 @@ export function InvoiceDetailPage({ id }: { id: string }) {
   const canVoid = invoice.status !== "VOID" && invoice.status !== "PAID"
   const canRecordPayment = invoice.status === "ISSUED" || invoice.status === "PARTIAL" || invoice.status === "OVERDUE"
 
+  async function handleDownloadPdf() {
+    try {
+      await downloadPdf(`/api/v1/admin/invoices/${id}/pdf`, `invoice-${id.slice(0, 8)}.pdf`)
+    } catch {
+      toast.error("Failed to download PDF")
+    }
+  }
+
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
@@ -412,6 +421,10 @@ export function InvoiceDetailPage({ id }: { id: string }) {
 
       {/* Actions */}
       <div className="flex gap-3 flex-wrap">
+        <Button variant="outline" onClick={() => void handleDownloadPdf()}>
+          <Download className="size-4 mr-2" />
+          Download PDF
+        </Button>
         {canRecordPayment && (
           <Button onClick={() => setPaymentDialogOpen(true)}>
             Record payment

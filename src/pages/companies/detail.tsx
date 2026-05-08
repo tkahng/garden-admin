@@ -975,6 +975,127 @@ function SalesRepSection({ company, onUpdated }: { company: Company; onUpdated: 
   )
 }
 
+// ─── Members & invitations ────────────────────────────────────────────────────
+
+type CompanyMember = components["schemas"]["CompanyMemberResponse"]
+type CreateInvitation = components["schemas"]["CreateInvitationRequest"]
+
+function MembersSection({ companyId }: { companyId: string }) {
+  const qc = useQueryClient()
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteRole, setInviteRole] = useState<"MANAGER" | "MEMBER">("MEMBER")
+  const [inviteOpen, setInviteOpen] = useState(false)
+
+  const { data: members = [], isLoading } = useQuery<CompanyMember[]>({
+    queryKey: ["admin", "company-members", companyId],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/companies/{id}/members", {
+        params: { path: { id: companyId } },
+      })
+      if (error) throw error
+      return (data as { data?: CompanyMember[] } | undefined)?.data ?? []
+    },
+  })
+
+  const inviteMutation = useMutation({
+    mutationFn: async (body: CreateInvitation) => {
+      const { error } = await apiClient.POST("/api/v1/companies/{id}/invitations", {
+        params: { path: { id: companyId } },
+        body,
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Invitation sent")
+      setInviteEmail("")
+      setInviteOpen(false)
+      void qc.invalidateQueries({ queryKey: ["admin", "company-members", companyId] })
+    },
+    onError: () => toast.error("Failed to send invitation"),
+  })
+
+  function handleInvite() {
+    if (!inviteEmail.trim()) { toast.error("Email required"); return }
+    inviteMutation.mutate({ email: inviteEmail.trim(), role: inviteRole })
+  }
+
+  function roleBadge(role: string | undefined) {
+    if (role === "OWNER") return <Badge variant="default" className="text-xs">Owner</Badge>
+    if (role === "MANAGER") return <Badge variant="secondary" className="text-xs">Manager</Badge>
+    return <Badge variant="outline" className="text-xs">Member</Badge>
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">Members ({members.length})</h2>
+        <Button size="sm" onClick={() => setInviteOpen((v) => !v)}>
+          <Plus className="size-4 mr-2" />
+          Invite member
+        </Button>
+      </div>
+
+      {inviteOpen && (
+        <div className="rounded-lg border px-4 py-3 space-y-3 bg-muted/20">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Send invitation</p>
+          <div className="flex gap-2">
+            <Input
+              placeholder="email@company.com"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              className="flex-1 h-8 text-sm"
+              onKeyDown={(e) => { if (e.key === "Enter") handleInvite() }}
+            />
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as "MANAGER" | "MEMBER")}
+              className="rounded-md border border-input bg-background px-2 py-1 text-sm"
+            >
+              <option value="MEMBER">Member</option>
+              <option value="MANAGER">Manager</option>
+            </select>
+            <Button size="sm" className="h-8" onClick={handleInvite} disabled={inviteMutation.isPending}>
+              Send
+            </Button>
+            <Button size="sm" variant="outline" className="h-8" onClick={() => setInviteOpen(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="h-16 w-full bg-muted animate-pulse rounded-lg" />
+      ) : members.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No members yet.</p>
+      ) : (
+        <div className="rounded-lg border divide-y">
+          {members.map((m) => (
+            <div key={m.membershipId} className="flex items-center justify-between px-4 py-2.5 text-sm">
+              <div className="flex flex-col gap-0.5">
+                <span className="font-medium">
+                  {[m.firstName, m.lastName].filter(Boolean).join(" ") || m.email}
+                </span>
+                {(m.firstName || m.lastName) && (
+                  <span className="text-xs text-muted-foreground">{m.email}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {m.spendingLimit != null && (
+                  <span className="text-xs text-muted-foreground">
+                    Limit: {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(m.spendingLimit)}
+                  </span>
+                )}
+                {roleBadge(m.role)}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Shipping addresses ───────────────────────────────────────────────────────
 
 type CompanyAddress = components["schemas"]["CompanyAddressResponse"]
@@ -1492,6 +1613,9 @@ export function CompanyDetailPage({ id }: { id: string }) {
 
       {/* Credit account */}
       <CreditAccountSection companyId={id} />
+
+      {/* Members */}
+      <MembersSection companyId={id} />
 
       {/* Shipping addresses */}
       <ShippingAddressSection companyId={id} />

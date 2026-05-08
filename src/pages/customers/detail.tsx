@@ -9,6 +9,14 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
   Command,
   CommandEmpty,
   CommandGroup,
@@ -26,6 +34,107 @@ import { toast } from "sonner"
 
 type Role = components["schemas"]["RoleResponse"]
 type User = components["schemas"]["AdminUserResponse"]
+type Order = components["schemas"]["OrderResponse"]
+
+const ORDER_STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+  PAID: "default",
+  FULFILLED: "default",
+  PENDING_PAYMENT: "secondary",
+  CANCELLED: "destructive",
+  REFUNDED: "outline",
+  INVOICED: "outline",
+}
+
+function fmtCurrency(amount: number | undefined, currency?: string | null) {
+  if (amount == null) return "—"
+  const cur = /^[A-Z]{3}$/.test(currency ?? "") ? currency! : "USD"
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: cur }).format(amount)
+}
+
+function fmtDate(iso: string | undefined) {
+  return iso ? new Date(iso).toLocaleDateString() : "—"
+}
+
+// ─── Order history ────────────────────────────────────────────────────────────
+
+function OrderHistory({ userId }: { userId: string }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "orders", { userId }],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/admin/orders", {
+        params: { query: { userId, size: 50 } },
+      })
+      if (error) throw error
+      return (data as { data?: { content?: Order[] } } | undefined)?.data?.content ?? []
+    },
+  })
+
+  const orders = data ?? []
+  const totalSpend = orders.reduce((sum, o) => sum + (o.totalAmount ?? 0), 0)
+  const currency = orders[0]?.currency ?? "USD"
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">Order history</CardTitle>
+          {orders.length > 0 && (
+            <span className="text-sm text-muted-foreground">
+              {orders.length} order{orders.length !== 1 ? "s" : ""} · {fmtCurrency(totalSpend, currency)} lifetime
+            </span>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {isLoading ? (
+          <div className="px-6 py-4 text-sm text-muted-foreground">Loading…</div>
+        ) : orders.length === 0 ? (
+          <div className="px-6 py-4 text-sm text-muted-foreground">No orders yet.</div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Order</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Items</TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {orders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell>
+                    <a
+                      href={`/orders/${order.id}`}
+                      className="font-mono text-xs text-primary hover:underline"
+                    >
+                      #{order.id?.slice(0, 8).toUpperCase()}
+                    </a>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={ORDER_STATUS_VARIANT[order.status ?? ""] ?? "secondary"} className="text-xs">
+                      {order.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {order.items?.length ?? 0}
+                  </TableCell>
+                  <TableCell className="text-right text-sm font-medium">
+                    {fmtCurrency(order.totalAmount, order.currency ?? "USD")}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {fmtDate(order.createdAt)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
 
 // ─── Roles card ───────────────────────────────────────────────────────────────
 
@@ -346,6 +455,9 @@ export function CustomerDetailPage({ id }: { id: string }) {
 
       {/* Roles */}
       <RolesCard userId={id} assignedRoleNames={user?.roles ?? []} />
+
+      {/* Order history */}
+      <OrderHistory userId={id} />
 
       {/* Admin notes */}
       <Card>
