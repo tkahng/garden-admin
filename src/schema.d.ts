@@ -100,6 +100,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/companies/{id}/addresses/{addressId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateAddress"];
+        post?: never;
+        delete: operations["deleteAddress"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/companies/{id}/addresses/{addressId}/default": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["setDefaultAddress"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/cart/items/{itemId}": {
         parameters: {
             query?: never;
@@ -636,9 +668,9 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put: operations["updateAddress"];
+        put: operations["updateAddress_1"];
         post?: never;
-        delete: operations["deleteAddress"];
+        delete: operations["deleteAddress_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -654,6 +686,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["handleStripeWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/storefront/returns/orders/{orderId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submit"];
         delete?: never;
         options?: never;
         head?: never;
@@ -676,6 +724,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/storefront/orders/{id}/reject-approval": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["rejectApproval"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/storefront/orders/{id}/refund": {
         parameters: {
             query?: never;
@@ -692,6 +756,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/storefront/orders/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approveOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/quotes": {
         parameters: {
             query?: never;
@@ -701,7 +781,7 @@ export interface paths {
         };
         get: operations["list"];
         put?: never;
-        post: operations["submit"];
+        post: operations["submit_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -910,6 +990,22 @@ export interface paths {
         get: operations["listInvitations"];
         put?: never;
         post: operations["invite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/companies/{id}/addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAddresses"];
+        put?: never;
+        post: operations["addAddress"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1182,6 +1278,54 @@ export interface paths {
         get: operations["listRates"];
         put?: never;
         post: operations["createRate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/returns/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reject_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/returns/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/returns/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["approve"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1851,7 +1995,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listAddresses"];
+        get: operations["listAddresses_1"];
         put?: never;
         post: operations["createAddress"];
         delete?: never;
@@ -2164,6 +2308,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/storefront/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_13"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/storefront/returns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_8"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/storefront/orders": {
         parameters: {
             query?: never;
@@ -2188,6 +2364,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getOrder_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/storefront/orders/pending-approvals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPendingApprovals"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2251,7 +2443,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_8"];
+        get: operations["get_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2283,7 +2475,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["listPendingApprovals"];
+        get: operations["listPendingApprovals_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2315,7 +2507,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_13"];
+        get: operations["list_14"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2395,7 +2587,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_14"];
+        get: operations["list_15"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2427,7 +2619,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_9"];
+        get: operations["get_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2555,7 +2747,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_15"];
+        get: operations["list_16"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2852,6 +3044,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/returns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_17"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/returns/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_11"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/quotes": {
         parameters: {
             query?: never;
@@ -2859,7 +3083,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_16"];
+        get: operations["list_18"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2875,7 +3099,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_10"];
+        get: operations["get_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2955,7 +3179,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_17"];
+        get: operations["list_19"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2971,7 +3195,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["get_11"];
+        get: operations["get_13"];
         put?: never;
         post?: never;
         delete: operations["voidInvoice"];
@@ -3051,7 +3275,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_18"];
+        get: operations["list_20"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3316,7 +3540,7 @@ export interface components {
             userId?: string;
             guestEmail?: string;
             /** @enum {string} */
-            status?: "DRAFT" | "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "INVOICED";
+            status?: "DRAFT" | "PENDING_PAYMENT" | "PENDING_APPROVAL" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "INVOICED";
             totalAmount?: number;
             currency?: string;
             stripeSessionId?: string;
@@ -3470,6 +3694,44 @@ export interface components {
         UpdateMemberRoleRequest: {
             /** @enum {string} */
             role: "OWNER" | "MANAGER" | "MEMBER";
+        };
+        CompanyAddressRequest: {
+            label?: string;
+            firstName: string;
+            lastName: string;
+            company?: string;
+            address1: string;
+            address2?: string;
+            city: string;
+            province?: string;
+            zip: string;
+            country: string;
+            isDefault?: boolean;
+        };
+        ApiResponseCompanyAddressResponse: {
+            data?: components["schemas"]["CompanyAddressResponse"];
+            meta?: unknown;
+        };
+        CompanyAddressResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            companyId?: string;
+            label?: string;
+            firstName?: string;
+            lastName?: string;
+            company?: string;
+            address1?: string;
+            address2?: string;
+            city?: string;
+            province?: string;
+            zip?: string;
+            country?: string;
+            isDefault?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
         };
         SetCartCompanyRequest: {
             /** Format: uuid */
@@ -3755,6 +4017,9 @@ export interface components {
             startsAt?: string;
             /** Format: date-time */
             endsAt?: string;
+            /** @enum {string} */
+            adjustmentType?: "PERCENTAGE_OFF" | "MARKUP_PERCENTAGE";
+            adjustmentValue?: number;
         };
         ApiResponsePriceListResponse: {
             data?: components["schemas"]["PriceListResponse"];
@@ -3773,6 +4038,9 @@ export interface components {
             startsAt?: string;
             /** Format: date-time */
             endsAt?: string;
+            /** @enum {string} */
+            adjustmentType?: "PERCENTAGE_OFF" | "MARKUP_PERCENTAGE";
+            adjustmentValue?: number;
             /** Format: date-time */
             createdAt?: string;
             /** Format: date-time */
@@ -4154,6 +4422,67 @@ export interface components {
             data?: components["schemas"]["AddressResponse"];
             meta?: unknown;
         };
+        ReturnRequestItemInput: {
+            /** Format: uuid */
+            orderItemId: string;
+            /** Format: int32 */
+            quantity?: number;
+        };
+        SubmitReturnRequest: {
+            /** @enum {string} */
+            reason: "DAMAGED" | "WRONG_ITEM" | "NOT_AS_DESCRIBED" | "CHANGED_MIND" | "OTHER";
+            notes?: string;
+            /** @enum {string} */
+            resolution?: "REFUND" | "EXCHANGE" | "STORE_CREDIT";
+            items?: components["schemas"]["ReturnRequestItemInput"][];
+        };
+        ApiResponseReturnRequestResponse: {
+            data?: components["schemas"]["ReturnRequestResponse"];
+            meta?: unknown;
+        };
+        ReturnRequestItemResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            orderItemId?: string;
+            /** Format: int32 */
+            quantity?: number;
+        };
+        ReturnRequestResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            orderId?: string;
+            /** Format: uuid */
+            userId?: string;
+            /** @enum {string} */
+            reason?: "DAMAGED" | "WRONG_ITEM" | "NOT_AS_DESCRIBED" | "CHANGED_MIND" | "OTHER";
+            notes?: string;
+            /** @enum {string} */
+            resolution?: "REFUND" | "EXCHANGE" | "STORE_CREDIT";
+            /** @enum {string} */
+            status?: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
+            staffNotes?: string;
+            /** Format: uuid */
+            resolvedBy?: string;
+            /** Format: date-time */
+            resolvedAt?: string;
+            items?: components["schemas"]["ReturnRequestItemResponse"][];
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        ApiResponseCheckoutResponse: {
+            data?: components["schemas"]["CheckoutResponse"];
+            meta?: unknown;
+        };
+        CheckoutResponse: {
+            checkoutUrl?: string;
+            /** Format: uuid */
+            orderId?: string;
+            pendingApproval?: boolean;
+        };
         SubmitQuoteRequest: {
             /** Format: uuid */
             companyId: string;
@@ -4286,15 +4615,6 @@ export interface components {
             shippingRateId?: string;
             poNumber?: string;
         };
-        ApiResponseCheckoutResponse: {
-            data?: components["schemas"]["CheckoutResponse"];
-            meta?: unknown;
-        };
-        CheckoutResponse: {
-            checkoutUrl?: string;
-            /** Format: uuid */
-            orderId?: string;
-        };
         GuestAddressRequest: {
             firstName: string;
             lastName: string;
@@ -4381,6 +4701,9 @@ export interface components {
             estimatedDaysMax?: number;
             carrier?: string;
         };
+        ReviewReturnRequest: {
+            staffNotes?: string;
+        };
         SendQuoteRequest: {
             /** Format: date-time */
             expiresAt: string;
@@ -4456,6 +4779,9 @@ export interface components {
             startsAt?: string;
             /** Format: date-time */
             endsAt?: string;
+            /** @enum {string} */
+            adjustmentType?: "PERCENTAGE_OFF" | "MARKUP_PERCENTAGE";
+            adjustmentValue?: number;
         };
         CreatePageRequest: {
             title: string;
@@ -4490,7 +4816,7 @@ export interface components {
             /** Format: uuid */
             orderId?: string;
             /** @enum {string} */
-            type?: "ORDER_PLACED" | "PAYMENT_CONFIRMED" | "ORDER_CANCELLED" | "ORDER_REFUNDED" | "ADMIN_REFUND_ISSUED" | "DISCOUNT_APPLIED" | "GIFT_CARD_APPLIED" | "FULFILLMENT_CREATED" | "FULFILLMENT_UPDATED" | "NOTE_ADDED";
+            type?: "ORDER_PLACED" | "PAYMENT_CONFIRMED" | "ORDER_CANCELLED" | "ORDER_REFUNDED" | "ADMIN_REFUND_ISSUED" | "DISCOUNT_APPLIED" | "GIFT_CARD_APPLIED" | "FULFILLMENT_CREATED" | "FULFILLMENT_UPDATED" | "NOTE_ADDED" | "INVOICE_ISSUED" | "ORDER_APPROVAL_REQUESTED" | "ORDER_APPROVED" | "ORDER_APPROVAL_REJECTED" | "RETURN_REQUESTED" | "RETURN_APPROVED" | "RETURN_REJECTED" | "RETURN_COMPLETED";
             message?: string;
             /** Format: uuid */
             authorId?: string;
@@ -4943,8 +5269,8 @@ export interface components {
             data?: components["schemas"]["ShippingRateResponse"][];
             meta?: unknown;
         };
-        ApiResponsePagedResultOrderResponse: {
-            data?: components["schemas"]["PagedResultOrderResponse"];
+        ApiResponsePagedResultReturnRequestResponse: {
+            data?: components["schemas"]["PagedResultReturnRequestResponse"];
             meta?: unknown;
         };
         PageMeta: {
@@ -4954,6 +5280,14 @@ export interface components {
             pageSize?: number;
             /** Format: int64 */
             total?: number;
+        };
+        PagedResultReturnRequestResponse: {
+            content?: components["schemas"]["ReturnRequestResponse"][];
+            meta?: components["schemas"]["PageMeta"];
+        };
+        ApiResponsePagedResultOrderResponse: {
+            data?: components["schemas"]["PagedResultOrderResponse"];
+            meta?: unknown;
         };
         PagedResultOrderResponse: {
             content?: components["schemas"]["OrderResponse"][];
@@ -5219,6 +5553,10 @@ export interface components {
             data?: components["schemas"]["InvitationResponse"][];
             meta?: unknown;
         };
+        ApiResponseListCompanyAddressResponse: {
+            data?: components["schemas"]["CompanyAddressResponse"][];
+            meta?: unknown;
+        };
         ApiResponsePagedResultCollectionSummaryResponse: {
             data?: components["schemas"]["PagedResultCollectionSummaryResponse"];
             meta?: unknown;
@@ -5253,7 +5591,7 @@ export interface components {
             /** Format: uuid */
             orderId?: string;
             /** @enum {string} */
-            status?: "DRAFT" | "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "INVOICED";
+            status?: "DRAFT" | "PENDING_PAYMENT" | "PENDING_APPROVAL" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "INVOICED";
         };
         ApiResponsePagedResultBlogResponse: {
             data?: components["schemas"]["PagedResultBlogResponse"];
@@ -5828,6 +6166,77 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseCompanyMemberResponse"];
+                };
+            };
+        };
+    };
+    updateAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                addressId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyAddressRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCompanyAddressResponse"];
+                };
+            };
+        };
+    };
+    deleteAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                addressId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    setDefaultAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                addressId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCompanyAddressResponse"];
                 };
             };
         };
@@ -7291,7 +7700,7 @@ export interface operations {
             };
         };
     };
-    updateAddress: {
+    updateAddress_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -7317,7 +7726,7 @@ export interface operations {
             };
         };
     };
-    deleteAddress: {
+    deleteAddress_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -7361,6 +7770,32 @@ export interface operations {
             };
         };
     };
+    submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitReturnRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseReturnRequestResponse"];
+                };
+            };
+        };
+    };
     reorder: {
         parameters: {
             query?: never;
@@ -7383,6 +7818,28 @@ export interface operations {
             };
         };
     };
+    rejectApproval: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseOrderResponse"];
+                };
+            };
+        };
+    };
     refundOrder: {
         parameters: {
             query?: never;
@@ -7401,6 +7858,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseOrderResponse"];
+                };
+            };
+        };
+    };
+    approveOrder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCheckoutResponse"];
                 };
             };
         };
@@ -7428,7 +7907,7 @@ export interface operations {
             };
         };
     };
-    submit: {
+    submit_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -7845,6 +8324,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseInvitationResponse"];
+                };
+            };
+        };
+    };
+    listAddresses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListCompanyAddressResponse"];
+                };
+            };
+        };
+    };
+    addAddress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyAddressRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCompanyAddressResponse"];
                 };
             };
         };
@@ -8310,6 +8837,80 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseShippingRateResponse"];
+                };
+            };
+        };
+    };
+    reject_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReviewReturnRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseReturnRequestResponse"];
+                };
+            };
+        };
+    };
+    complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseReturnRequestResponse"];
+                };
+            };
+        };
+    };
+    approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReviewReturnRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseReturnRequestResponse"];
                 };
             };
         };
@@ -9761,7 +10362,7 @@ export interface operations {
             };
         };
     };
-    listAddresses: {
+    listAddresses_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -10528,6 +11129,51 @@ export interface operations {
             };
         };
     };
+    list_13: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePagedResultReturnRequestResponse"];
+                };
+            };
+        };
+    };
+    get_8: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseReturnRequestResponse"];
+                };
+            };
+        };
+    };
     listOrders: {
         parameters: {
             query?: {
@@ -10569,6 +11215,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseOrderResponse"];
+                };
+            };
+        };
+    };
+    listPendingApprovals: {
+        parameters: {
+            query: {
+                companyId: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePagedResultOrderResponse"];
                 };
             };
         };
@@ -10644,7 +11314,7 @@ export interface operations {
             };
         };
     };
-    get_8: {
+    get_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -10688,7 +11358,7 @@ export interface operations {
             };
         };
     };
-    listPendingApprovals: {
+    listPendingApprovals_1: {
         parameters: {
             query?: {
                 page?: number;
@@ -10749,7 +11419,7 @@ export interface operations {
             };
         };
     };
-    list_13: {
+    list_14: {
         parameters: {
             query?: {
                 titleContains?: string;
@@ -10779,7 +11449,9 @@ export interface operations {
     };
     getByHandle: {
         parameters: {
-            query?: never;
+            query?: {
+                companyId?: string;
+            };
             header?: never;
             path: {
                 handle: string;
@@ -10869,7 +11541,7 @@ export interface operations {
             };
         };
     };
-    list_14: {
+    list_15: {
         parameters: {
             query?: {
                 page?: number;
@@ -10915,7 +11587,7 @@ export interface operations {
             };
         };
     };
-    get_9: {
+    get_10: {
         parameters: {
             query?: never;
             header?: never;
@@ -11118,7 +11790,7 @@ export interface operations {
             };
         };
     };
-    list_15: {
+    list_16: {
         parameters: {
             query?: {
                 page?: number;
@@ -11576,7 +12248,53 @@ export interface operations {
             };
         };
     };
-    list_16: {
+    list_17: {
+        parameters: {
+            query?: {
+                status?: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePagedResultReturnRequestResponse"];
+                };
+            };
+        };
+    };
+    get_11: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseReturnRequestResponse"];
+                };
+            };
+        };
+    };
+    list_18: {
         parameters: {
             query?: {
                 status?: "PENDING" | "ASSIGNED" | "DRAFT" | "SENT" | "ACCEPTED" | "PAID" | "REJECTED" | "EXPIRED" | "CANCELLED" | "PENDING_APPROVAL";
@@ -11602,7 +12320,7 @@ export interface operations {
             };
         };
     };
-    get_10: {
+    get_12: {
         parameters: {
             query?: never;
             header?: never;
@@ -11671,7 +12389,7 @@ export interface operations {
     listOrders_1: {
         parameters: {
             query?: {
-                status?: "DRAFT" | "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "INVOICED";
+                status?: "DRAFT" | "PENDING_PAYMENT" | "PENDING_APPROVAL" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "INVOICED";
                 userId?: string;
                 from?: string;
                 to?: string;
@@ -11698,7 +12416,7 @@ export interface operations {
     exportCsv_1: {
         parameters: {
             query?: {
-                status?: "DRAFT" | "PENDING_PAYMENT" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "INVOICED";
+                status?: "DRAFT" | "PENDING_PAYMENT" | "PENDING_APPROVAL" | "PAID" | "CANCELLED" | "REFUNDED" | "PARTIALLY_FULFILLED" | "FULFILLED" | "INVOICED";
                 userId?: string;
                 from?: string;
                 to?: string;
@@ -11720,7 +12438,7 @@ export interface operations {
             };
         };
     };
-    list_17: {
+    list_19: {
         parameters: {
             query?: {
                 companyId?: string;
@@ -11746,7 +12464,7 @@ export interface operations {
             };
         };
     };
-    get_11: {
+    get_13: {
         parameters: {
             query?: never;
             header?: never;
@@ -11880,7 +12598,7 @@ export interface operations {
             };
         };
     };
-    list_18: {
+    list_20: {
         parameters: {
             query?: never;
             header?: never;

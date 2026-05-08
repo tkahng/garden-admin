@@ -563,6 +563,11 @@ function PriceListRow({
         </TableCell>
         <TableCell className="text-muted-foreground text-sm">{pl.currency ?? "USD"}</TableCell>
         <TableCell className="text-muted-foreground text-sm">{pl.priority ?? 0}</TableCell>
+        <TableCell className="text-muted-foreground text-sm">
+          {pl.adjustmentType
+            ? `${pl.adjustmentType === "PERCENTAGE_OFF" ? "-" : "+"}${pl.adjustmentValue}%`
+            : "—"}
+        </TableCell>
         <TableCell>{statusBadge(pl)}</TableCell>
         <TableCell className="text-muted-foreground text-sm">{fmt(pl.startsAt)}</TableCell>
         <TableCell className="text-muted-foreground text-sm">{fmt(pl.endsAt)}</TableCell>
@@ -589,7 +594,7 @@ function PriceListRow({
       </TableRow>
       {expanded && (
         <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={7} className="p-0">
+          <TableCell colSpan={8} className="p-0">
             <PriceListEntries priceListId={pl.id!} />
           </TableCell>
         </TableRow>
@@ -970,6 +975,270 @@ function SalesRepSection({ company, onUpdated }: { company: Company; onUpdated: 
   )
 }
 
+// ─── Shipping addresses ───────────────────────────────────────────────────────
+
+type CompanyAddress = components["schemas"]["CompanyAddressResponse"]
+type CompanyAddressReq = components["schemas"]["CompanyAddressRequest"]
+
+function AddressDialog({
+  open,
+  onOpenChange,
+  companyId,
+  editing,
+  onSuccess,
+}: {
+  open: boolean
+  onOpenChange: (v: boolean) => void
+  companyId: string
+  editing: CompanyAddress | null
+  onSuccess: () => void
+}) {
+  const emptyForm = (): Partial<CompanyAddressReq> => ({ country: "US" })
+  const [form, setForm] = useState<Partial<CompanyAddressReq>>(emptyForm())
+
+  useEffect(() => {
+    if (open) {
+      setForm(editing
+        ? {
+            label: editing.label ?? undefined,
+            firstName: editing.firstName ?? "",
+            lastName: editing.lastName ?? "",
+            company: editing.company ?? undefined,
+            address1: editing.address1 ?? "",
+            address2: editing.address2 ?? undefined,
+            city: editing.city ?? "",
+            province: editing.province ?? undefined,
+            zip: editing.zip ?? "",
+            country: editing.country ?? "US",
+            isDefault: editing.isDefault ?? false,
+          }
+        : emptyForm(),
+      )
+    }
+  }, [open, editing])
+
+  const saveMutation = useMutation({
+    mutationFn: async (body: CompanyAddressReq) => {
+      if (editing?.id) {
+        const { error } = await apiClient.PUT("/api/v1/companies/{id}/addresses/{addressId}", {
+          params: { path: { id: companyId, addressId: editing.id } },
+          body,
+        })
+        if (error) throw error
+      } else {
+        const { error } = await apiClient.POST("/api/v1/companies/{id}/addresses", {
+          params: { path: { id: companyId } },
+          body,
+        })
+        if (error) throw error
+      }
+    },
+    onSuccess: () => { toast.success(editing ? "Address updated" : "Address added"); onSuccess() },
+    onError: () => toast.error("Failed to save address"),
+  })
+
+  function handleSubmit() {
+    if (!form.firstName?.trim() || !form.lastName?.trim() || !form.address1?.trim() || !form.city?.trim() || !form.zip?.trim() || !form.country?.trim()) {
+      toast.error("Name, address, city, zip, and country are required")
+      return
+    }
+    saveMutation.mutate(form as CompanyAddressReq)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{editing ? "Edit address" : "Add address"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>First name</Label>
+              <Input value={form.firstName ?? ""} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Last name</Label>
+              <Input value={form.lastName ?? ""} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Label (optional)</Label>
+            <Input placeholder="Warehouse, HQ…" value={form.label ?? ""} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value || undefined }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Address line 1</Label>
+            <Input value={form.address1 ?? ""} onChange={(e) => setForm((f) => ({ ...f, address1: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Address line 2</Label>
+            <Input value={form.address2 ?? ""} onChange={(e) => setForm((f) => ({ ...f, address2: e.target.value || undefined }))} />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5 col-span-1">
+              <Label>City</Label>
+              <Input value={form.city ?? ""} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>State</Label>
+              <Input value={form.province ?? ""} onChange={(e) => setForm((f) => ({ ...f, province: e.target.value || undefined }))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>ZIP</Label>
+              <Input value={form.zip ?? ""} onChange={(e) => setForm((f) => ({ ...f, zip: e.target.value }))} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Country</Label>
+            <Input value={form.country ?? "US"} onChange={(e) => setForm((f) => ({ ...f, country: e.target.value.toUpperCase() }))} maxLength={2} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={saveMutation.isPending}>
+            {editing ? "Save" : "Add"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function ShippingAddressSection({ companyId }: { companyId: string }) {
+  const qc = useQueryClient()
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editing, setEditing] = useState<CompanyAddress | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+
+  const { data: addresses = [], isLoading } = useQuery<CompanyAddress[]>({
+    queryKey: ["admin", "company-addresses", companyId],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET("/api/v1/companies/{id}/addresses", {
+        params: { path: { id: companyId } },
+      })
+      if (error) throw error
+      return (data as { data?: CompanyAddress[] } | undefined)?.data ?? []
+    },
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (addressId: string) => {
+      const { error } = await apiClient.DELETE("/api/v1/companies/{id}/addresses/{addressId}", {
+        params: { path: { id: companyId, addressId } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Address removed")
+      setDeleteTarget(null)
+      void qc.invalidateQueries({ queryKey: ["admin", "company-addresses", companyId] })
+    },
+    onError: () => toast.error("Failed to remove address"),
+  })
+
+  const setDefaultMutation = useMutation({
+    mutationFn: async (addressId: string) => {
+      const { error } = await apiClient.PUT("/api/v1/companies/{id}/addresses/{addressId}/default", {
+        params: { path: { id: companyId, addressId } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success("Default address updated")
+      void qc.invalidateQueries({ queryKey: ["admin", "company-addresses", companyId] })
+    },
+    onError: () => toast.error("Failed to update default address"),
+  })
+
+  function onSuccess() {
+    setDialogOpen(false)
+    setEditing(null)
+    void qc.invalidateQueries({ queryKey: ["admin", "company-addresses", companyId] })
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">Shipping addresses</h2>
+        <Button size="sm" onClick={() => { setEditing(null); setDialogOpen(true) }}>
+          <Plus className="size-4 mr-2" />
+          Add address
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="h-16 w-full bg-muted animate-pulse rounded-lg" />
+      ) : addresses.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No shipping addresses saved.</p>
+      ) : (
+        <div className="space-y-2">
+          {addresses.map((addr) => (
+            <div key={addr.id} className="flex items-start justify-between rounded-lg border px-4 py-3 gap-3">
+              <div className="flex flex-col gap-0.5 text-sm">
+                {addr.label && <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{addr.label}</span>}
+                <span className="font-medium">{[addr.firstName, addr.lastName].filter(Boolean).join(" ")}</span>
+                <span className="text-muted-foreground">{addr.address1}{addr.address2 ? `, ${addr.address2}` : ""}</span>
+                <span className="text-muted-foreground">{[addr.city, addr.province, addr.zip, addr.country].filter(Boolean).join(", ")}</span>
+                {addr.isDefault && <Badge variant="secondary" className="w-fit text-xs">Default</Badge>}
+              </div>
+              <div className="flex gap-1 shrink-0">
+                {!addr.isDefault && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => addr.id && setDefaultMutation.mutate(addr.id)}
+                    disabled={setDefaultMutation.isPending}
+                  >
+                    Set default
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" className="size-7" onClick={() => { setEditing(addr); setDialogOpen(true) }}>
+                  <Pencil className="size-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 text-destructive"
+                  onClick={() => addr.id && setDeleteTarget(addr.id)}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <AddressDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        companyId={companyId}
+        editing={editing}
+        onSuccess={onSuccess}
+      />
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(v) => !v && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove address?</AlertDialogTitle>
+            <AlertDialogDescription>This address will be permanently removed.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget)}
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}
+
 // ─── CatalogSection ───────────────────────────────────────────────────────────
 
 function CatalogSection({ companyId }: { companyId: string }) {
@@ -1224,6 +1493,9 @@ export function CompanyDetailPage({ id }: { id: string }) {
       {/* Credit account */}
       <CreditAccountSection companyId={id} />
 
+      {/* Shipping addresses */}
+      <ShippingAddressSection companyId={id} />
+
       {/* Catalog section */}
       <CatalogSection companyId={id} />
 
@@ -1244,6 +1516,7 @@ export function CompanyDetailPage({ id }: { id: string }) {
                 <TableHead>Name</TableHead>
                 <TableHead className="w-20">Currency</TableHead>
                 <TableHead className="w-20">Priority</TableHead>
+                <TableHead className="w-28">Adjustment</TableHead>
                 <TableHead className="w-28">Status</TableHead>
                 <TableHead className="w-28">Starts</TableHead>
                 <TableHead className="w-28">Ends</TableHead>
@@ -1253,14 +1526,14 @@ export function CompanyDetailPage({ id }: { id: string }) {
             <TableBody>
               {listsLoading && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
                     Loading…
                   </TableCell>
                 </TableRow>
               )}
               {!listsLoading && priceLists.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
                     No price lists yet.
                   </TableCell>
                 </TableRow>

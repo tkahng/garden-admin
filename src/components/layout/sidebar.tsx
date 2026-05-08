@@ -18,6 +18,7 @@ import {
   Gift,
   Truck,
   Webhook,
+  RotateCcw,
 } from "lucide-react"
 import { useState } from "react"
 
@@ -43,6 +44,11 @@ const navItems: NavItem[] = [
     label: "Quotes",
     href: "/quotes",
     icon: ClipboardList,
+  },
+  {
+    label: "Returns",
+    href: "/returns",
+    icon: RotateCcw,
   },
   {
     label: "Products",
