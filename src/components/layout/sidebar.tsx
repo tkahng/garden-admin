@@ -19,6 +19,7 @@ import {
   Truck,
   Webhook,
   RotateCcw,
+  ScrollText,
 } from "lucide-react"
 import { useState } from "react"
 
@@ -114,6 +115,11 @@ const settingsItems: NavItem[] = [
     label: "Webhooks",
     href: "/settings/webhooks",
     icon: Webhook,
+  },
+  {
+    label: "Audit log",
+    href: "/settings/audit-log",
+    icon: ScrollText,
   },
 ]
 
