@@ -33,9 +33,16 @@ function makeRouter(initialPath = "/customers") {
     component: () => <Outlet />,
   })
 
-  const customersRoute = createRoute({
+  // Mirror production structure: layout with Outlet, index with component
+  const customersLayoutRoute = createRoute({
     getParentRoute: () => authenticatedRoute,
     path: "customers",
+    component: () => <Outlet />,
+  })
+
+  const customersIndexRoute = createRoute({
+    getParentRoute: () => customersLayoutRoute,
+    path: "/",
     validateSearch: (search: Record<string, unknown>) => ({
       page: search.page !== undefined ? Number(search.page) : undefined,
       email: typeof search.email === "string" ? search.email : undefined,
@@ -44,13 +51,15 @@ function makeRouter(initialPath = "/customers") {
   })
 
   const customerDetailRoute = createRoute({
-    getParentRoute: () => authenticatedRoute,
-    path: "customers/$customerId",
+    getParentRoute: () => customersLayoutRoute,
+    path: "$customerId",
     component: () => <div>Customer Detail</div>,
   })
 
   const routeTree = rootRoute.addChildren([
-    authenticatedRoute.addChildren([customersRoute, customerDetailRoute]),
+    authenticatedRoute.addChildren([
+      customersLayoutRoute.addChildren([customersIndexRoute, customerDetailRoute]),
+    ]),
   ])
 
   const history = createMemoryHistory({ initialEntries: [initialPath] })
@@ -103,6 +112,21 @@ describe("CustomersPage", () => {
       const link = screen.getByRole("link", { name: "Jane Doe" })
       expect(link).toHaveAttribute("href", `/customers/${mockCustomer.id}`)
     })
+  })
+
+  it("clicking customer link navigates to detail page", async () => {
+    const user = userEvent.setup()
+    renderCustomers()
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: "Jane Doe" })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole("link", { name: "Jane Doe" }))
+
+    await waitFor(() => {
+      expect(screen.getByText("Customer Detail")).toBeInTheDocument()
+    })
+    expect(screen.queryByText("Jane Doe")).not.toBeInTheDocument()
   })
 
   it("SUSPENDED customer shows destructive badge", async () => {
