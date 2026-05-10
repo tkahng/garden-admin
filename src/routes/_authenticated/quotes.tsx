@@ -1,10 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { QuotesPage } from "@/pages/quotes"
+import { createFileRoute, Outlet } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_authenticated/quotes")({
-  validateSearch: (search: Record<string, unknown>): { page?: number; status?: string } => ({
-    page: search.page !== undefined ? Number(search.page) : undefined,
-    status: typeof search.status === "string" ? search.status : undefined,
-  }),
-  component: QuotesPage,
+  component: () => <Outlet />,
 })

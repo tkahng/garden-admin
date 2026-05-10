@@ -25,7 +25,7 @@ const TYPE_TABS = [
 ] as const
 
 export function CollectionsPage() {
-  const { page: rawPage, titleContains, collectionType } = useSearch({ from: "/_authenticated/collections" })
+  const { page: rawPage, titleContains, collectionType } = useSearch({ from: "/_authenticated/collections/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
 

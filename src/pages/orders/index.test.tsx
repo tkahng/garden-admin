@@ -33,24 +33,36 @@ function makeRouter(initialPath = "/orders") {
     component: () => <Outlet />,
   })
 
-  const ordersRoute = createRoute({
+  // Mirror production structure: layout with Outlet, index with component
+  const ordersLayoutRoute = createRoute({
     getParentRoute: () => authenticatedRoute,
     path: "orders",
+    component: () => <Outlet />,
+  })
+
+  const ordersIndexRoute = createRoute({
+    getParentRoute: () => ordersLayoutRoute,
+    path: "/",
     validateSearch: (search: Record<string, unknown>) => ({
       page: search.page !== undefined ? Number(search.page) : undefined,
       status: typeof search.status === "string" ? search.status : undefined,
+      userId: typeof search.userId === "string" ? search.userId : undefined,
+      from: typeof search.from === "string" ? search.from : undefined,
+      to: typeof search.to === "string" ? search.to : undefined,
     }),
     component: OrdersPage,
   })
 
   const orderDetailRoute = createRoute({
-    getParentRoute: () => authenticatedRoute,
-    path: "orders/$orderId",
+    getParentRoute: () => ordersLayoutRoute,
+    path: "$orderId",
     component: () => <div>Order Detail</div>,
   })
 
   const routeTree = rootRoute.addChildren([
-    authenticatedRoute.addChildren([ordersRoute, orderDetailRoute]),
+    authenticatedRoute.addChildren([
+      ordersLayoutRoute.addChildren([ordersIndexRoute, orderDetailRoute]),
+    ]),
   ])
 
   const history = createMemoryHistory({ initialEntries: [initialPath] })
@@ -106,6 +118,21 @@ describe("OrdersPage", () => {
       const link = screen.getByRole("link", { name: ORDER_DISPLAY_ID })
       expect(link).toHaveAttribute("href", `/orders/${mockOrder.id}`)
     })
+  })
+
+  it("clicking order link navigates to detail page", async () => {
+    const user = userEvent.setup()
+    renderOrders()
+    await waitFor(() => {
+      expect(screen.getByRole("link", { name: ORDER_DISPLAY_ID })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole("link", { name: ORDER_DISPLAY_ID }))
+
+    await waitFor(() => {
+      expect(screen.getByText("Order Detail")).toBeInTheDocument()
+    })
+    expect(screen.queryByText("Orders")).not.toBeInTheDocument()
   })
 
   it("shows empty state when no orders returned", async () => {

@@ -58,7 +58,7 @@ function fmtCurrency(amount: number | undefined, currency = "USD") {
 }
 
 export function InvoicesPage() {
-  const { page: rawPage, status, companyId } = useSearch({ from: "/_authenticated/invoices" })
+  const { page: rawPage, status, companyId } = useSearch({ from: "/_authenticated/invoices/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
 
@@ -127,11 +127,11 @@ export function InvoicesPage() {
       {/* Filters */}
       <div className="flex items-center gap-2">
         <Select
-          value={companyId ?? ""}
+          value={companyId ?? "__all__"}
           onValueChange={(v) =>
             void navigate({
               to: "/invoices",
-              search: { page: 0, status, companyId: v || undefined },
+              search: { page: 0, status, companyId: v === "__all__" ? undefined : v },
               replace: true,
             })
           }
@@ -140,7 +140,7 @@ export function InvoicesPage() {
             <SelectValue placeholder="All companies" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All companies</SelectItem>
+            <SelectItem value="__all__">All companies</SelectItem>
             {companies.map((c) => (
               <SelectItem key={c.id!} value={c.id!}>
                 {c.name ?? c.id}

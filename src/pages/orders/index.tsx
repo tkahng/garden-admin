@@ -273,7 +273,7 @@ function CreateDraftDialog({
 }
 
 export function OrdersPage() {
-  const { page: rawPage, status, userId, from, to } = useSearch({ from: "/_authenticated/orders" })
+  const { page: rawPage, status, userId, from, to } = useSearch({ from: "/_authenticated/orders/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
   const queryClient = useQueryClient()
