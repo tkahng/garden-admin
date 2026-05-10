@@ -30,11 +30,20 @@ import { Route as AuthenticatedCustomersRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCompaniesRouteImport } from './routes/_authenticated/companies'
 import { Route as AuthenticatedCollectionsRouteImport } from './routes/_authenticated/collections'
 import { Route as AuthenticatedBlogsRouteImport } from './routes/_authenticated/blogs'
+import { Route as AuthenticatedQuotesIndexRouteImport } from './routes/_authenticated/quotes.index'
 import { Route as AuthenticatedProductsIndexRouteImport } from './routes/_authenticated/products.index'
+import { Route as AuthenticatedOrdersIndexRouteImport } from './routes/_authenticated/orders.index'
+import { Route as AuthenticatedInvoicesIndexRouteImport } from './routes/_authenticated/invoices.index'
+import { Route as AuthenticatedGiftCardsIndexRouteImport } from './routes/_authenticated/gift-cards.index'
+import { Route as AuthenticatedCustomersIndexRouteImport } from './routes/_authenticated/customers.index'
+import { Route as AuthenticatedCompaniesIndexRouteImport } from './routes/_authenticated/companies.index'
+import { Route as AuthenticatedCollectionsIndexRouteImport } from './routes/_authenticated/collections.index'
+import { Route as AuthenticatedBlogsIndexRouteImport } from './routes/_authenticated/blogs.index'
 import { Route as AuthenticatedSettingsWebhooksRouteImport } from './routes/_authenticated/settings/webhooks'
 import { Route as AuthenticatedSettingsShippingRouteImport } from './routes/_authenticated/settings/shipping'
 import { Route as AuthenticatedSettingsPermissionsRouteImport } from './routes/_authenticated/settings/permissions'
 import { Route as AuthenticatedSettingsLocationsRouteImport } from './routes/_authenticated/settings/locations'
+import { Route as AuthenticatedSettingsAuditLogRouteImport } from './routes/_authenticated/settings/audit-log'
 import { Route as AuthenticatedQuotesQuoteIdRouteImport } from './routes/_authenticated/quotes.$quoteId'
 import { Route as AuthenticatedProductsNewRouteImport } from './routes/_authenticated/products.new'
 import { Route as AuthenticatedProductsProductIdRouteImport } from './routes/_authenticated/products.$productId'
@@ -152,12 +161,59 @@ const AuthenticatedBlogsRoute = AuthenticatedBlogsRouteImport.update({
   path: '/blogs',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedQuotesIndexRoute =
+  AuthenticatedQuotesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedQuotesRoute,
+  } as any)
 const AuthenticatedProductsIndexRoute =
   AuthenticatedProductsIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedProductsRoute,
   } as any)
+const AuthenticatedOrdersIndexRoute =
+  AuthenticatedOrdersIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedOrdersRoute,
+  } as any)
+const AuthenticatedInvoicesIndexRoute =
+  AuthenticatedInvoicesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedInvoicesRoute,
+  } as any)
+const AuthenticatedGiftCardsIndexRoute =
+  AuthenticatedGiftCardsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedGiftCardsRoute,
+  } as any)
+const AuthenticatedCustomersIndexRoute =
+  AuthenticatedCustomersIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCustomersRoute,
+  } as any)
+const AuthenticatedCompaniesIndexRoute =
+  AuthenticatedCompaniesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCompaniesRoute,
+  } as any)
+const AuthenticatedCollectionsIndexRoute =
+  AuthenticatedCollectionsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedCollectionsRoute,
+  } as any)
+const AuthenticatedBlogsIndexRoute = AuthenticatedBlogsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedBlogsRoute,
+} as any)
 const AuthenticatedSettingsWebhooksRoute =
   AuthenticatedSettingsWebhooksRouteImport.update({
     id: '/settings/webhooks',
@@ -180,6 +236,12 @@ const AuthenticatedSettingsLocationsRoute =
   AuthenticatedSettingsLocationsRouteImport.update({
     id: '/settings/locations',
     path: '/settings/locations',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsAuditLogRoute =
+  AuthenticatedSettingsAuditLogRouteImport.update({
+    id: '/settings/audit-log',
+    path: '/settings/audit-log',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedQuotesQuoteIdRoute =
@@ -281,30 +343,31 @@ export interface FileRoutesByFullPath {
   '/products/$productId': typeof AuthenticatedProductsProductIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/quotes/$quoteId': typeof AuthenticatedQuotesQuoteIdRoute
+  '/settings/audit-log': typeof AuthenticatedSettingsAuditLogRoute
   '/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/settings/shipping': typeof AuthenticatedSettingsShippingRoute
   '/settings/webhooks': typeof AuthenticatedSettingsWebhooksRoute
+  '/blogs/': typeof AuthenticatedBlogsIndexRoute
+  '/collections/': typeof AuthenticatedCollectionsIndexRoute
+  '/companies/': typeof AuthenticatedCompaniesIndexRoute
+  '/customers/': typeof AuthenticatedCustomersIndexRoute
+  '/gift-cards/': typeof AuthenticatedGiftCardsIndexRoute
+  '/invoices/': typeof AuthenticatedInvoicesIndexRoute
+  '/orders/': typeof AuthenticatedOrdersIndexRoute
   '/products/': typeof AuthenticatedProductsIndexRoute
+  '/quotes/': typeof AuthenticatedQuotesIndexRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/verify-email': typeof VerifyEmailRoute
-  '/blogs': typeof AuthenticatedBlogsRouteWithChildren
-  '/collections': typeof AuthenticatedCollectionsRouteWithChildren
-  '/companies': typeof AuthenticatedCompaniesRouteWithChildren
-  '/customers': typeof AuthenticatedCustomersRouteWithChildren
   '/discounts': typeof AuthenticatedDiscountsRoute
-  '/gift-cards': typeof AuthenticatedGiftCardsRouteWithChildren
   '/inventory': typeof AuthenticatedInventoryRoute
-  '/invoices': typeof AuthenticatedInvoicesRouteWithChildren
   '/media': typeof AuthenticatedMediaRoute
-  '/orders': typeof AuthenticatedOrdersRouteWithChildren
   '/pages': typeof AuthenticatedPagesRoute
   '/price-lists': typeof AuthenticatedPriceListsRoute
-  '/quotes': typeof AuthenticatedQuotesRouteWithChildren
   '/returns': typeof AuthenticatedReturnsRoute
   '/': typeof AuthenticatedIndexRoute
   '/blogs/$blogId': typeof AuthenticatedBlogsBlogIdRoute
@@ -318,11 +381,20 @@ export interface FileRoutesByTo {
   '/products/$productId': typeof AuthenticatedProductsProductIdRoute
   '/products/new': typeof AuthenticatedProductsNewRoute
   '/quotes/$quoteId': typeof AuthenticatedQuotesQuoteIdRoute
+  '/settings/audit-log': typeof AuthenticatedSettingsAuditLogRoute
   '/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/settings/shipping': typeof AuthenticatedSettingsShippingRoute
   '/settings/webhooks': typeof AuthenticatedSettingsWebhooksRoute
+  '/blogs': typeof AuthenticatedBlogsIndexRoute
+  '/collections': typeof AuthenticatedCollectionsIndexRoute
+  '/companies': typeof AuthenticatedCompaniesIndexRoute
+  '/customers': typeof AuthenticatedCustomersIndexRoute
+  '/gift-cards': typeof AuthenticatedGiftCardsIndexRoute
+  '/invoices': typeof AuthenticatedInvoicesIndexRoute
+  '/orders': typeof AuthenticatedOrdersIndexRoute
   '/products': typeof AuthenticatedProductsIndexRoute
+  '/quotes': typeof AuthenticatedQuotesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -358,11 +430,20 @@ export interface FileRoutesById {
   '/_authenticated/products/$productId': typeof AuthenticatedProductsProductIdRoute
   '/_authenticated/products/new': typeof AuthenticatedProductsNewRoute
   '/_authenticated/quotes/$quoteId': typeof AuthenticatedQuotesQuoteIdRoute
+  '/_authenticated/settings/audit-log': typeof AuthenticatedSettingsAuditLogRoute
   '/_authenticated/settings/locations': typeof AuthenticatedSettingsLocationsRoute
   '/_authenticated/settings/permissions': typeof AuthenticatedSettingsPermissionsRoute
   '/_authenticated/settings/shipping': typeof AuthenticatedSettingsShippingRoute
   '/_authenticated/settings/webhooks': typeof AuthenticatedSettingsWebhooksRoute
+  '/_authenticated/blogs/': typeof AuthenticatedBlogsIndexRoute
+  '/_authenticated/collections/': typeof AuthenticatedCollectionsIndexRoute
+  '/_authenticated/companies/': typeof AuthenticatedCompaniesIndexRoute
+  '/_authenticated/customers/': typeof AuthenticatedCustomersIndexRoute
+  '/_authenticated/gift-cards/': typeof AuthenticatedGiftCardsIndexRoute
+  '/_authenticated/invoices/': typeof AuthenticatedInvoicesIndexRoute
+  '/_authenticated/orders/': typeof AuthenticatedOrdersIndexRoute
   '/_authenticated/products/': typeof AuthenticatedProductsIndexRoute
+  '/_authenticated/quotes/': typeof AuthenticatedQuotesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -398,30 +479,31 @@ export interface FileRouteTypes {
     | '/products/$productId'
     | '/products/new'
     | '/quotes/$quoteId'
+    | '/settings/audit-log'
     | '/settings/locations'
     | '/settings/permissions'
     | '/settings/shipping'
     | '/settings/webhooks'
+    | '/blogs/'
+    | '/collections/'
+    | '/companies/'
+    | '/customers/'
+    | '/gift-cards/'
+    | '/invoices/'
+    | '/orders/'
     | '/products/'
+    | '/quotes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
     | '/login'
     | '/reset-password'
     | '/verify-email'
-    | '/blogs'
-    | '/collections'
-    | '/companies'
-    | '/customers'
     | '/discounts'
-    | '/gift-cards'
     | '/inventory'
-    | '/invoices'
     | '/media'
-    | '/orders'
     | '/pages'
     | '/price-lists'
-    | '/quotes'
     | '/returns'
     | '/'
     | '/blogs/$blogId'
@@ -435,11 +517,20 @@ export interface FileRouteTypes {
     | '/products/$productId'
     | '/products/new'
     | '/quotes/$quoteId'
+    | '/settings/audit-log'
     | '/settings/locations'
     | '/settings/permissions'
     | '/settings/shipping'
     | '/settings/webhooks'
+    | '/blogs'
+    | '/collections'
+    | '/companies'
+    | '/customers'
+    | '/gift-cards'
+    | '/invoices'
+    | '/orders'
     | '/products'
+    | '/quotes'
   id:
     | '__root__'
     | '/_authenticated'
@@ -474,11 +565,20 @@ export interface FileRouteTypes {
     | '/_authenticated/products/$productId'
     | '/_authenticated/products/new'
     | '/_authenticated/quotes/$quoteId'
+    | '/_authenticated/settings/audit-log'
     | '/_authenticated/settings/locations'
     | '/_authenticated/settings/permissions'
     | '/_authenticated/settings/shipping'
     | '/_authenticated/settings/webhooks'
+    | '/_authenticated/blogs/'
+    | '/_authenticated/collections/'
+    | '/_authenticated/companies/'
+    | '/_authenticated/customers/'
+    | '/_authenticated/gift-cards/'
+    | '/_authenticated/invoices/'
+    | '/_authenticated/orders/'
     | '/_authenticated/products/'
+    | '/_authenticated/quotes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -638,12 +738,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBlogsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/quotes/': {
+      id: '/_authenticated/quotes/'
+      path: '/'
+      fullPath: '/quotes/'
+      preLoaderRoute: typeof AuthenticatedQuotesIndexRouteImport
+      parentRoute: typeof AuthenticatedQuotesRoute
+    }
     '/_authenticated/products/': {
       id: '/_authenticated/products/'
       path: '/'
       fullPath: '/products/'
       preLoaderRoute: typeof AuthenticatedProductsIndexRouteImport
       parentRoute: typeof AuthenticatedProductsRoute
+    }
+    '/_authenticated/orders/': {
+      id: '/_authenticated/orders/'
+      path: '/'
+      fullPath: '/orders/'
+      preLoaderRoute: typeof AuthenticatedOrdersIndexRouteImport
+      parentRoute: typeof AuthenticatedOrdersRoute
+    }
+    '/_authenticated/invoices/': {
+      id: '/_authenticated/invoices/'
+      path: '/'
+      fullPath: '/invoices/'
+      preLoaderRoute: typeof AuthenticatedInvoicesIndexRouteImport
+      parentRoute: typeof AuthenticatedInvoicesRoute
+    }
+    '/_authenticated/gift-cards/': {
+      id: '/_authenticated/gift-cards/'
+      path: '/'
+      fullPath: '/gift-cards/'
+      preLoaderRoute: typeof AuthenticatedGiftCardsIndexRouteImport
+      parentRoute: typeof AuthenticatedGiftCardsRoute
+    }
+    '/_authenticated/customers/': {
+      id: '/_authenticated/customers/'
+      path: '/'
+      fullPath: '/customers/'
+      preLoaderRoute: typeof AuthenticatedCustomersIndexRouteImport
+      parentRoute: typeof AuthenticatedCustomersRoute
+    }
+    '/_authenticated/companies/': {
+      id: '/_authenticated/companies/'
+      path: '/'
+      fullPath: '/companies/'
+      preLoaderRoute: typeof AuthenticatedCompaniesIndexRouteImport
+      parentRoute: typeof AuthenticatedCompaniesRoute
+    }
+    '/_authenticated/collections/': {
+      id: '/_authenticated/collections/'
+      path: '/'
+      fullPath: '/collections/'
+      preLoaderRoute: typeof AuthenticatedCollectionsIndexRouteImport
+      parentRoute: typeof AuthenticatedCollectionsRoute
+    }
+    '/_authenticated/blogs/': {
+      id: '/_authenticated/blogs/'
+      path: '/'
+      fullPath: '/blogs/'
+      preLoaderRoute: typeof AuthenticatedBlogsIndexRouteImport
+      parentRoute: typeof AuthenticatedBlogsRoute
     }
     '/_authenticated/settings/webhooks': {
       id: '/_authenticated/settings/webhooks'
@@ -671,6 +827,13 @@ declare module '@tanstack/react-router' {
       path: '/settings/locations'
       fullPath: '/settings/locations'
       preLoaderRoute: typeof AuthenticatedSettingsLocationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/audit-log': {
+      id: '/_authenticated/settings/audit-log'
+      path: '/settings/audit-log'
+      fullPath: '/settings/audit-log'
+      preLoaderRoute: typeof AuthenticatedSettingsAuditLogRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/quotes/$quoteId': {
@@ -755,10 +918,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedBlogsRouteChildren {
   AuthenticatedBlogsBlogIdRoute: typeof AuthenticatedBlogsBlogIdRoute
+  AuthenticatedBlogsIndexRoute: typeof AuthenticatedBlogsIndexRoute
 }
 
 const AuthenticatedBlogsRouteChildren: AuthenticatedBlogsRouteChildren = {
   AuthenticatedBlogsBlogIdRoute: AuthenticatedBlogsBlogIdRoute,
+  AuthenticatedBlogsIndexRoute: AuthenticatedBlogsIndexRoute,
 }
 
 const AuthenticatedBlogsRouteWithChildren =
@@ -767,6 +932,7 @@ const AuthenticatedBlogsRouteWithChildren =
 interface AuthenticatedCollectionsRouteChildren {
   AuthenticatedCollectionsCollectionIdRoute: typeof AuthenticatedCollectionsCollectionIdRoute
   AuthenticatedCollectionsNewRoute: typeof AuthenticatedCollectionsNewRoute
+  AuthenticatedCollectionsIndexRoute: typeof AuthenticatedCollectionsIndexRoute
 }
 
 const AuthenticatedCollectionsRouteChildren: AuthenticatedCollectionsRouteChildren =
@@ -774,6 +940,7 @@ const AuthenticatedCollectionsRouteChildren: AuthenticatedCollectionsRouteChildr
     AuthenticatedCollectionsCollectionIdRoute:
       AuthenticatedCollectionsCollectionIdRoute,
     AuthenticatedCollectionsNewRoute: AuthenticatedCollectionsNewRoute,
+    AuthenticatedCollectionsIndexRoute: AuthenticatedCollectionsIndexRoute,
   }
 
 const AuthenticatedCollectionsRouteWithChildren =
@@ -783,11 +950,13 @@ const AuthenticatedCollectionsRouteWithChildren =
 
 interface AuthenticatedCompaniesRouteChildren {
   AuthenticatedCompaniesCompanyIdRoute: typeof AuthenticatedCompaniesCompanyIdRoute
+  AuthenticatedCompaniesIndexRoute: typeof AuthenticatedCompaniesIndexRoute
 }
 
 const AuthenticatedCompaniesRouteChildren: AuthenticatedCompaniesRouteChildren =
   {
     AuthenticatedCompaniesCompanyIdRoute: AuthenticatedCompaniesCompanyIdRoute,
+    AuthenticatedCompaniesIndexRoute: AuthenticatedCompaniesIndexRoute,
   }
 
 const AuthenticatedCompaniesRouteWithChildren =
@@ -797,12 +966,14 @@ const AuthenticatedCompaniesRouteWithChildren =
 
 interface AuthenticatedCustomersRouteChildren {
   AuthenticatedCustomersCustomerIdRoute: typeof AuthenticatedCustomersCustomerIdRoute
+  AuthenticatedCustomersIndexRoute: typeof AuthenticatedCustomersIndexRoute
 }
 
 const AuthenticatedCustomersRouteChildren: AuthenticatedCustomersRouteChildren =
   {
     AuthenticatedCustomersCustomerIdRoute:
       AuthenticatedCustomersCustomerIdRoute,
+    AuthenticatedCustomersIndexRoute: AuthenticatedCustomersIndexRoute,
   }
 
 const AuthenticatedCustomersRouteWithChildren =
@@ -812,12 +983,14 @@ const AuthenticatedCustomersRouteWithChildren =
 
 interface AuthenticatedGiftCardsRouteChildren {
   AuthenticatedGiftCardsGiftCardIdRoute: typeof AuthenticatedGiftCardsGiftCardIdRoute
+  AuthenticatedGiftCardsIndexRoute: typeof AuthenticatedGiftCardsIndexRoute
 }
 
 const AuthenticatedGiftCardsRouteChildren: AuthenticatedGiftCardsRouteChildren =
   {
     AuthenticatedGiftCardsGiftCardIdRoute:
       AuthenticatedGiftCardsGiftCardIdRoute,
+    AuthenticatedGiftCardsIndexRoute: AuthenticatedGiftCardsIndexRoute,
   }
 
 const AuthenticatedGiftCardsRouteWithChildren =
@@ -827,10 +1000,12 @@ const AuthenticatedGiftCardsRouteWithChildren =
 
 interface AuthenticatedInvoicesRouteChildren {
   AuthenticatedInvoicesInvoiceIdRoute: typeof AuthenticatedInvoicesInvoiceIdRoute
+  AuthenticatedInvoicesIndexRoute: typeof AuthenticatedInvoicesIndexRoute
 }
 
 const AuthenticatedInvoicesRouteChildren: AuthenticatedInvoicesRouteChildren = {
   AuthenticatedInvoicesInvoiceIdRoute: AuthenticatedInvoicesInvoiceIdRoute,
+  AuthenticatedInvoicesIndexRoute: AuthenticatedInvoicesIndexRoute,
 }
 
 const AuthenticatedInvoicesRouteWithChildren =
@@ -840,10 +1015,12 @@ const AuthenticatedInvoicesRouteWithChildren =
 
 interface AuthenticatedOrdersRouteChildren {
   AuthenticatedOrdersOrderIdRoute: typeof AuthenticatedOrdersOrderIdRoute
+  AuthenticatedOrdersIndexRoute: typeof AuthenticatedOrdersIndexRoute
 }
 
 const AuthenticatedOrdersRouteChildren: AuthenticatedOrdersRouteChildren = {
   AuthenticatedOrdersOrderIdRoute: AuthenticatedOrdersOrderIdRoute,
+  AuthenticatedOrdersIndexRoute: AuthenticatedOrdersIndexRoute,
 }
 
 const AuthenticatedOrdersRouteWithChildren =
@@ -868,10 +1045,12 @@ const AuthenticatedProductsRouteWithChildren =
 
 interface AuthenticatedQuotesRouteChildren {
   AuthenticatedQuotesQuoteIdRoute: typeof AuthenticatedQuotesQuoteIdRoute
+  AuthenticatedQuotesIndexRoute: typeof AuthenticatedQuotesIndexRoute
 }
 
 const AuthenticatedQuotesRouteChildren: AuthenticatedQuotesRouteChildren = {
   AuthenticatedQuotesQuoteIdRoute: AuthenticatedQuotesQuoteIdRoute,
+  AuthenticatedQuotesIndexRoute: AuthenticatedQuotesIndexRoute,
 }
 
 const AuthenticatedQuotesRouteWithChildren =
@@ -894,6 +1073,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedQuotesRoute: typeof AuthenticatedQuotesRouteWithChildren
   AuthenticatedReturnsRoute: typeof AuthenticatedReturnsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedSettingsAuditLogRoute: typeof AuthenticatedSettingsAuditLogRoute
   AuthenticatedSettingsLocationsRoute: typeof AuthenticatedSettingsLocationsRoute
   AuthenticatedSettingsPermissionsRoute: typeof AuthenticatedSettingsPermissionsRoute
   AuthenticatedSettingsShippingRoute: typeof AuthenticatedSettingsShippingRoute
@@ -917,6 +1097,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedQuotesRoute: AuthenticatedQuotesRouteWithChildren,
   AuthenticatedReturnsRoute: AuthenticatedReturnsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedSettingsAuditLogRoute: AuthenticatedSettingsAuditLogRoute,
   AuthenticatedSettingsLocationsRoute: AuthenticatedSettingsLocationsRoute,
   AuthenticatedSettingsPermissionsRoute: AuthenticatedSettingsPermissionsRoute,
   AuthenticatedSettingsShippingRoute: AuthenticatedSettingsShippingRoute,
