@@ -120,7 +120,7 @@ function BlogDialog({
 }
 
 export function BlogsPage() {
-  const { page: rawPage, titleContains } = useSearch({ from: "/_authenticated/blogs" })
+  const { page: rawPage, titleContains } = useSearch({ from: "/_authenticated/blogs/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
   const qc = useQueryClient()

@@ -37,7 +37,7 @@ export function GiftCardsPage() {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState<Partial<CreateGiftCard>>({ currency: "USD" })
 
-  const { page: rawPage, codeContains } = useSearch({ from: "/_authenticated/gift-cards" })
+  const { page: rawPage, codeContains } = useSearch({ from: "/_authenticated/gift-cards/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
 

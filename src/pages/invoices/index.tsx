@@ -58,7 +58,7 @@ function fmtCurrency(amount: number | undefined, currency = "USD") {
 }
 
 export function InvoicesPage() {
-  const { page: rawPage, status, companyId } = useSearch({ from: "/_authenticated/invoices" })
+  const { page: rawPage, status, companyId } = useSearch({ from: "/_authenticated/invoices/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
 

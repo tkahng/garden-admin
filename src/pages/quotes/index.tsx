@@ -33,7 +33,7 @@ const STATUS_TABS: { label: string; value: QuoteStatus | undefined }[] = [
 const PAGE_SIZE = 20
 
 export function QuotesPage() {
-  const { page: rawPage, status } = useSearch({ from: "/_authenticated/quotes" })
+  const { page: rawPage, status } = useSearch({ from: "/_authenticated/quotes/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
 
@@ -109,7 +109,7 @@ export function QuotesPage() {
             {quotes.map((q) => (
               <TableRow key={String(q.id)}>
                 <TableCell>
-                  <Link to={`/quotes/${q.id}` as string} className="font-medium hover:underline">
+                  <Link to="/quotes/$quoteId" params={{ quoteId: String(q.id) }} className="font-medium hover:underline">
                     #{String(q.id).slice(0, 8)}
                   </Link>
                 </TableCell>

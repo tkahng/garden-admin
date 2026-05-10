@@ -33,7 +33,7 @@ const STATUS_TABS: { label: string; value: UserStatus | undefined }[] = [
 const PAGE_SIZE = 20
 
 export function CustomersPage() {
-  const { page: rawPage, email, status } = useSearch({ from: "/_authenticated/customers" })
+  const { page: rawPage, email, status } = useSearch({ from: "/_authenticated/customers/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
   const queryClient = useQueryClient()
