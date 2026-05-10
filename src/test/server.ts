@@ -7,6 +7,11 @@ import { customerHandlers } from "./handlers/customers"
 import { pageHandlers } from "./handlers/pages"
 import { giftCardHandlers } from "./handlers/gift-cards"
 import { mediaHandlers } from "./handlers/media"
+import { quoteHandlers } from "./handlers/quotes"
+import { companyHandlers } from "./handlers/companies"
+import { invoiceHandlers } from "./handlers/invoices"
+import { collectionHandlers } from "./handlers/collections"
+import { blogHandlers } from "./handlers/blogs"
 
 export const server = setupServer(
   ...authHandlers,
@@ -17,4 +22,9 @@ export const server = setupServer(
   ...pageHandlers,
   ...giftCardHandlers,
   ...mediaHandlers,
+  ...quoteHandlers,
+  ...companyHandlers,
+  ...invoiceHandlers,
+  ...collectionHandlers,
+  ...blogHandlers,
 )
