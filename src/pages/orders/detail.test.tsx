@@ -12,7 +12,12 @@ import { createMemoryHistory } from "@tanstack/react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { http, HttpResponse } from "msw"
 import { server } from "@/test/server"
-import { mockOrder } from "@/test/handlers/orders"
+import {
+  mockDeliveredFulfillment,
+  mockOrder,
+  mockPendingFulfillment,
+  mockShippedFulfillment,
+} from "@/test/handlers/orders"
 import { OrderDetailPage } from "./detail"
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
@@ -100,7 +105,7 @@ describe("OrderDetailPage", () => {
     // $9.99 appears twice: unit price + line total (qty 1)
     expect(screen.getAllByText("$9.99").length).toBeGreaterThanOrEqual(1)
     // quantities
-    expect(screen.getByText("2")).toBeInTheDocument()
+    expect(screen.getAllByText("2").length).toBeGreaterThan(0)
     // line total: 2 × $49.99 = $99.98
     expect(screen.getByText("$99.98")).toBeInTheDocument()
   })
@@ -138,6 +143,17 @@ describe("OrderDetailPage", () => {
     expect(screen.getByRole("button", { name: /Cancel/i })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Refund/i })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Fulfill items" })).toBeInTheDocument()
+    expect(screen.getAllByText("Unfulfilled").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Not shipped").length).toBeGreaterThan(0)
+  })
+
+  it("shows ordered, fulfilled and remaining quantities", async () => {
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("columnheader", { name: "Ordered" })).toBeInTheDocument()
+    })
+    expect(screen.getByRole("columnheader", { name: "Fulfilled" })).toBeInTheDocument()
+    expect(screen.getByRole("columnheader", { name: "Remaining" })).toBeInTheDocument()
   })
 
   it("CANCELLED order does not show Cancel, Refund or Fulfill buttons", async () => {
@@ -210,5 +226,126 @@ describe("OrderDetailPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Items (2)")).toBeInTheDocument()
     })
+  })
+
+  it("create fulfillment requires selected items and posts selected quantity", async () => {
+    let postedBody: unknown
+    server.use(
+      http.post("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments", async ({ request }) => {
+        postedBody = await request.json()
+        return HttpResponse.json({ data: { ...mockPendingFulfillment, id: "fulfillment-new" } })
+      })
+    )
+
+    const user = userEvent.setup()
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Fulfill items" })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole("button", { name: "Fulfill items" }))
+    const submit = await screen.findByRole("button", { name: "Create fulfillment" })
+    expect(submit).toBeDisabled()
+
+    await user.click(screen.getByLabelText(/Classic Garden Chair/i))
+    expect(submit).toBeEnabled()
+    await user.click(submit)
+
+    await waitFor(() => {
+      expect(postedBody).toEqual(expect.objectContaining({
+        items: [{ orderItemId: "item-1", quantity: 2 }],
+      }))
+    })
+  })
+
+  it("partial fulfillment shows remaining quantities and prevents over-fulfillment", async () => {
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments", () =>
+        HttpResponse.json({ data: [mockPendingFulfillment] })
+      )
+    )
+
+    const user = userEvent.setup()
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getAllByText("Partially fulfilled").length).toBeGreaterThan(0)
+    })
+
+    await user.click(screen.getByRole("button", { name: "Fulfill items" }))
+    await waitFor(() => {
+      expect(screen.getAllByText("/1 remaining").length).toBeGreaterThan(0)
+    })
+    expect(screen.queryByText("/2 remaining")).not.toBeInTheDocument()
+  })
+
+  it("pending fulfillment exposes mark shipped action", async () => {
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments", () =>
+        HttpResponse.json({ data: [mockPendingFulfillment] })
+      )
+    )
+
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Mark shipped" })).toBeInTheDocument()
+    })
+    expect(screen.queryByRole("button", { name: "Mark delivered" })).not.toBeInTheDocument()
+  })
+
+  it("shipped fulfillment exposes mark delivered action", async () => {
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments", () =>
+        HttpResponse.json({ data: [mockShippedFulfillment] })
+      )
+    )
+
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Mark delivered" })).toBeInTheDocument()
+    })
+    expect(screen.queryByRole("button", { name: "Mark shipped" })).not.toBeInTheDocument()
+  })
+
+  it("delivered fulfillment does not expose progression actions", async () => {
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments", () =>
+        HttpResponse.json({ data: [mockDeliveredFulfillment] })
+      )
+    )
+
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getAllByText("Delivered").length).toBeGreaterThan(0)
+    })
+    expect(screen.queryByRole("button", { name: "Mark shipped" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Mark delivered" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Cancel fulfillment" })).not.toBeInTheDocument()
+  })
+
+  it("successful shipment mutation reloads visible fulfillment state", async () => {
+    let status = "PENDING"
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments", () =>
+        HttpResponse.json({ data: [{ ...mockPendingFulfillment, status }] })
+      ),
+      http.put("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments/:fulfillmentId", async ({ request }) => {
+        const body = await request.json() as { status?: string }
+        status = body.status ?? status
+        return HttpResponse.json({ data: { ...mockPendingFulfillment, status } })
+      })
+    )
+
+    const user = userEvent.setup()
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Mark shipped" })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole("button", { name: "Mark shipped" }))
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Shipped").length).toBeGreaterThan(0)
+    })
+    expect(screen.getByRole("button", { name: "Mark delivered" })).toBeInTheDocument()
   })
 })
