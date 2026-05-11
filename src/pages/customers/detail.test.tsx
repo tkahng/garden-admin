@@ -41,7 +41,13 @@ function makeRouter(id = mockCustomer.id) {
     component: () => <CustomerDetailPage id={id} />,
   })
 
-  const routeTree = rootRoute.addChildren([customersListRoute, detailRoute])
+  const orderDetailRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: "/orders/$orderId",
+    component: () => <div>Order Detail</div>,
+  })
+
+  const routeTree = rootRoute.addChildren([customersListRoute, detailRoute, orderDetailRoute])
   const history = createMemoryHistory({ initialEntries: [`/customers/${id}`] })
   return { router: createRouter({ routeTree, history, context: {} }), qc }
 }
@@ -194,6 +200,31 @@ describe("CustomerDetailPage", () => {
     renderDetail()
     await waitFor(() => {
       expect(screen.getByText("No orders yet.")).toBeInTheDocument()
+    })
+  })
+
+  it("order ID links to order detail route using router Link (not bare anchor)", async () => {
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByText("PAID")).toBeInTheDocument()
+    })
+    const orderId = "abc12345-6789-0000-0000-000000000001"
+    const link = screen.getByRole("link", { name: `#${orderId.slice(0, 8).toUpperCase()}` })
+    expect(link.tagName).toBe("A")
+    expect(link.getAttribute("href")).toBe(`/orders/${orderId}`)
+  })
+
+  it("clicking order ID link navigates client-side to order detail", async () => {
+    const user = userEvent.setup()
+    const { router } = renderDetail()
+    await waitFor(() => {
+      expect(screen.getByText("PAID")).toBeInTheDocument()
+    })
+    const orderId = "abc12345-6789-0000-0000-000000000001"
+    const link = screen.getByRole("link", { name: `#${orderId.slice(0, 8).toUpperCase()}` })
+    await user.click(link)
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(`/orders/${orderId}`)
     })
   })
 })
