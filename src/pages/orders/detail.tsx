@@ -170,7 +170,7 @@ export function OrderDetailPage({ id }: { id: string }) {
   const { data: companiesData } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      const { data, error } = await apiClient.GET("/api/v1/companies", { params: { query: { user: {} as never } } })
+      const { data, error } = await apiClient.GET("/api/v1/companies")
       if (error) throw error
       return data
     },

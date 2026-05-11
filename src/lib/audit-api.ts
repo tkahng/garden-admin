@@ -28,7 +28,7 @@ export interface AuditLogFilters {
 export const auditLogApi = {
   list: async (filters: AuditLogFilters = {}): Promise<AuditLogPage> => {
     const { entityType, entityId, actorEmail, page = 0, size = 25 } = filters
-    const { data, error } = await apiClient.GET("/api/v1/admin/audit-log" as never, {
+    const { data, error } = await apiClient.GET("/api/v1/admin/audit-log", {
       params: {
         query: {
           entityType: entityType || undefined,
@@ -36,10 +36,10 @@ export const auditLogApi = {
           actorEmail: actorEmail || undefined,
           page,
           size,
-        } as never,
+        },
       },
     })
     if (error) throw error
-    return (data as { data?: AuditLogPage } | undefined)?.data as AuditLogPage
+    return data?.data as AuditLogPage
   },
 }
