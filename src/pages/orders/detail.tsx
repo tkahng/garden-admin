@@ -244,7 +244,7 @@ export function OrderDetailPage({ id }: { id: string }) {
   const fulfillMutation = useMutation({
     mutationFn: async (body: CreateFulfillment) => {
       const { error } = await apiClient.POST("/api/v1/admin/orders/{orderId}/fulfillments", {
-        params: { query: { admin: {} as never }, path: { orderId: id } },
+        params: { path: { orderId: id } },
         body,
       })
       if (error) throw error
@@ -285,7 +285,7 @@ export function OrderDetailPage({ id }: { id: string }) {
   const noteMutation = useMutation({
     mutationFn: async (message: string) => {
       const { error } = await apiClient.POST("/api/v1/admin/orders/{orderId}/events", {
-        params: { query: { admin: {} as never }, path: { orderId: id } },
+        params: { path: { orderId: id } },
         body: { message },
       })
       if (error) throw error

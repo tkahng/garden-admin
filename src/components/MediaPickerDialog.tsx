@@ -344,7 +344,7 @@ export function MediaPickerDialog({
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="shrink-0 pt-1">
-            <DataPagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            <DataPagination page={page} totalPages={totalPages} total={total} label="file" onPageChange={setPage} />
           </div>
         )}
 

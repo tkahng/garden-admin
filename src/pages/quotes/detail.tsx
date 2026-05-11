@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/table"
 import { ArrowLeft, Pencil, Trash2, Plus, Send, UserCheck, Ban, Check, Download } from "lucide-react"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
+
 import { downloadPdf } from "@/lib/download"
 
 type Quote = components["schemas"]["QuoteRequestResponse"]
@@ -626,22 +626,24 @@ export function QuoteDetailPage({ id }: { id: string }) {
 
           {/* Details */}
           <div className="rounded-lg border bg-card divide-y text-sm">
-            {[
-              quote.userId && ["Customer", <span key="u" className="font-mono text-xs">{quote.userId.slice(0, 8)}…</span>],
-              quote.companyId && ["Company", (
-                <Link key="c" to="/companies/$companyId" params={{ companyId: quote.companyId }} className="font-mono text-xs hover:underline">
-                  {quote.companyId.slice(0, 8)}…
-                </Link>
-              )],
-              quote.assignedStaffId && ["Assigned to", <span key="a" className="font-mono text-xs">{quote.assignedStaffId.slice(0, 8)}…</span>],
-              quote.expiresAt && ["Expires", fmt(quote.expiresAt)],
-              quote.orderId && ["Order", <span key="o" className="font-mono text-xs">{quote.orderId.slice(0, 8)}…</span>],
-            ]
-              .filter(Boolean)
+            {(
+              [
+                quote.userId && ["Customer", <span key="u" className="font-mono text-xs">{quote.userId.slice(0, 8)}…</span>],
+                quote.companyId && ["Company", (
+                  <Link key="c" to="/companies/$companyId" params={{ companyId: quote.companyId }} className="font-mono text-xs hover:underline">
+                    {quote.companyId.slice(0, 8)}…
+                  </Link>
+                )],
+                quote.assignedStaffId && ["Assigned to", <span key="a" className="font-mono text-xs">{quote.assignedStaffId.slice(0, 8)}…</span>],
+                quote.expiresAt && ["Expires", fmt(quote.expiresAt)],
+                quote.orderId && ["Order", <span key="o" className="font-mono text-xs">{quote.orderId.slice(0, 8)}…</span>],
+              ] as ([string, React.ReactNode] | false)[]
+            )
+              .filter((r): r is [string, React.ReactNode] => !!r)
               .map(([label, value]) => (
-                <div key={String(label)} className="flex items-center justify-between px-4 py-2.5">
-                  <span className="text-muted-foreground">{label as string}</span>
-                  <span>{value as React.ReactNode}</span>
+                <div key={label} className="flex items-center justify-between px-4 py-2.5">
+                  <span className="text-muted-foreground">{label}</span>
+                  <span>{value}</span>
                 </div>
               ))}
           </div>

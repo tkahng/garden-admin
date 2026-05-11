@@ -54,7 +54,7 @@ export function ForgotPasswordPage() {
                 <p className="text-sm text-muted-foreground">
                   If an account exists for <span className="font-medium">{email}</span>, you will receive an email shortly.
                 </p>
-                <Link to="/login" className="flex items-center gap-1 text-sm text-primary hover:underline">
+                <Link to="/login" search={{ redirect_to: undefined }} className="flex items-center gap-1 text-sm text-primary hover:underline">
                   <ArrowLeft className="size-3.5" />
                   Back to sign in
                 </Link>
@@ -77,7 +77,7 @@ export function ForgotPasswordPage() {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Sending..." : "Send reset link"}
                 </Button>
-                <Link to="/login" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+                <Link to="/login" search={{ redirect_to: undefined }} className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground">
                   <ArrowLeft className="size-3.5" />
                   Back to sign in
                 </Link>

@@ -44,7 +44,7 @@ export function VerifyEmailPage({ token }: { token: string }) {
                 <p className="text-sm text-muted-foreground text-center">
                   Your email address has been confirmed. You can now sign in.
                 </p>
-                <Link to="/login" className="text-sm text-primary hover:underline">
+                <Link to="/login" search={{ redirect_to: undefined }} className="text-sm text-primary hover:underline">
                   Go to sign in →
                 </Link>
               </div>
@@ -55,7 +55,7 @@ export function VerifyEmailPage({ token }: { token: string }) {
                 <p className="text-sm text-muted-foreground text-center">
                   This verification link is invalid or has already been used.
                 </p>
-                <Link to="/login" className="text-sm text-primary hover:underline">
+                <Link to="/login" search={{ redirect_to: undefined }} className="text-sm text-primary hover:underline">
                   Back to sign in →
                 </Link>
               </div>

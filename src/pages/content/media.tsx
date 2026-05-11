@@ -1090,9 +1090,9 @@ export function MediaPage() {
             <h1 className="text-2xl font-semibold">Media library</h1>
             {statsData && (
               <span className="text-sm text-muted-foreground">
-                {statsData.totalFiles.toLocaleString()} file{statsData.totalFiles !== 1 ? "s" : ""}
+                {(statsData.totalFiles ?? 0).toLocaleString()} file{(statsData.totalFiles ?? 0) !== 1 ? "s" : ""}
                 {" · "}
-                {formatBytes(statsData.totalBytes)}
+                {formatBytes(statsData.totalBytes ?? 0)}
               </span>
             )}
           </div>
