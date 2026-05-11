@@ -105,12 +105,13 @@ function OrderHistory({ userId }: { userId: string }) {
               {orders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell>
-                    <a
-                      href={`/orders/${order.id}`}
+                    <Link
+                      to="/orders/$orderId"
+                      params={{ orderId: order.id ?? "" }}
                       className="font-mono text-xs text-primary hover:underline"
                     >
                       #{order.id?.slice(0, 8).toUpperCase()}
-                    </a>
+                    </Link>
                   </TableCell>
                   <TableCell>
                     <Badge variant={ORDER_STATUS_VARIANT[order.status ?? ""] ?? "secondary"} className="text-xs">
