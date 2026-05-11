@@ -84,7 +84,7 @@ export function ProductsPage() {
   }
 
   const bulkStatusMutation = useMutation({
-    mutationFn: (newStatus: string) => bulkChangeProductStatus([...selectedIds], newStatus),
+    mutationFn: (newStatus: string) => bulkChangeProductStatus([...selectedIds], newStatus as "DRAFT" | "ACTIVE" | "ARCHIVED"),
     onSuccess: invalidate,
   })
 

@@ -44,7 +44,7 @@ import {
 import { ArrowLeft, ChevronDown, ChevronUp, ImageIcon, Pencil, Plus, Star, Trash2, X } from "lucide-react"
 import { MediaPickerDialog } from "@/components/MediaPickerDialog"
 import { toast } from "sonner"
-import { cn } from "@/lib/utils"
+
 
 type Product = components["schemas"]["AdminProductResponse"]
 type ProductOption = components["schemas"]["ProductOptionResponse"]

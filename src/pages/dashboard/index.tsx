@@ -252,8 +252,8 @@ export function DashboardPage() {
                   />
                   <Tooltip
                     contentStyle={{ fontSize: 12, border: "1px solid hsl(var(--border))", borderRadius: 6 }}
-                    formatter={(v: number) => [
-                      `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                    formatter={(v: unknown) => [
+                      `$${(v as number).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                       "Revenue",
                     ]}
                   />
@@ -293,7 +293,7 @@ export function DashboardPage() {
                   />
                   <Tooltip
                     contentStyle={{ fontSize: 12, border: "1px solid hsl(var(--border))", borderRadius: 6 }}
-                    formatter={(v: number) => [v, "Orders"]}
+                    formatter={(v: unknown) => [v as React.ReactNode, "Orders"]}
                   />
                   <Line type="monotone" dataKey="orderCount" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
                 </LineChart>

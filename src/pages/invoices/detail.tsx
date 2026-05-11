@@ -366,17 +366,19 @@ export function InvoiceDetailPage({ id }: { id: string }) {
 
       {/* Metadata */}
       <div className="rounded-lg border bg-card divide-y text-sm">
-        {[
-          ["Issued", fmt(invoice.issuedAt)],
-          ["Due", fmt(invoice.dueAt)],
-          invoice.orderId && ["Order", invoice.orderId],
-          invoice.quoteId && ["Quote", invoice.quoteId],
-        ]
-          .filter(Boolean)
+        {(
+          [
+            ["Issued", fmt(invoice.issuedAt)],
+            ["Due", fmt(invoice.dueAt)],
+            invoice.orderId && ["Order", invoice.orderId],
+            invoice.quoteId && ["Quote", invoice.quoteId],
+          ] as ([string, string] | false)[]
+        )
+          .filter((r): r is [string, string] => !!r)
           .map(([label, value]) => (
-            <div key={label as string} className="flex justify-between px-4 py-3">
-              <span className="text-muted-foreground">{label as string}</span>
-              <span className="font-mono text-xs">{value as string}</span>
+            <div key={label} className="flex justify-between px-4 py-3">
+              <span className="text-muted-foreground">{label}</span>
+              <span className="font-mono text-xs">{value}</span>
             </div>
           ))}
       </div>

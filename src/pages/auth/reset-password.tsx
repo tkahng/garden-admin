@@ -60,7 +60,7 @@ export function ResetPasswordPage({ token }: { token: string }) {
             {done ? (
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">You can now sign in with your new password.</p>
-                <Link to="/login" className="flex items-center gap-1 text-sm text-primary hover:underline">
+                <Link to="/login" search={{ redirect_to: undefined }} className="flex items-center gap-1 text-sm text-primary hover:underline">
                   <ArrowLeft className="size-3.5" />
                   Go to sign in
                 </Link>
@@ -94,7 +94,7 @@ export function ResetPasswordPage({ token }: { token: string }) {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Saving..." : "Set new password"}
                 </Button>
-                <Link to="/login" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+                <Link to="/login" search={{ redirect_to: undefined }} className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground">
                   <ArrowLeft className="size-3.5" />
                   Back to sign in
                 </Link>

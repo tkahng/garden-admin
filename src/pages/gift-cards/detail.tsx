@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import type { ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
@@ -39,6 +40,7 @@ import { cn } from "@/lib/utils"
 
 type GiftCard = components["schemas"]["GiftCardResponse"]
 type Transaction = components["schemas"]["GiftCardTransactionResponse"]
+type MetadataRow = [label: string, value: ReactNode]
 
 function fmt(iso: string | undefined) {
   return iso
@@ -273,6 +275,14 @@ export function GiftCardDetailPage({ id }: { id: string }) {
   const transactions: Transaction[] = txData ?? []
   const totalUsed = (card.initialBalance ?? 0) - (card.currentBalance ?? 0)
   const isExpired = card.expiresAt ? new Date(card.expiresAt) < new Date() : false
+  const metadataRows: MetadataRow[] = [
+    ...(card.recipientEmail ? [["Recipient", card.recipientEmail] satisfies MetadataRow] : []),
+    ...(card.purchaserUserId
+      ? [["Purchaser", <span key="p" className="font-mono text-xs">{card.purchaserUserId.slice(0, 8)}…</span>] satisfies MetadataRow]
+      : []),
+    ["Expires", card.expiresAt ? fmt(card.expiresAt) : "No expiry"],
+    ...(card.note ? [["Note", card.note] satisfies MetadataRow] : []),
+  ]
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -342,17 +352,10 @@ export function GiftCardDetailPage({ id }: { id: string }) {
 
       {/* Metadata */}
       <div className="rounded-lg border bg-card divide-y text-sm">
-        {[
-          card.recipientEmail && ["Recipient", card.recipientEmail],
-          card.purchaserUserId && ["Purchaser", <span key="p" className="font-mono text-xs">{card.purchaserUserId.slice(0, 8)}…</span>],
-          ["Expires", card.expiresAt ? fmt(card.expiresAt) : "No expiry"],
-          card.note && ["Note", card.note],
-        ]
-          .filter(Boolean)
-          .map(([label, value]) => (
+        {metadataRows.map(([label, value]) => (
             <div key={String(label)} className="flex justify-between items-center px-4 py-3">
-              <span className="text-muted-foreground">{label as string}</span>
-              <span>{value as React.ReactNode}</span>
+              <span className="text-muted-foreground">{label}</span>
+              <span>{value}</span>
             </div>
           ))}
       </div>
