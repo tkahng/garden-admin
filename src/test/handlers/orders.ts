@@ -25,6 +25,32 @@ export const mockOrder = {
   shippingAddress: "John Doe\n123 Main St\nSpringfield, IL 62701\nUS",
 }
 
+export const mockPendingFulfillment = {
+  id: "fulfillment-pending",
+  orderId: mockOrder.id,
+  status: "PENDING",
+  trackingNumber: "TRACK-PENDING",
+  trackingCompany: "UPS",
+  trackingUrl: "https://example.com/track/TRACK-PENDING",
+  note: null,
+  items: [{ id: "fi-pending-1", orderItemId: "item-1", quantity: 1 }],
+  createdAt: "2026-04-01T12:00:00.000Z",
+}
+
+export const mockShippedFulfillment = {
+  ...mockPendingFulfillment,
+  id: "fulfillment-shipped",
+  status: "SHIPPED",
+  trackingNumber: "TRACK-SHIPPED",
+}
+
+export const mockDeliveredFulfillment = {
+  ...mockPendingFulfillment,
+  id: "fulfillment-delivered",
+  status: "DELIVERED",
+  trackingNumber: "TRACK-DELIVERED",
+}
+
 export const orderHandlers = [
   http.get("http://localhost:8080/api/v1/admin/orders", () => {
     return HttpResponse.json({
@@ -60,7 +86,11 @@ export const orderHandlers = [
   }),
 
   http.post("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments", () => {
-    return HttpResponse.json({ data: { id: "fulfillment-1", status: "FULFILLED" } })
+    return HttpResponse.json({ data: { ...mockPendingFulfillment, id: "fulfillment-1" } })
+  }),
+
+  http.put("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments/:fulfillmentId", () => {
+    return HttpResponse.json({ data: { ...mockPendingFulfillment, status: "SHIPPED" } })
   }),
 
   http.post("http://localhost:8080/api/v1/admin/orders/:orderId/events", () => {

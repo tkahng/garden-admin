@@ -68,7 +68,7 @@ const EVENT_LABELS: Record<string, string> = {
   NOTE_ADDED: "Note added",
 }
 
-const FULFILLMENT_STATUSES = ["PENDING", "SHIPPED", "DELIVERED", "CANCELLED"] as const
+const ACTIVE_FULFILLMENT_STATUSES = new Set<string>(["PENDING", "SHIPPED", "DELIVERED"])
 
 function statusVariant(status: string) {
   switch (status) {
@@ -90,6 +90,69 @@ function fulfillmentStatusVariant(s: string) {
     case "SHIPPED": return "secondary"
     case "CANCELLED": return "destructive"
     default: return "outline"
+  }
+}
+
+function paymentStatusLabel(status: string) {
+  switch (status) {
+    case "PENDING_PAYMENT": return "Payment pending"
+    case "PAID": case "PARTIALLY_FULFILLED": case "FULFILLED": return "Paid"
+    case "INVOICED": return "Invoiced"
+    case "REFUNDED": return "Refunded"
+    case "CANCELLED": return "Cancelled"
+    default: return statusLabel(status)
+  }
+}
+
+function deriveFulfillmentProgress(items: OrderItem[], fulfillments: Fulfillment[]) {
+  const fulfilledByItemId = new Map<string, number>()
+
+  for (const fulfillment of fulfillments) {
+    if (!ACTIVE_FULFILLMENT_STATUSES.has(fulfillment.status ?? "")) continue
+    for (const item of fulfillment.items ?? []) {
+      if (!item.orderItemId) continue
+      fulfilledByItemId.set(
+        item.orderItemId,
+        (fulfilledByItemId.get(item.orderItemId) ?? 0) + (item.quantity ?? 0)
+      )
+    }
+  }
+
+  const rows = items.map((item) => {
+    const ordered = item.quantity ?? 0
+    const fulfilled = Math.min(ordered, item.id ? fulfilledByItemId.get(item.id) ?? 0 : 0)
+    return {
+      item,
+      ordered,
+      fulfilled,
+      remaining: Math.max(ordered - fulfilled, 0),
+    }
+  })
+
+  const totalOrdered = rows.reduce((sum, row) => sum + row.ordered, 0)
+  const totalFulfilled = rows.reduce((sum, row) => sum + row.fulfilled, 0)
+  const totalRemaining = rows.reduce((sum, row) => sum + row.remaining, 0)
+
+  let label = "Unfulfilled"
+  if (totalOrdered > 0 && totalRemaining === 0) label = "Fulfilled"
+  else if (totalFulfilled > 0) label = "Partially fulfilled"
+
+  return { rows, totalOrdered, totalFulfilled, totalRemaining, label }
+}
+
+function deriveShipmentStatus(fulfillments: Fulfillment[]) {
+  if (fulfillments.some((f) => f.status === "SHIPPED")) return "Shipped"
+  if (fulfillments.some((f) => f.status === "PENDING")) return "Pending"
+  if (fulfillments.some((f) => f.status === "DELIVERED")) return "Delivered"
+  if (fulfillments.some((f) => f.status === "CANCELLED")) return "Cancelled"
+  return "Not shipped"
+}
+
+function nextFulfillmentActions(status?: Fulfillment["status"]) {
+  switch (status) {
+    case "PENDING": return ["SHIPPED", "CANCELLED"] as const
+    case "SHIPPED": return ["DELIVERED", "CANCELLED"] as const
+    default: return [] as const
   }
 }
 
@@ -277,6 +340,7 @@ export function OrderDetailPage({ id }: { id: string }) {
       toast.success("Fulfillment updated")
       void qc.invalidateQueries({ queryKey: ["admin", "orders", id, "fulfillments"] })
       void qc.invalidateQueries({ queryKey: ["admin", "orders", id, "events"] })
+      invalidate()
       setEditFulfillment(null)
     },
     onError: () => toast.error("Failed to update fulfillment"),
@@ -362,7 +426,6 @@ export function OrderDetailPage({ id }: { id: string }) {
   function openEditFulfillment(f: Fulfillment) {
     setEditFulfillment(f)
     setEditFulfillForm({
-      status: f.status,
       trackingNumber: f.trackingNumber ?? "",
       trackingCompany: f.trackingCompany ?? "",
       trackingUrl: f.trackingUrl ?? "",
@@ -385,10 +448,13 @@ export function OrderDetailPage({ id }: { id: string }) {
 
   const o = order
   const items: OrderItem[] = o.items ?? []
+  const fulfillmentProgress = deriveFulfillmentProgress(items, fulfillments)
+  const fulfillableRows = fulfillmentProgress.rows.filter((row) => row.item.id && row.remaining > 0)
+  const shipmentStatus = deriveShipmentStatus(fulfillments)
   const isDraft = o.status === "DRAFT"
   const canCancel = o.status !== "CANCELLED" && o.status !== "REFUNDED"
   const canRefund = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED" || o.status === "FULFILLED"
-  const canFulfill = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED"
+  const canFulfill = (o.status === "PAID" || o.status === "PARTIALLY_FULFILLED") && fulfillmentProgress.totalRemaining > 0
   const canInvoice = o.status !== "CANCELLED" && o.status !== "REFUNDED" && !isDraft
 
   // Initialise editable draft items once the order loads
@@ -424,6 +490,15 @@ export function OrderDetailPage({ id }: { id: string }) {
           <p className="text-sm text-muted-foreground">
             {o.createdAt ? new Date(o.createdAt).toLocaleString() : ""}
           </p>
+        </div>
+        <div className="hidden xl:flex items-center gap-2 shrink-0">
+          <Badge variant={statusVariant(o.status ?? "")}>{paymentStatusLabel(o.status ?? "")}</Badge>
+          <Badge variant={fulfillmentProgress.totalRemaining === 0 && fulfillmentProgress.totalOrdered > 0 ? "default" : fulfillmentProgress.totalFulfilled > 0 ? "secondary" : "outline"}>
+            {fulfillmentProgress.label}
+          </Badge>
+          <Badge variant={shipmentStatus === "Delivered" ? "default" : shipmentStatus === "Shipped" ? "secondary" : shipmentStatus === "Cancelled" ? "destructive" : "outline"}>
+            {shipmentStatus}
+          </Badge>
         </div>
         <div className="flex gap-2 shrink-0">
           {isDraft && (
@@ -574,12 +649,14 @@ export function OrderDetailPage({ id }: { id: string }) {
                         <TableHead className="w-10"></TableHead>
                         <TableHead>Product</TableHead>
                         <TableHead className="text-right">Price</TableHead>
-                        <TableHead className="text-right">Qty</TableHead>
+                        <TableHead className="text-right">Ordered</TableHead>
+                        <TableHead className="text-right">Fulfilled</TableHead>
+                        <TableHead className="text-right">Remaining</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {items.map((item) => (
+                      {fulfillmentProgress.rows.map(({ item, ordered, fulfilled, remaining }) => (
                         <TableRow key={item.id}>
                           <TableCell>
                             <div className="size-8 rounded border bg-muted overflow-hidden flex items-center justify-center shrink-0">
@@ -600,7 +677,13 @@ export function OrderDetailPage({ id }: { id: string }) {
                             {item.unitPrice != null ? `$${Number(item.unitPrice).toFixed(2)}` : "—"}
                           </TableCell>
                           <TableCell className="text-right text-sm tabular-nums">
-                            {item.quantity ?? 1}
+                            {ordered}
+                          </TableCell>
+                          <TableCell className="text-right text-sm tabular-nums">
+                            {fulfilled}
+                          </TableCell>
+                          <TableCell className="text-right text-sm tabular-nums">
+                            {remaining}
                           </TableCell>
                           <TableCell className="text-right text-sm font-medium tabular-nums">
                             {item.unitPrice != null
@@ -664,9 +747,22 @@ export function OrderDetailPage({ id }: { id: string }) {
                           {statusLabel(f.status ?? "")}
                         </Badge>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => openEditFulfillment(f)}>
-                        <Pencil className="size-3.5 mr-1.5" />Edit
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        {nextFulfillmentActions(f.status).map((status) => (
+                          <Button
+                            key={status}
+                            variant={status === "CANCELLED" ? "outline" : "default"}
+                            size="sm"
+                            onClick={() => f.id && updateFulfillmentMutation.mutate({ fulfillmentId: f.id, body: { status } })}
+                            disabled={updateFulfillmentMutation.isPending}
+                          >
+                            {status === "SHIPPED" ? "Mark shipped" : status === "DELIVERED" ? "Mark delivered" : "Cancel fulfillment"}
+                          </Button>
+                        ))}
+                        <Button variant="ghost" size="sm" onClick={() => openEditFulfillment(f)}>
+                          <Pencil className="size-3.5 mr-1.5" />Edit tracking
+                        </Button>
+                      </div>
                     </div>
                     {f.trackingNumber && (
                       <div className="text-sm flex items-center gap-2">
@@ -805,13 +901,25 @@ export function OrderDetailPage({ id }: { id: string }) {
           {/* Payment */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base">Payment</CardTitle>
+              <CardTitle className="text-base">Status</CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-2">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Status</span>
+                <span className="text-muted-foreground">Payment</span>
                 <Badge variant={statusVariant(o.status ?? "")} className="text-xs">
-                  {statusLabel(o.status ?? "")}
+                  {paymentStatusLabel(o.status ?? "")}
+                </Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Fulfillment</span>
+                <Badge variant={fulfillmentProgress.totalRemaining === 0 && fulfillmentProgress.totalOrdered > 0 ? "default" : fulfillmentProgress.totalFulfilled > 0 ? "secondary" : "outline"} className="text-xs">
+                  {fulfillmentProgress.label}
+                </Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Shipment</span>
+                <Badge variant={shipmentStatus === "Delivered" ? "default" : shipmentStatus === "Shipped" ? "secondary" : shipmentStatus === "Cancelled" ? "destructive" : "outline"} className="text-xs">
+                  {shipmentStatus}
                 </Badge>
               </div>
               <div className="flex justify-between">
@@ -866,13 +974,14 @@ export function OrderDetailPage({ id }: { id: string }) {
           </DialogHeader>
           <div className="space-y-4 py-2">
             {/* Items selection */}
-            {items.length > 0 && (
+            {fulfillableRows.length > 0 ? (
               <div className="space-y-2">
                 <Label>Items to fulfill</Label>
                 <div className="rounded-md border divide-y">
-                  {items.map((item) => (
+                  {fulfillableRows.map(({ item, remaining }) => (
                     <div key={item.id} className="flex items-center gap-3 px-3 py-2">
                       <Checkbox
+                        aria-label={`Select ${item.product?.productTitle ?? "item"}`}
                         checked={selectedItemIds.has(item.id!)}
                         onCheckedChange={(checked) => {
                           setSelectedItemIds((prev) => {
@@ -882,7 +991,7 @@ export function OrderDetailPage({ id }: { id: string }) {
                             return next
                           })
                           if (checked && !itemQtys[item.id!]) {
-                            setItemQtys((prev) => ({ ...prev, [item.id!]: item.quantity ?? 1 }))
+                            setItemQtys((prev) => ({ ...prev, [item.id!]: remaining }))
                           }
                         }}
                       />
@@ -896,18 +1005,24 @@ export function OrderDetailPage({ id }: { id: string }) {
                         <Input
                           type="number"
                           min={1}
-                          max={item.quantity ?? 1}
+                          max={remaining}
                           className="w-16 h-7 text-sm text-center"
-                          value={itemQtys[item.id!] ?? item.quantity ?? 1}
-                          onChange={(e) => setItemQtys((prev) => ({ ...prev, [item.id!]: Number(e.target.value) }))}
+                          value={itemQtys[item.id!] ?? remaining}
+                          onChange={(e) => {
+                            const raw = Number(e.target.value)
+                            const next = Math.min(Math.max(Number.isFinite(raw) ? raw : 1, 1), remaining)
+                            setItemQtys((prev) => ({ ...prev, [item.id!]: next }))
+                          }}
                           onClick={(e) => e.stopPropagation()}
                         />
                       )}
-                      <span className="text-xs text-muted-foreground">/{item.quantity}</span>
+                      <span className="text-xs text-muted-foreground">/{remaining} remaining</span>
                     </div>
                   ))}
                 </div>
               </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">All items are already fulfilled.</p>
             )}
             <div className="space-y-1.5">
               <Label>Tracking number</Label>
@@ -948,7 +1063,7 @@ export function OrderDetailPage({ id }: { id: string }) {
             <Button variant="outline" onClick={() => setFulfillOpen(false)}>Cancel</Button>
             <Button
               onClick={handleCreateFulfillment}
-              disabled={fulfillMutation.isPending}
+              disabled={fulfillMutation.isPending || selectedItemIds.size === 0}
             >
               Create fulfillment
             </Button>
@@ -960,25 +1075,9 @@ export function OrderDetailPage({ id }: { id: string }) {
       <Dialog open={!!editFulfillment} onOpenChange={(o) => !o && setEditFulfillment(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Update fulfillment</DialogTitle>
+            <DialogTitle>Edit tracking</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Status</Label>
-              <Select
-                value={editFulfillForm.status ?? "PENDING"}
-                onValueChange={(v) =>
-                  setEditFulfillForm((f) => ({ ...f, status: v as typeof FULFILLMENT_STATUSES[number] }))
-                }
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {FULFILLMENT_STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>{statusLabel(s)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             <div className="space-y-1.5">
               <Label>Tracking number</Label>
               <Input
