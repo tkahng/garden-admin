@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CountrySelect } from "@/components/CountrySelect"
+import { countryLabel } from "@/lib/countries"
 import {
   Dialog,
   DialogContent,
@@ -20,7 +22,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { Plus, ChevronDown, Trash2, Pencil } from "lucide-react"
+import { Plus, ChevronDown, Trash2, Pencil, X } from "lucide-react"
 import { toast } from "sonner"
 
 type Zone = components["schemas"]["ShippingZoneResponse"]
@@ -368,6 +370,23 @@ function ZoneDialog({
         }
       : { isActive: true }
   )
+  const [countryToAdd, setCountryToAdd] = useState("US")
+  const countryCodes = form.countryCodes ?? []
+
+  function addCountry() {
+    setForm((f) => {
+      const existingCodes = f.countryCodes ?? []
+      if (existingCodes.includes(countryToAdd)) return f
+      return { ...f, countryCodes: [...existingCodes, countryToAdd] }
+    })
+  }
+
+  function removeCountry(code: string) {
+    setForm((f) => ({
+      ...f,
+      countryCodes: (f.countryCodes ?? []).filter((country) => country !== code),
+    }))
+  }
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose() }}>
@@ -392,18 +411,39 @@ function ZoneDialog({
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             />
           </div>
-          <div className="space-y-1.5">
-            <Label>Country codes (comma-separated)</Label>
-            <Input
-              placeholder="US, CA, MX"
-              value={form.countryCodes?.join(", ") ?? ""}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  countryCodes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
-                }))
-              }
-            />
+          <div className="space-y-2">
+            <Label>Countries</Label>
+            <div className="flex gap-2">
+              <CountrySelect
+                value={countryToAdd}
+                onValueChange={setCountryToAdd}
+                className="w-full"
+              />
+              <Button type="button" variant="outline" onClick={addCountry} aria-label="Add country">
+                <Plus className="size-4" />
+              </Button>
+            </div>
+            {countryCodes.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {countryCodes.map((code) => (
+                  <Badge key={code} variant="outline" className="gap-1 pr-1">
+                    {countryLabel(code)}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      className="size-4"
+                      onClick={() => removeCountry(code)}
+                      aria-label={`Remove ${countryLabel(code)}`}
+                    >
+                      <X className="size-3" />
+                    </Button>
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">No countries selected.</p>
+            )}
           </div>
           {existing && (
             <div className="flex items-center justify-between">

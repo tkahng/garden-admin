@@ -33,6 +33,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Card, CardContent } from "@/components/ui/card"
+import { CountrySelect } from "@/components/CountrySelect"
 import { ArrowLeft, ChevronDown, ChevronRight, Plus, Pencil, Trash2, ShieldCheck, UserCheck, X } from "lucide-react"
 import { toast } from "sonner"
 
@@ -1211,7 +1212,10 @@ function AddressDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Country</Label>
-            <Input value={form.country ?? "US"} onChange={(e) => setForm((f) => ({ ...f, country: e.target.value.toUpperCase() }))} maxLength={2} />
+            <CountrySelect
+              value={form.country ?? "US"}
+              onValueChange={(country) => setForm((f) => ({ ...f, country }))}
+            />
           </div>
         </div>
         <DialogFooter>
