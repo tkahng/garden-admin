@@ -71,7 +71,8 @@ const shippingAddressFormSchema = z.object({
   country: z.string().trim().length(2, "Country must be a 2-letter code").transform((value) => value.toUpperCase()),
 })
 
-type ShippingAddressForm = z.infer<typeof shippingAddressFormSchema>
+type ShippingAddressFormInput = z.input<typeof shippingAddressFormSchema>
+type ShippingAddressForm = z.output<typeof shippingAddressFormSchema>
 
 const storedShippingAddressSchema = z.object({
   firstName: z.string().nullable().optional(),
@@ -85,7 +86,7 @@ const storedShippingAddressSchema = z.object({
   country: z.string().nullable().optional(),
 }).passthrough()
 
-const EMPTY_SHIPPING_ADDRESS: ShippingAddressForm = {
+const EMPTY_SHIPPING_ADDRESS: ShippingAddressFormInput = {
   firstName: "",
   lastName: "",
   company: "",
@@ -146,7 +147,7 @@ function paymentStatusLabel(status: string) {
   }
 }
 
-function parseShippingAddress(value?: string | null): ShippingAddressForm {
+function parseShippingAddress(value?: string | null): ShippingAddressFormInput {
   if (!value?.trim()) return { ...EMPTY_SHIPPING_ADDRESS }
 
   try {
@@ -189,7 +190,7 @@ function shippingAddressLines(value?: string | null) {
     address.address2,
     [address.city, address.province, address.zip].filter(Boolean).join(", "),
     address.country,
-  ].filter((line) => line.trim().length > 0)
+  ].filter((line): line is string => typeof line === "string" && line.trim().length > 0)
 }
 
 function serializeShippingAddress(address: ShippingAddressForm) {
@@ -278,7 +279,7 @@ export function OrderDetailPage({ id }: { id: string }) {
   const [cancelOpen, setCancelOpen] = useState(false)
   const [refundOpen, setRefundOpen] = useState(false)
   const [noteText, setNoteText] = useState("")
-  const shippingAddressForm = useForm<ShippingAddressForm>({
+  const shippingAddressForm = useForm<ShippingAddressFormInput, unknown, ShippingAddressForm>({
     resolver: zodResolver(shippingAddressFormSchema),
     defaultValues: EMPTY_SHIPPING_ADDRESS,
   })

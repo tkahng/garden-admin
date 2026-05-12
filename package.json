@@ -8,10 +8,10 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "preview": "vite preview",
     "generate:schema": "openapi-typescript http://localhost:8080/v3/api-docs -o ./src/schema.d.ts",
-    "test": "tsc --noEmit && vitest",
+    "test": "npm run typecheck && vitest",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
