@@ -1,10 +1,11 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
-import { apiClient, setAuthToken, setUnauthorizedHandler } from "@/api/client"
+import { apiClient, clearAuthTokens, getRefreshToken, setAuthTokens, setUnauthorizedHandler } from "@/api/client"
 
 const USER_KEY = "garden_user"
 
 let navigationHandler: ((path: string) => void) | null = null
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function setNavigationHandler(handler: ((path: string) => void) | null) {
   navigationHandler = handler
 }
@@ -34,8 +35,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null
     }
   })
-  const [refreshToken, setRefreshToken] = useState<string>("")
-
   useEffect(() => {
     if (user) {
       localStorage.setItem(USER_KEY, JSON.stringify(user))
@@ -47,7 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setUnauthorizedHandler(() => {
       setUser(null)
-      setRefreshToken("")
       const redirectTo = window.location.pathname + window.location.search
       navigationHandler?.(redirectTo)
     })
@@ -61,8 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error("Login failed")
     if (data) {
       const d = data as { id?: unknown; email?: string; firstName?: string; lastName?: string; data?: { refreshToken?: string; accessToken?: string } }
-      setAuthToken(d.data?.accessToken ?? "")
-      setRefreshToken(d.data?.refreshToken ?? "")
+      setAuthTokens(d.data?.accessToken ?? "", d.data?.refreshToken ?? "")
       setUser({
         id: String(d.id ?? ""),
         email: d.email ?? email,
@@ -73,11 +70,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(async () => {
-    await apiClient.POST("/api/v1/auth/logout", { body: { refreshToken } })
-    setAuthToken("")
+    const token = getRefreshToken()
+    await apiClient.POST("/api/v1/auth/logout", { body: { refreshToken: token } })
+    clearAuthTokens()
     setUser(null)
-    setRefreshToken("")
-  }, [refreshToken])
+  }, [])
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
