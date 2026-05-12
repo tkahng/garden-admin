@@ -156,6 +156,13 @@ function nextFulfillmentActions(status?: Fulfillment["status"]) {
   }
 }
 
+function canCreateFulfillment(status?: Order["status"]) {
+  return status !== "DRAFT"
+    && status !== "PENDING_PAYMENT"
+    && status !== "CANCELLED"
+    && status !== "REFUNDED"
+}
+
 export function OrderDetailPage({ id }: { id: string }) {
   const qc = useQueryClient()
 
@@ -454,7 +461,7 @@ export function OrderDetailPage({ id }: { id: string }) {
   const isDraft = o.status === "DRAFT"
   const canCancel = o.status !== "CANCELLED" && o.status !== "REFUNDED"
   const canRefund = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED" || o.status === "FULFILLED"
-  const canFulfill = (o.status === "PAID" || o.status === "PARTIALLY_FULFILLED") && fulfillmentProgress.totalRemaining > 0
+  const canFulfill = canCreateFulfillment(o.status) && fulfillmentProgress.totalRemaining > 0
   const canInvoice = o.status !== "CANCELLED" && o.status !== "REFUNDED" && !isDraft
 
   // Initialise editable draft items once the order loads
