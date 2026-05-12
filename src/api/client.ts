@@ -7,7 +7,14 @@ export const apiClient = createClient<paths>({
   fetch: (...args) => globalThis.fetch(...args),
 })
 
+const publicApiClient = createClient<paths>({
+  baseUrl: import.meta.env.VITE_API_URL ?? "http://localhost:8080",
+  credentials: "include",
+  fetch: (...args) => globalThis.fetch(...args),
+})
+
 const TOKEN_KEY = "garden_access_token"
+const REFRESH_TOKEN_KEY = "garden_refresh_token"
 
 export function setAuthToken(token: string) {
   if (token) {
@@ -17,14 +24,52 @@ export function setAuthToken(token: string) {
   }
 }
 
+export function setAuthTokens(accessToken: string, refreshToken: string) {
+  setAuthToken(accessToken)
+  if (refreshToken) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
+  } else {
+    localStorage.removeItem(REFRESH_TOKEN_KEY)
+  }
+}
+
 export function getAuthToken(): string {
   return localStorage.getItem(TOKEN_KEY) ?? ""
 }
 
+export function getRefreshToken(): string {
+  return localStorage.getItem(REFRESH_TOKEN_KEY) ?? ""
+}
+
+export function clearAuthTokens() {
+  localStorage.removeItem(TOKEN_KEY)
+  localStorage.removeItem(REFRESH_TOKEN_KEY)
+}
+
 let unauthorizedHandler: (() => void) | null = null
+let refreshPromise: Promise<string> | null = null
 
 export function setUnauthorizedHandler(handler: (() => void) | null) {
   unauthorizedHandler = handler
+}
+
+async function refreshAccessToken(refreshToken: string) {
+  if (!refreshPromise) {
+    refreshPromise = publicApiClient
+      .POST("/api/v1/auth/refresh", { body: { refreshToken } })
+      .then(({ data, error }) => {
+        if (error) throw error
+        const accessToken = data?.data?.accessToken
+        const nextRefreshToken = data?.data?.refreshToken
+        if (!accessToken || !nextRefreshToken) throw new Error("Invalid refresh response")
+        setAuthTokens(accessToken, nextRefreshToken)
+        return accessToken
+      })
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+  return refreshPromise
 }
 
 apiClient.use({
@@ -35,11 +80,25 @@ apiClient.use({
     }
     return request
   },
-  async onResponse({ response }) {
-    if (response.status === 401) {
-      setAuthToken("")
+  async onResponse({ request, response }) {
+    if (response.status !== 401) return response
+
+    const refreshToken = getRefreshToken()
+    if (!refreshToken || request.url.includes("/api/v1/auth/refresh")) {
+      clearAuthTokens()
       unauthorizedHandler?.()
+      return response
     }
-    return response
+
+    try {
+      const accessToken = await refreshAccessToken(refreshToken)
+      const retryRequest = request.clone()
+      retryRequest.headers.set("Authorization", `Bearer ${accessToken}`)
+      return fetch(retryRequest)
+    } catch {
+      clearAuthTokens()
+      unauthorizedHandler?.()
+      return response
+    }
   },
 })

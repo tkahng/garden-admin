@@ -38,6 +38,7 @@ describe("AuthProvider", () => {
     expect(result.current.isAuthenticated).toBe(true)
     expect(result.current.user?.email).toBe("a@b.com")
     expect(localStorage.getItem("garden_access_token")).toBe("test-access-token")
+    expect(localStorage.getItem("garden_refresh_token")).toBe("test-refresh-token")
   })
 
   it("failed login throws", async () => {
@@ -65,5 +66,6 @@ describe("AuthProvider", () => {
     expect(result.current.isAuthenticated).toBe(false)
     expect(result.current.user).toBeNull()
     expect(localStorage.getItem("garden_access_token")).toBeNull()
+    expect(localStorage.getItem("garden_refresh_token")).toBeNull()
   })
 })
