@@ -22,7 +22,17 @@ export const mockOrder = {
       product: { productTitle: "Garden Cushion", variantTitle: null, imageUrl: null },
     },
   ],
-  shippingAddress: "John Doe\n123 Main St\nSpringfield, IL 62701\nUS",
+  shippingAddress: JSON.stringify({
+    firstName: "John",
+    lastName: "Doe",
+    company: null,
+    address1: "123 Main St",
+    address2: "Suite 4",
+    city: "Springfield",
+    province: "IL",
+    zip: "62701",
+    country: "US",
+  }),
 }
 
 export const mockPendingFulfillment = {

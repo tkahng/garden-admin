@@ -123,7 +123,45 @@ describe("OrderDetailPage", () => {
       expect(screen.getByText(/John Doe/)).toBeInTheDocument()
     })
     expect(screen.getByText(/123 Main St/)).toBeInTheDocument()
-    expect(screen.getByText(/Springfield/)).toBeInTheDocument()
+    expect(screen.getByText(/Suite 4/)).toBeInTheDocument()
+    expect(screen.getByText(/Springfield, IL, 62701/)).toBeInTheDocument()
+    expect(screen.queryByText(/firstName/)).not.toBeInTheDocument()
+  })
+
+  it("edits shipping address with address fields and posts structured address", async () => {
+    let postedBody: { adminNotes?: string; shippingAddress?: string } | undefined
+    server.use(
+      http.put("http://localhost:8080/api/v1/admin/orders/:id", async ({ request }) => {
+        postedBody = await request.json() as typeof postedBody
+        return HttpResponse.json({ data: { ...mockOrder, ...postedBody } })
+      })
+    )
+
+    const user = userEvent.setup()
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: ORDER_DISPLAY_ID })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole("button", { name: /Edit/i }))
+    const address1 = await screen.findByLabelText("Address line 1")
+    await user.clear(address1)
+    await user.type(address1, "456 Oak Ave")
+    await user.clear(screen.getByLabelText("ZIP"))
+    await user.type(screen.getByLabelText("ZIP"), "62702")
+    await user.click(screen.getByRole("button", { name: "Save" }))
+
+    await waitFor(() => {
+      expect(postedBody?.shippingAddress).toBeTruthy()
+    })
+    expect(JSON.parse(postedBody!.shippingAddress!)).toEqual(expect.objectContaining({
+      firstName: "John",
+      lastName: "Doe",
+      address1: "456 Oak Ave",
+      city: "Springfield",
+      zip: "62702",
+      country: "US",
+    }))
   })
 
   it("back button links to /orders", async () => {

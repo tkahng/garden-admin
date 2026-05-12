@@ -1,6 +1,9 @@
 import { useState } from "react"
 import { Link } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Controller, useForm } from "react-hook-form"
+import { z } from "zod"
 import { apiClient } from "@/api/client"
 import type { components } from "@/schema"
 import { Button } from "@/components/ui/button"
@@ -23,6 +26,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,6 +58,44 @@ type CreateFulfillment = components["schemas"]["CreateFulfillmentRequest"]
 type UpdateFulfillment = components["schemas"]["UpdateFulfillmentRequest"]
 type DraftItem = { variantId: string; quantity: number; unitPrice: string }
 type Invoice = components["schemas"]["InvoiceResponse"]
+
+const shippingAddressFormSchema = z.object({
+  firstName: z.string().trim().min(1, "First name is required").max(64),
+  lastName: z.string().trim().min(1, "Last name is required").max(64),
+  company: z.string().trim().max(128).optional().default(""),
+  address1: z.string().trim().min(1, "Address line 1 is required").max(255),
+  address2: z.string().trim().max(255).optional().default(""),
+  city: z.string().trim().min(1, "City is required").max(128),
+  province: z.string().trim().max(128).optional().default(""),
+  zip: z.string().trim().min(1, "ZIP is required").max(20),
+  country: z.string().trim().length(2, "Country must be a 2-letter code").transform((value) => value.toUpperCase()),
+})
+
+type ShippingAddressForm = z.infer<typeof shippingAddressFormSchema>
+
+const storedShippingAddressSchema = z.object({
+  firstName: z.string().nullable().optional(),
+  lastName: z.string().nullable().optional(),
+  company: z.string().nullable().optional(),
+  address1: z.string().nullable().optional(),
+  address2: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  province: z.string().nullable().optional(),
+  zip: z.string().nullable().optional(),
+  country: z.string().nullable().optional(),
+}).passthrough()
+
+const EMPTY_SHIPPING_ADDRESS: ShippingAddressForm = {
+  firstName: "",
+  lastName: "",
+  company: "",
+  address1: "",
+  address2: "",
+  city: "",
+  province: "",
+  zip: "",
+  country: "US",
+}
 
 const EVENT_LABELS: Record<string, string> = {
   ORDER_PLACED: "Order placed",
@@ -102,6 +144,60 @@ function paymentStatusLabel(status: string) {
     case "CANCELLED": return "Cancelled"
     default: return statusLabel(status)
   }
+}
+
+function parseShippingAddress(value?: string | null): ShippingAddressForm {
+  if (!value?.trim()) return { ...EMPTY_SHIPPING_ADDRESS }
+
+  try {
+    const parsed = storedShippingAddressSchema.safeParse(JSON.parse(value))
+    if (parsed.success) {
+      const address = parsed.data
+      return {
+        firstName: address.firstName ?? "",
+        lastName: address.lastName ?? "",
+        company: address.company ?? "",
+        address1: address.address1 ?? "",
+        address2: address.address2 ?? "",
+        city: address.city ?? "",
+        province: address.province ?? "",
+        zip: address.zip ?? "",
+        country: address.country ?? "US",
+      }
+    }
+  } catch {
+    // Legacy orders may have a plain multi-line address string.
+  }
+
+  const lines = value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+  return {
+    ...EMPTY_SHIPPING_ADDRESS,
+    firstName: lines[0]?.split(" ").slice(0, -1).join(" ") ?? "",
+    lastName: lines[0]?.split(" ").slice(-1).join(" ") ?? "",
+    address1: lines[1] ?? value,
+    city: lines[2] ?? "",
+    country: lines[3] ?? "US",
+  }
+}
+
+function shippingAddressLines(value?: string | null) {
+  const address = parseShippingAddress(value)
+  return [
+    [address.firstName, address.lastName].filter(Boolean).join(" "),
+    address.company,
+    address.address1,
+    address.address2,
+    [address.city, address.province, address.zip].filter(Boolean).join(", "),
+    address.country,
+  ].filter((line) => line.trim().length > 0)
+}
+
+function serializeShippingAddress(address: ShippingAddressForm) {
+  const parsed = shippingAddressFormSchema.parse(address)
+  const clean = Object.fromEntries(
+    Object.entries(parsed).map(([key, value]) => [key, value.trim() || null])
+  )
+  return JSON.stringify(clean)
 }
 
 function deriveFulfillmentProgress(items: OrderItem[], fulfillments: Fulfillment[]) {
@@ -182,6 +278,10 @@ export function OrderDetailPage({ id }: { id: string }) {
   const [cancelOpen, setCancelOpen] = useState(false)
   const [refundOpen, setRefundOpen] = useState(false)
   const [noteText, setNoteText] = useState("")
+  const shippingAddressForm = useForm<ShippingAddressForm>({
+    resolver: zodResolver(shippingAddressFormSchema),
+    defaultValues: EMPTY_SHIPPING_ADDRESS,
+  })
 
   // Create invoice
   const [invoiceOpen, setInvoiceOpen] = useState(false)
@@ -310,6 +410,20 @@ export function OrderDetailPage({ id }: { id: string }) {
     },
     onError: () => toast.error("Failed to update order"),
   })
+
+  function openEditOrderDetails() {
+    if (!order) return
+    setAdminNotesForm(order.adminNotes ?? "")
+    shippingAddressForm.reset(parseShippingAddress(order.shippingAddress))
+    setEditNotes(true)
+  }
+
+  function handleSaveOrderDetails(address: ShippingAddressForm) {
+    updateOrderMutation.mutate({
+      adminNotes: adminNotesForm,
+      shippingAddress: serializeShippingAddress(address),
+    })
+  }
 
   const fulfillMutation = useMutation({
     mutationFn: async (body: CreateFulfillment) => {
@@ -458,6 +572,7 @@ export function OrderDetailPage({ id }: { id: string }) {
   const fulfillmentProgress = deriveFulfillmentProgress(items, fulfillments)
   const fulfillableRows = fulfillmentProgress.rows.filter((row) => row.item.id && row.remaining > 0)
   const shipmentStatus = deriveShipmentStatus(fulfillments)
+  const shippingAddress = shippingAddressLines(o.shippingAddress)
   const isDraft = o.status === "DRAFT"
   const canCancel = o.status !== "CANCELLED" && o.status !== "REFUNDED"
   const canRefund = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED" || o.status === "FULFILLED"
@@ -883,10 +998,7 @@ export function OrderDetailPage({ id }: { id: string }) {
               <CardTitle className="text-base">Shipping</CardTitle>
               <Button
                 variant="ghost" size="sm"
-                onClick={() => {
-                  setAdminNotesForm(o.adminNotes ?? "")
-                  setEditNotes(true)
-                }}
+                onClick={openEditOrderDetails}
               >
                 <Pencil className="size-3.5 mr-1" />Edit
               </Button>
@@ -894,7 +1006,15 @@ export function OrderDetailPage({ id }: { id: string }) {
             <CardContent className="text-sm space-y-2">
               <div>
                 <p className="text-muted-foreground text-xs mb-0.5">Address</p>
-                <p className="whitespace-pre-line">{o.shippingAddress || "—"}</p>
+                {shippingAddress.length > 0 ? (
+                  <div className="space-y-0.5">
+                    {shippingAddress.map((line, index) => (
+                      <p key={`${line}-${index}`}>{line}</p>
+                    ))}
+                  </div>
+                ) : (
+                  <p>—</p>
+                )}
               </div>
               {o.adminNotes && (
                 <div>
@@ -1133,43 +1253,140 @@ export function OrderDetailPage({ id }: { id: string }) {
 
       {/* Edit admin notes + shipping */}
       <Dialog open={editNotes} onOpenChange={setEditNotes}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Edit order details</DialogTitle></DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>Shipping address</Label>
-              <Textarea
-                rows={3}
-                value={(order as Order).shippingAddress ?? ""}
-                onChange={() => {
-                  /* controlled via mutation only */
-                }}
-                placeholder="Shipping address..."
-                className="resize-none"
-                defaultValue={(order as Order).shippingAddress ?? ""}
-                key="shipping"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Admin notes</Label>
-              <Textarea
-                rows={3}
-                value={adminNotesForm}
-                onChange={(e) => setAdminNotesForm(e.target.value)}
-                placeholder="Internal notes..."
-                className="resize-none"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditNotes(false)}>Cancel</Button>
-            <Button
-              onClick={() => updateOrderMutation.mutate({ adminNotes: adminNotesForm })}
-              disabled={updateOrderMutation.isPending}
-            >
-              Save
-            </Button>
-          </DialogFooter>
+          <form onSubmit={shippingAddressForm.handleSubmit(handleSaveOrderDetails)}>
+              <div className="space-y-4 py-2">
+                <div className="space-y-3">
+                  <Label>Shipping address</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Controller
+                      control={shippingAddressForm.control}
+                      name="firstName"
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name} className="text-xs text-muted-foreground">First name</FieldLabel>
+                          <Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      control={shippingAddressForm.control}
+                      name="lastName"
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name} className="text-xs text-muted-foreground">Last name</FieldLabel>
+                          <Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                  </div>
+                  <Controller
+                    control={shippingAddressForm.control}
+                    name="company"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name} className="text-xs text-muted-foreground">Company</FieldLabel>
+                        <Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={shippingAddressForm.control}
+                    name="address1"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name} className="text-xs text-muted-foreground">Address line 1</FieldLabel>
+                        <Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    control={shippingAddressForm.control}
+                    name="address2"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name} className="text-xs text-muted-foreground">Address line 2</FieldLabel>
+                        <Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                  <div className="grid grid-cols-3 gap-3">
+                    <Controller
+                      control={shippingAddressForm.control}
+                      name="city"
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name} className="text-xs text-muted-foreground">City</FieldLabel>
+                          <Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      control={shippingAddressForm.control}
+                      name="province"
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name} className="text-xs text-muted-foreground">State</FieldLabel>
+                          <Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      control={shippingAddressForm.control}
+                      name="zip"
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor={field.name} className="text-xs text-muted-foreground">ZIP</FieldLabel>
+                          <Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+                          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        </Field>
+                      )}
+                    />
+                  </div>
+                  <Controller
+                    control={shippingAddressForm.control}
+                    name="country"
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor={field.name} className="text-xs text-muted-foreground">Country</FieldLabel>
+                        <Input
+                          {...field}
+                          id={field.name}
+                          aria-invalid={fieldState.invalid}
+                          maxLength={2}
+                          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                        />
+                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      </Field>
+                    )}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Admin notes</Label>
+                  <Textarea
+                    rows={3}
+                    value={adminNotesForm}
+                    onChange={(e) => setAdminNotesForm(e.target.value)}
+                    placeholder="Internal notes..."
+                    className="resize-none"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditNotes(false)}>Cancel</Button>
+                <Button type="submit" disabled={updateOrderMutation.isPending}>
+                  Save
+                </Button>
+              </DialogFooter>
+            </form>
         </DialogContent>
       </Dialog>
 
