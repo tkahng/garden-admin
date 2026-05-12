@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { CountrySelect } from "@/components/CountrySelect"
 import {
   Select,
   SelectContent,
@@ -68,7 +69,7 @@ const shippingAddressFormSchema = z.object({
   city: z.string().trim().min(1, "City is required").max(128),
   province: z.string().trim().max(128).optional().default(""),
   zip: z.string().trim().min(1, "ZIP is required").max(20),
-  country: z.string().trim().length(2, "Country must be a 2-letter code").transform((value) => value.toUpperCase()),
+  country: z.string().trim().regex(/^[A-Z]{2}$/, "Country is required"),
 })
 
 type ShippingAddressFormInput = z.input<typeof shippingAddressFormSchema>
@@ -1358,12 +1359,11 @@ export function OrderDetailPage({ id }: { id: string }) {
                     render={({ field, fieldState }) => (
                       <Field data-invalid={fieldState.invalid}>
                         <FieldLabel htmlFor={field.name} className="text-xs text-muted-foreground">Country</FieldLabel>
-                        <Input
-                          {...field}
+                        <CountrySelect
                           id={field.name}
+                          value={field.value}
+                          onValueChange={field.onChange}
                           aria-invalid={fieldState.invalid}
-                          maxLength={2}
-                          onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                         />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                       </Field>
