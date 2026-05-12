@@ -171,6 +171,20 @@ describe("OrderDetailPage", () => {
     expect(screen.queryByRole("button", { name: "Fulfill items" })).not.toBeInTheDocument()
   })
 
+  it("INVOICED order with remaining items shows fulfillment controls", async () => {
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders/:id", () =>
+        HttpResponse.json({ data: { ...mockOrder, status: "INVOICED" } })
+      )
+    )
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: ORDER_DISPLAY_ID })).toBeInTheDocument()
+    })
+    expect(screen.getByRole("button", { name: "Fulfill items" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Add fulfillment/i })).toBeInTheDocument()
+  })
+
   it("cancel button opens confirmation dialog then calls cancel endpoint", async () => {
     let cancelCalled = false
     server.use(
