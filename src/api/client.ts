@@ -7,6 +7,12 @@ export const apiClient = createClient<paths>({
   fetch: (...args) => globalThis.fetch(...args),
 })
 
+const publicApiClient = createClient<paths>({
+  baseUrl: import.meta.env.VITE_API_URL ?? "http://localhost:8080",
+  credentials: "include",
+  fetch: (...args) => globalThis.fetch(...args),
+})
+
 const TOKEN_KEY = "garden_access_token"
 const REFRESH_TOKEN_KEY = "garden_refresh_token"
 
@@ -49,16 +55,12 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
 
 async function refreshAccessToken(refreshToken: string) {
   if (!refreshPromise) {
-    refreshPromise = fetch(`${import.meta.env.VITE_API_URL ?? "http://localhost:8080"}/api/v1/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Refresh failed")
-        const json = await response.json() as { data?: { accessToken?: string; refreshToken?: string } }
-        const accessToken = json.data?.accessToken
-        const nextRefreshToken = json.data?.refreshToken
+    refreshPromise = publicApiClient
+      .POST("/api/v1/auth/refresh", { body: { refreshToken } })
+      .then(({ data, error }) => {
+        if (error) throw error
+        const accessToken = data?.data?.accessToken
+        const nextRefreshToken = data?.data?.refreshToken
         if (!accessToken || !nextRefreshToken) throw new Error("Invalid refresh response")
         setAuthTokens(accessToken, nextRefreshToken)
         return accessToken
