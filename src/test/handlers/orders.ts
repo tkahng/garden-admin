@@ -1,5 +1,33 @@
 import { http, HttpResponse } from "msw"
 
+export const mockPendingOrder = {
+  id: "abc12345-6789-0000-0000-000000000002",
+  status: "PENDING_PAYMENT",
+  stripeSessionId: "cs_test_pending_123",
+  createdAt: "2026-04-01T10:00:00.000Z",
+  userId: "user-9876",
+  currency: "$",
+  totalAmount: 109.98,
+  notes: null,
+  items: [
+    {
+      id: "item-1",
+      quantity: 2,
+      unitPrice: 49.99,
+      product: { productTitle: "Classic Garden Chair", variantTitle: "Default", imageUrl: null },
+    },
+  ],
+  shippingAddress: JSON.stringify({
+    firstName: "John",
+    lastName: "Doe",
+    address1: "123 Main St",
+    city: "Springfield",
+    province: "IL",
+    zip: "62701",
+    country: "US",
+  }),
+}
+
 export const mockOrder = {
   id: "abc12345-6789-0000-0000-000000000001",
   status: "PAID",
@@ -105,5 +133,9 @@ export const orderHandlers = [
 
   http.post("http://localhost:8080/api/v1/admin/orders/:orderId/events", () => {
     return HttpResponse.json({ data: { id: "event-1" } })
+  }),
+
+  http.post("http://localhost:8080/api/v1/admin/orders/:id/sync-payment", () => {
+    return HttpResponse.json({ data: { ...mockOrder, status: "PAID" } })
   }),
 ]
