@@ -53,15 +53,32 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
   unauthorizedHandler = handler
 }
 
-async function refreshAccessToken(refreshToken: string) {
+class AuthRefreshError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "AuthRefreshError"
+  }
+}
+
+async function refreshAccessToken(usedRefreshToken: string): Promise<string> {
   if (!refreshPromise) {
     refreshPromise = publicApiClient
-      .POST("/api/v1/auth/refresh", { body: { refreshToken } })
+      .POST("/api/v1/auth/refresh", { body: { refreshToken: usedRefreshToken } })
       .then(({ data, error }) => {
-        if (error) throw error
+        if (error) {
+          // Another tab may have already rotated the token while this request was in
+          // flight. If localStorage now holds a different refresh token, reuse its
+          // paired access token instead of forcing a logout.
+          const currentRefresh = getRefreshToken()
+          if (currentRefresh && currentRefresh !== usedRefreshToken) {
+            const currentAccess = getAuthToken()
+            if (currentAccess) return currentAccess
+          }
+          throw new AuthRefreshError("Refresh token rejected by server")
+        }
         const accessToken = data?.data?.accessToken
         const nextRefreshToken = data?.data?.refreshToken
-        if (!accessToken || !nextRefreshToken) throw new Error("Invalid refresh response")
+        if (!accessToken || !nextRefreshToken) throw new AuthRefreshError("Invalid refresh response")
         setAuthTokens(accessToken, nextRefreshToken)
         return accessToken
       })
@@ -95,9 +112,13 @@ apiClient.use({
       const retryRequest = request.clone()
       retryRequest.headers.set("Authorization", `Bearer ${accessToken}`)
       return fetch(retryRequest)
-    } catch {
-      clearAuthTokens()
-      unauthorizedHandler?.()
+    } catch (err) {
+      // Only revoke the session for definitive auth failures. Transient network
+      // errors (TypeError) should not log the user out — they can retry later.
+      if (err instanceof AuthRefreshError) {
+        clearAuthTokens()
+        unauthorizedHandler?.()
+      }
       return response
     }
   },
