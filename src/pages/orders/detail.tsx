@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
-import { apiClient } from "@/api/client"
+import { apiClient, getAuthToken } from "@/api/client"
 import type { components } from "@/schema"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -47,7 +47,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ArrowLeft, Ban, ImageIcon, Pencil, RefreshCcw, Plus, Package, FileText, CheckCheck, Trash2, ExternalLink } from "lucide-react"
+import { ArrowLeft, Ban, ImageIcon, Pencil, RefreshCcw, RefreshCw, Plus, Package, FileText, CheckCheck, Trash2, ExternalLink } from "lucide-react"
 import { toast } from "sonner"
 
 
@@ -279,6 +279,7 @@ export function OrderDetailPage({ id }: { id: string }) {
   const [adminNotesForm, setAdminNotesForm] = useState("")
   const [cancelOpen, setCancelOpen] = useState(false)
   const [refundOpen, setRefundOpen] = useState(false)
+  const [syncPaymentOpen, setSyncPaymentOpen] = useState(false)
   const [noteText, setNoteText] = useState("")
   const shippingAddressForm = useForm<ShippingAddressFormInput, unknown, ShippingAddressForm>({
     resolver: zodResolver(shippingAddressFormSchema),
@@ -395,6 +396,26 @@ export function OrderDetailPage({ id }: { id: string }) {
       setRefundOpen(false)
     },
     onError: () => toast.error("Failed to issue refund"),
+  })
+
+  const syncPaymentMutation = useMutation({
+    mutationFn: async () => {
+      const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
+      const token = getAuthToken()
+      const res = await fetch(`${baseUrl}/api/v1/admin/orders/${id}/sync-payment`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: "include",
+      })
+      if (!res.ok) throw await res.json()
+    },
+    onSuccess: () => {
+      toast.success("Payment status synced")
+      invalidate()
+      void qc.invalidateQueries({ queryKey: ["admin", "orders", id, "events"] })
+      setSyncPaymentOpen(false)
+    },
+    onError: () => toast.error("Failed to sync payment status"),
   })
 
   const updateOrderMutation = useMutation({
@@ -580,6 +601,7 @@ export function OrderDetailPage({ id }: { id: string }) {
   const canRefund = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED" || o.status === "FULFILLED"
   const canFulfill = canCreateFulfillment(o.status) && fulfillmentProgress.totalRemaining > 0
   const canInvoice = o.status !== "CANCELLED" && o.status !== "REFUNDED" && !isDraft
+  const canSyncPayment = o.status === "PENDING_PAYMENT" && !!o.stripeSessionId
 
   // Initialise editable draft items once the order loads
   if (isDraft && !draftItemsInit) {
@@ -645,6 +667,12 @@ export function OrderDetailPage({ id }: { id: string }) {
             <Button variant="outline" size="sm" onClick={() => setInvoiceOpen(true)}>
               <FileText className="size-4 mr-2" />
               Create invoice
+            </Button>
+          )}
+          {canSyncPayment && (
+            <Button variant="outline" size="sm" onClick={() => setSyncPaymentOpen(true)} disabled={syncPaymentMutation.isPending}>
+              <RefreshCw className="size-4 mr-2" />
+              Sync payment
             </Button>
           )}
           {canRefund && (
@@ -1425,6 +1453,24 @@ export function OrderDetailPage({ id }: { id: string }) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={() => refundMutation.mutate()}>
               Issue refund
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Sync payment confirm */}
+      <AlertDialog open={syncPaymentOpen} onOpenChange={setSyncPaymentOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sync payment status?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will query Stripe for the current session status and update the order accordingly. The order may be marked as paid or cancelled.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => syncPaymentMutation.mutate()}>
+              Sync payment
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

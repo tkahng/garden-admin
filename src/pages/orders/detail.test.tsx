@@ -16,6 +16,7 @@ import {
   mockDeliveredFulfillment,
   mockOrder,
   mockPendingFulfillment,
+  mockPendingOrder,
   mockShippedFulfillment,
 } from "@/test/handlers/orders"
 import { OrderDetailPage } from "./detail"
@@ -372,6 +373,67 @@ describe("OrderDetailPage", () => {
     expect(screen.queryByRole("button", { name: "Mark shipped" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Mark delivered" })).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Cancel fulfillment" })).not.toBeInTheDocument()
+  })
+
+  it("PENDING_PAYMENT order with stripeSessionId shows Sync payment button", async () => {
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders/:id", () =>
+        HttpResponse.json({ data: mockPendingOrder })
+      )
+    )
+    renderDetail(mockPendingOrder.id)
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Sync payment/i })).toBeInTheDocument()
+    })
+  })
+
+  it("PENDING_PAYMENT order without stripeSessionId does not show Sync payment button", async () => {
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders/:id", () =>
+        HttpResponse.json({ data: { ...mockPendingOrder, stripeSessionId: null } })
+      )
+    )
+    renderDetail(mockPendingOrder.id)
+    await waitFor(() => {
+      expect(screen.getByRole("heading")).toBeInTheDocument()
+    })
+    expect(screen.queryByRole("button", { name: /Sync payment/i })).not.toBeInTheDocument()
+  })
+
+  it("PAID order does not show Sync payment button", async () => {
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: ORDER_DISPLAY_ID })).toBeInTheDocument()
+    })
+    expect(screen.queryByRole("button", { name: /Sync payment/i })).not.toBeInTheDocument()
+  })
+
+  it("Sync payment button opens confirmation dialog then calls sync endpoint", async () => {
+    let syncCalled = false
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders/:id", () =>
+        HttpResponse.json({ data: mockPendingOrder })
+      ),
+      http.post("http://localhost:8080/api/v1/admin/orders/:id/sync-payment", () => {
+        syncCalled = true
+        return HttpResponse.json({ data: { ...mockPendingOrder, status: "PAID" } })
+      })
+    )
+
+    const user = userEvent.setup()
+    renderDetail(mockPendingOrder.id)
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /Sync payment/i })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole("button", { name: /Sync payment/i }))
+    expect(await screen.findByText("Sync payment status?")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Sync payment" }))
+
+    await waitFor(() => {
+      expect(syncCalled).toBe(true)
+    })
   })
 
   it("successful shipment mutation reloads visible fulfillment state", async () => {
