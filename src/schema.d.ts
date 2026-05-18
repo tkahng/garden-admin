@@ -1604,6 +1604,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/orders/{id}/sync-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["syncPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/orders/{id}/refund": {
         parameters: {
             query?: never;
@@ -3220,6 +3236,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/quotes/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["downloadPdf_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/products/{id}/inventory": {
         parameters: {
             query?: never;
@@ -3323,7 +3355,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["downloadPdf_1"];
+        get: operations["downloadPdf_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3701,6 +3733,13 @@ export interface components {
             data?: components["schemas"]["QuoteCartResponse"];
             meta?: unknown;
         };
+        CartItemProductInfo: {
+            /** Format: uuid */
+            productId?: string;
+            productTitle?: string;
+            variantTitle?: string;
+            imageUrl?: string;
+        };
         QuoteCartItemResponse: {
             /** Format: uuid */
             id?: string;
@@ -3709,6 +3748,8 @@ export interface components {
             /** Format: int32 */
             quantity?: number;
             note?: string;
+            product?: components["schemas"]["CartItemProductInfo"];
+            estimatedUnitPrice?: number;
             /** Format: date-time */
             createdAt?: string;
         };
@@ -3728,13 +3769,6 @@ export interface components {
         ApiResponseCartResponse: {
             data?: components["schemas"]["CartResponse"];
             meta?: unknown;
-        };
-        CartItemProductInfo: {
-            /** Format: uuid */
-            productId?: string;
-            productTitle?: string;
-            variantTitle?: string;
-            imageUrl?: string;
         };
         CartItemResponse: {
             /** Format: uuid */
@@ -4017,6 +4051,7 @@ export interface components {
             userId?: string;
             /** Format: uuid */
             companyId?: string;
+            companyName?: string;
             /** Format: uuid */
             assignedStaffId?: string;
             /** @enum {string} */
@@ -9701,6 +9736,28 @@ export interface operations {
             };
         };
     };
+    syncPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseOrderResponse"];
+                };
+            };
+        };
+    };
     refundOrder_1: {
         parameters: {
             query?: never;
@@ -12765,6 +12822,28 @@ export interface operations {
             };
         };
     };
+    downloadPdf_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
     getInventory: {
         parameters: {
             query?: never;
@@ -12931,7 +13010,7 @@ export interface operations {
             };
         };
     };
-    downloadPdf_1: {
+    downloadPdf_2: {
         parameters: {
             query?: never;
             header?: never;
