@@ -631,7 +631,7 @@ export function QuoteDetailPage({ id }: { id: string }) {
                 quote.userId && ["Customer", <span key="u" className="font-mono text-xs">{quote.userId.slice(0, 8)}…</span>],
                 quote.companyId && ["Company", (
                   <Link key="c" to="/companies/$companyId" params={{ companyId: quote.companyId }} className="font-mono text-xs hover:underline">
-                    {quote.companyId.slice(0, 8)}…
+                    {(quote as { companyName?: string }).companyName ?? quote.companyId.slice(0, 8) + "…"}
                   </Link>
                 )],
                 quote.assignedStaffId && ["Assigned to", <span key="a" className="font-mono text-xs">{quote.assignedStaffId.slice(0, 8)}…</span>],

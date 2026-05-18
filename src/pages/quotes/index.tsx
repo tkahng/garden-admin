@@ -1,5 +1,6 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -33,15 +34,23 @@ const STATUS_TABS: { label: string; value: QuoteStatus | undefined }[] = [
 const PAGE_SIZE = 20
 
 export function QuotesPage() {
-  const { page: rawPage, status } = useSearch({ from: "/_authenticated/quotes/" })
+  const { page: rawPage, status, companyId, assignedStaffId } = useSearch({ from: "/_authenticated/quotes/" })
   const page = rawPage ?? 0
   const navigate = useNavigate()
 
   const { data, isLoading } = useQuery({
-    queryKey: ["admin", "quotes", page, status],
+    queryKey: ["admin", "quotes", page, status, companyId, assignedStaffId],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/quotes", {
-        params: { query: { page, size: PAGE_SIZE, status: status as QuoteStatus } },
+        params: {
+          query: {
+            page,
+            size: PAGE_SIZE,
+            status: status as QuoteStatus,
+            companyId,
+            assignedStaffId,
+          },
+        },
       })
       if (error) throw error
       return data
@@ -53,11 +62,24 @@ export function QuotesPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE) || 1
 
   function setPage(newPage: number) {
-    void navigate({ to: "/quotes", search: { page: newPage, status }, replace: true })
+    void navigate({ to: "/quotes", search: { page: newPage, status, companyId, assignedStaffId }, replace: true })
   }
 
   function setStatus(newStatus: QuoteStatus | undefined) {
-    void navigate({ to: "/quotes", search: { page: 0, status: newStatus }, replace: true })
+    void navigate({ to: "/quotes", search: { page: 0, status: newStatus, companyId, assignedStaffId }, replace: true })
+  }
+
+  function setFilter(key: "companyId" | "assignedStaffId", value: string) {
+    void navigate({
+      to: "/quotes",
+      search: {
+        page: 0,
+        status,
+        companyId: key === "companyId" ? (value || undefined) : companyId,
+        assignedStaffId: key === "assignedStaffId" ? (value || undefined) : assignedStaffId,
+      },
+      replace: true,
+    })
   }
 
   return (
@@ -84,13 +106,33 @@ export function QuotesPage() {
         ))}
       </div>
 
+      {/* Filters */}
+      <div className="flex gap-3">
+        <Input
+          placeholder="Filter by company ID…"
+          data-testid="filter-company-id"
+          className="h-8 text-sm max-w-56"
+          defaultValue={companyId ?? ""}
+          onBlur={(e) => setFilter("companyId", e.target.value.trim())}
+          onKeyDown={(e) => { if (e.key === "Enter") setFilter("companyId", (e.target as HTMLInputElement).value.trim()) }}
+        />
+        <Input
+          placeholder="Filter by staff ID…"
+          data-testid="filter-assigned-staff-id"
+          className="h-8 text-sm max-w-56"
+          defaultValue={assignedStaffId ?? ""}
+          onBlur={(e) => setFilter("assignedStaffId", e.target.value.trim())}
+          onKeyDown={(e) => { if (e.key === "Enter") setFilter("assignedStaffId", (e.target as HTMLInputElement).value.trim()) }}
+        />
+      </div>
+
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Quote</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Customer</TableHead>
+              <TableHead>Company</TableHead>
               <TableHead>Assigned to</TableHead>
               <TableHead>Date</TableHead>
             </TableRow>
@@ -117,10 +159,10 @@ export function QuotesPage() {
                   <Badge variant="secondary">{String(q.status ?? "—")}</Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {String((q as Record<string, unknown>).customerEmail ?? q.userId ?? "—")}
+                  {String(q.companyName ?? q.companyId ?? "—")}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {String((q as Record<string, unknown>).assignedTo ?? "Unassigned")}
+                  {String(q.assignedStaffId ?? "Unassigned")}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-sm">
                   {q.createdAt ? new Date(q.createdAt as string).toLocaleDateString() : "—"}
