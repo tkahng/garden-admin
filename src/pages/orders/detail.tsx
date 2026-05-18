@@ -275,7 +275,7 @@ export function OrderDetailPage({ id }: { id: string }) {
   const [editFulfillForm, setEditFulfillForm] = useState<UpdateFulfillment>({})
 
   // Fulfillment status confirmation
-  const [confirmFulfillment, setConfirmFulfillment] = useState<{ fulfillmentId: string; status: string } | null>(null)
+  const [confirmFulfillment, setConfirmFulfillment] = useState<{ fulfillmentId: string; status: NonNullable<UpdateFulfillment["status"]> } | null>(null)
 
   // Admin notes / cancel / refund confirms
   const [editNotes, setEditNotes] = useState(false)
