@@ -17,6 +17,9 @@ import { QuoteDetailPage } from "./detail"
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
 
+const downloadPdfMock = vi.fn()
+vi.mock("@/lib/download", () => ({ downloadPdf: (...args: unknown[]) => downloadPdfMock(...args) }))
+
 const QUOTE_DISPLAY_ID = `QUO-${mockQuote.id.slice(0, 8).toUpperCase()}`
 
 function makeRouter(id = mockQuote.id) {
@@ -184,5 +187,38 @@ describe("QuoteDetailPage", () => {
       expect(screen.getByText("Quotes List")).toBeInTheDocument()
     })
     expect(router.state.location.pathname).toMatch(/^\/quotes\/?$/)
+  })
+
+  it("shows companyName in the metadata sidebar", async () => {
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: QUOTE_DISPLAY_ID })).toBeInTheDocument()
+    })
+    expect(screen.getByText("Acme Corp")).toBeInTheDocument()
+  })
+
+  it("shows Download PDF button when pdfBlobId is set", async () => {
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /download pdf/i })).toBeInTheDocument()
+    })
+  })
+
+  it("clicking Download PDF calls the admin PDF endpoint", async () => {
+    downloadPdfMock.mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /download pdf/i })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole("button", { name: /download pdf/i }))
+
+    await waitFor(() => {
+      expect(downloadPdfMock).toHaveBeenCalledWith(
+        `/api/v1/admin/quotes/${mockQuote.id}/pdf`,
+        expect.stringContaining("quote-"),
+      )
+    })
   })
 })

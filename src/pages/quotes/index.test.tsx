@@ -142,4 +142,55 @@ describe("QuotesPage", () => {
       expect(search.status).toBe("PENDING")
     })
   })
+
+  it("shows companyName in the company column", async () => {
+    renderQuotes()
+    await waitFor(() => {
+      expect(screen.getByText("Acme Corp")).toBeInTheDocument()
+    })
+  })
+
+  it("renders company and staff filter inputs", async () => {
+    renderQuotes()
+    await waitFor(() => {
+      expect(screen.getByTestId("filter-company-id")).toBeInTheDocument()
+      expect(screen.getByTestId("filter-assigned-staff-id")).toBeInTheDocument()
+    })
+  })
+
+  it("pressing Enter on company filter navigates with companyId search param", async () => {
+    const user = userEvent.setup()
+    const router = renderQuotes()
+    await waitFor(() => {
+      expect(screen.getByTestId("filter-company-id")).toBeInTheDocument()
+    })
+
+    const input = screen.getByTestId("filter-company-id")
+    await user.clear(input)
+    await user.type(input, "co-123")
+    await user.keyboard("{Enter}")
+
+    await waitFor(() => {
+      const search = router.state.location.search as { companyId?: string }
+      expect(search.companyId).toBe("co-123")
+    })
+  })
+
+  it("pressing Enter on staff filter navigates with assignedStaffId search param", async () => {
+    const user = userEvent.setup()
+    const router = renderQuotes()
+    await waitFor(() => {
+      expect(screen.getByTestId("filter-assigned-staff-id")).toBeInTheDocument()
+    })
+
+    const input = screen.getByTestId("filter-assigned-staff-id")
+    await user.clear(input)
+    await user.type(input, "staff-456")
+    await user.keyboard("{Enter}")
+
+    await waitFor(() => {
+      const search = router.state.location.search as { assignedStaffId?: string }
+      expect(search.assignedStaffId).toBe("staff-456")
+    })
+  })
 })

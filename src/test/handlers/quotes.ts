@@ -7,7 +7,9 @@ export const mockQuote = {
   createdAt: "2026-03-10T09:00:00.000Z",
   updatedAt: "2026-03-10T09:00:00.000Z",
   staffNotes: "Handle with priority",
-  companyId: null,
+  companyId: "co000001-0000-0000-0000-000000000001",
+  companyName: "Acme Corp",
+  pdfBlobId: "blob-0001-0000-0000-0000-000000000001",
   items: [
     {
       id: "qi-0001",
@@ -58,5 +60,11 @@ export const quoteHandlers = [
 
   http.delete("http://localhost:8080/api/v1/admin/quotes/:id/items/:itemId", () =>
     HttpResponse.json({ data: {} })
+  ),
+
+  http.get("http://localhost:8080/api/v1/admin/quotes/:id/pdf", () =>
+    new HttpResponse(new Uint8Array([37, 80, 68, 70]).buffer, {
+      headers: { "Content-Type": "application/pdf", "Content-Disposition": 'attachment; filename="quote.pdf"' },
+    })
   ),
 ]
