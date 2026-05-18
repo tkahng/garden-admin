@@ -436,7 +436,55 @@ describe("OrderDetailPage", () => {
     })
   })
 
-  it("successful shipment mutation reloads visible fulfillment state", async () => {
+  it("fulfillment action button opens confirmation dialog before mutating", async () => {
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments", () =>
+        HttpResponse.json({ data: [mockPendingFulfillment] })
+      )
+    )
+
+    const user = userEvent.setup()
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Mark shipped" })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole("button", { name: "Mark shipped" }))
+
+    expect(await screen.findByText("Update fulfillment status?")).toBeInTheDocument()
+    expect(screen.getByText("Mark this fulfillment as shipped?")).toBeInTheDocument()
+  })
+
+  it("cancelling fulfillment confirmation does not call mutation", async () => {
+    let mutationCalled = false
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments", () =>
+        HttpResponse.json({ data: [mockPendingFulfillment] })
+      ),
+      http.put("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments/:fulfillmentId", () => {
+        mutationCalled = true
+        return HttpResponse.json({ data: mockPendingFulfillment })
+      })
+    )
+
+    const user = userEvent.setup()
+    renderDetail()
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Mark shipped" })).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole("button", { name: "Mark shipped" }))
+    expect(await screen.findByText("Update fulfillment status?")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }))
+
+    await waitFor(() => {
+      expect(screen.queryByText("Update fulfillment status?")).not.toBeInTheDocument()
+    })
+    expect(mutationCalled).toBe(false)
+  })
+
+  it("confirming fulfillment status update calls mutation and reloads state", async () => {
     let status = "PENDING"
     server.use(
       http.get("http://localhost:8080/api/v1/admin/orders/:orderId/fulfillments", () =>
@@ -456,6 +504,9 @@ describe("OrderDetailPage", () => {
     })
 
     await user.click(screen.getByRole("button", { name: "Mark shipped" }))
+    expect(await screen.findByText("Update fulfillment status?")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Confirm" }))
 
     await waitFor(() => {
       expect(screen.getAllByText("Shipped").length).toBeGreaterThan(0)

@@ -274,6 +274,9 @@ export function OrderDetailPage({ id }: { id: string }) {
   const [editFulfillment, setEditFulfillment] = useState<Fulfillment | null>(null)
   const [editFulfillForm, setEditFulfillForm] = useState<UpdateFulfillment>({})
 
+  // Fulfillment status confirmation
+  const [confirmFulfillment, setConfirmFulfillment] = useState<{ fulfillmentId: string; status: NonNullable<UpdateFulfillment["status"]> } | null>(null)
+
   // Admin notes / cancel / refund confirms
   const [editNotes, setEditNotes] = useState(false)
   const [adminNotesForm, setAdminNotesForm] = useState("")
@@ -905,7 +908,7 @@ export function OrderDetailPage({ id }: { id: string }) {
                             key={status}
                             variant={status === "CANCELLED" ? "outline" : "default"}
                             size="sm"
-                            onClick={() => f.id && updateFulfillmentMutation.mutate({ fulfillmentId: f.id, body: { status } })}
+                            onClick={() => f.id && setConfirmFulfillment({ fulfillmentId: f.id, status })}
                             disabled={updateFulfillmentMutation.isPending}
                           >
                             {status === "SHIPPED" ? "Mark shipped" : status === "DELIVERED" ? "Mark delivered" : "Cancel fulfillment"}
@@ -1229,6 +1232,34 @@ export function OrderDetailPage({ id }: { id: string }) {
       </Dialog>
 
       {/* Update fulfillment */}
+      <AlertDialog open={!!confirmFulfillment} onOpenChange={(o) => !o && setConfirmFulfillment(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Update fulfillment status?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmFulfillment?.status === "CANCELLED"
+                ? "This will cancel the fulfillment. This cannot be undone."
+                : `Mark this fulfillment as ${confirmFulfillment?.status === "SHIPPED" ? "shipped" : "delivered"}?`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmFulfillment(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (confirmFulfillment) {
+                  updateFulfillmentMutation.mutate(
+                    { fulfillmentId: confirmFulfillment.fulfillmentId, body: { status: confirmFulfillment.status } },
+                    { onSettled: () => setConfirmFulfillment(null) }
+                  )
+                }
+              }}
+            >
+              Confirm
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={!!editFulfillment} onOpenChange={(o) => !o && setEditFulfillment(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
