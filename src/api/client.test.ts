@@ -131,7 +131,7 @@ describe("auth middleware", () => {
     expect(getRefreshToken()).toBe("new-refresh-token")
   })
 
-  it("clears auth and notifies when refresh fails", async () => {
+  it("clears auth and notifies when refresh endpoint rejects the token", async () => {
     setAuthTokens("expired-token", "refresh-token")
     let unauthorized = false
     setUnauthorizedHandler(() => {
@@ -154,5 +154,60 @@ describe("auth middleware", () => {
     expect(unauthorized).toBe(true)
     expect(getAuthToken()).toBe("")
     expect(getRefreshToken()).toBe("")
+  })
+
+  it("does not log out or clear tokens when the refresh request fails with a network error", async () => {
+    setAuthTokens("expired-token", "refresh-token")
+    let unauthorized = false
+    setUnauthorizedHandler(() => {
+      unauthorized = true
+    })
+
+    server.use(
+      http.post("http://localhost:8080/api/v1/auth/refresh", () => HttpResponse.error()),
+      http.get("http://localhost:8080/api/v1/admin/stats", () =>
+        HttpResponse.json({}, { status: 401 })
+      )
+    )
+
+    await apiClient.GET("/api/v1/admin/stats", {
+      params: { query: { from: "2026-01-01", to: "2026-04-14" } },
+    })
+
+    expect(unauthorized).toBe(false)
+    expect(getAuthToken()).toBe("expired-token")
+    expect(getRefreshToken()).toBe("refresh-token")
+  })
+
+  it("does not log out when another tab refreshed tokens while the refresh request was in flight", async () => {
+    setAuthTokens("expired-token", "old-refresh-token")
+    let unauthorized = false
+    setUnauthorizedHandler(() => {
+      unauthorized = true
+    })
+    const authHeaders: string[] = []
+
+    server.use(
+      http.post("http://localhost:8080/api/v1/auth/refresh", () => {
+        // Simulate another tab writing fresh tokens before this tab's request returns
+        setAuthTokens("new-access-token", "new-refresh-token")
+        return HttpResponse.json({}, { status: 401 })
+      }),
+      http.get("http://localhost:8080/api/v1/admin/stats", ({ request }) => {
+        const auth = request.headers.get("Authorization") ?? ""
+        authHeaders.push(auth)
+        if (auth === "Bearer expired-token") return HttpResponse.json({}, { status: 401 })
+        if (auth === "Bearer new-access-token") return HttpResponse.json({ data: { ok: true } })
+        return HttpResponse.json({}, { status: 403 })
+      })
+    )
+
+    await apiClient.GET("/api/v1/admin/stats", {
+      params: { query: { from: "2026-01-01", to: "2026-04-14" } },
+    })
+
+    expect(unauthorized).toBe(false)
+    expect(authHeaders).toEqual(["Bearer expired-token", "Bearer new-access-token"])
+    expect(getAuthToken()).toBe("new-access-token")
   })
 })
