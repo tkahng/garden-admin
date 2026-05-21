@@ -48,6 +48,8 @@ type CreditAccount = components["schemas"]["CreditAccountResponse"]
 type CreateCreditAccount = components["schemas"]["CreateCreditAccountRequest"]
 type UpdateCreditAccount = components["schemas"]["UpdateCreditAccountRequest"]
 type AdminUser = components["schemas"]["AdminUserResponse"]
+type SpendingSummary = components["schemas"]["CompanySpendingSummaryResponse"]
+type MemberSpend = components["schemas"]["CompanySpendingSummaryMemberSpend"]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -188,6 +190,119 @@ function CreditAccountDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  )
+}
+
+// ─── Spending summary section ─────────────────────────────────────────────────
+
+export function SpendingSummarySection({ companyId }: { companyId: string }) {
+  const fmtCur = (v: number | undefined) =>
+    v != null
+      ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(v)
+      : "—"
+
+  const { data, isLoading } = useQuery<SpendingSummary | null>({
+    queryKey: ["admin", "company-spending", companyId],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET(
+        "/api/v1/admin/companies/{id}/spending-summary",
+        { params: { path: { id: companyId } } },
+      )
+      if (error) return null
+      return (data as { data?: SpendingSummary } | undefined)?.data ?? null
+    },
+  })
+
+  const summary = data ?? null
+
+  return (
+    <div className="space-y-3" data-testid="spending-summary">
+      <h2 className="text-base font-semibold">Spending</h2>
+
+      {isLoading ? (
+        <div className="h-24 w-full bg-muted animate-pulse rounded-lg" />
+      ) : summary ? (
+        <div className="space-y-4">
+          {/* Totals */}
+          <Card>
+            <CardContent className="pt-4 pb-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Total orders</p>
+                  <p className="text-sm font-semibold">{summary.totalOrders ?? 0}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">Total spend</p>
+                  <p className="text-sm font-semibold">{fmtCur(summary.totalSpend)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Invoice aging */}
+          {summary.invoiceSummary && (
+            <Card>
+              <CardContent className="pt-4 pb-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Invoice aging</p>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">Pending</p>
+                    <p className="text-sm font-semibold">{fmtCur(summary.invoiceSummary.pendingAmount)}</p>
+                    <p className="text-xs text-muted-foreground">{summary.invoiceSummary.pendingCount ?? 0} invoices</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">Overdue</p>
+                    <p className={`text-sm font-semibold ${(summary.invoiceSummary.overdueCount ?? 0) > 0 ? "text-destructive" : ""}`}>
+                      {fmtCur(summary.invoiceSummary.overdueAmount)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{summary.invoiceSummary.overdueCount ?? 0} invoices</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">Paid</p>
+                    <p className="text-sm font-semibold text-green-700 dark:text-green-400">{fmtCur(summary.invoiceSummary.paidAmount)}</p>
+                    <p className="text-xs text-muted-foreground">{summary.invoiceSummary.paidCount ?? 0} invoices</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Member spending */}
+          {(summary.memberSpending ?? []).length > 0 && (
+            <Card>
+              <CardContent className="pt-4 pb-4">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-3">Member spending vs limit</p>
+                <div className="space-y-3">
+                  {(summary.memberSpending as MemberSpend[]).map((m) => (
+                    <div key={m.userId} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground truncate max-w-[60%]">{m.email ?? m.userId?.slice(0, 8)}</span>
+                        <span className="font-medium">
+                          {fmtCur(m.totalSpend)} / {fmtCur(m.spendingLimit)}
+                          <span className="ml-1 text-muted-foreground">({m.utilizationPercent ?? 0}%)</span>
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            (m.utilizationPercent ?? 0) >= 90 ? "bg-destructive"
+                            : (m.utilizationPercent ?? 0) >= 70 ? "bg-yellow-500"
+                            : "bg-primary"
+                          }`}
+                          style={{ width: `${Math.min(100, m.utilizationPercent ?? 0)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">No spending data available.</p>
+      )}
+    </div>
   )
 }
 
@@ -1617,6 +1732,9 @@ export function CompanyDetailPage({ id }: { id: string }) {
 
       {/* Credit account */}
       <CreditAccountSection companyId={id} />
+
+      {/* Spending */}
+      <SpendingSummarySection companyId={id} />
 
       {/* Members */}
       <MembersSection companyId={id} />

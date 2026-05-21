@@ -1892,6 +1892,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/companies/{id}/spending-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: { id: string };
+            cookie?: never;
+        };
+        get: operations["spendingSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/companies/{id}/catalog": {
         parameters: {
             query?: never;
@@ -3804,6 +3820,37 @@ export interface components {
             billingPostalCode?: string;
             billingCountry?: string;
             taxExempt?: boolean;
+        };
+        ApiResponseCompanySpendingSummaryResponse: {
+            data?: components["schemas"]["CompanySpendingSummaryResponse"];
+            meta?: unknown;
+        };
+        CompanySpendingSummaryResponse: {
+            /** Format: int64 */
+            totalOrders?: number;
+            totalSpend?: number;
+            invoiceSummary?: components["schemas"]["CompanySpendingSummaryInvoiceSummary"];
+            memberSpending?: components["schemas"]["CompanySpendingSummaryMemberSpend"][];
+        };
+        CompanySpendingSummaryInvoiceSummary: {
+            /** Format: int64 */
+            pendingCount?: number;
+            pendingAmount?: number;
+            /** Format: int64 */
+            overdueCount?: number;
+            overdueAmount?: number;
+            /** Format: int64 */
+            paidCount?: number;
+            paidAmount?: number;
+        };
+        CompanySpendingSummaryMemberSpend: {
+            /** Format: uuid */
+            userId?: string;
+            email?: string;
+            totalSpend?: number;
+            spendingLimit?: number;
+            /** Format: int32 */
+            utilizationPercent?: number;
         };
         ApiResponseCompanyResponse: {
             data?: components["schemas"]["CompanyResponse"];
@@ -10287,6 +10334,24 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseCreditAccountResponse"];
+                };
+            };
+        };
+    };
+    spendingSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: { id: string };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: { [name: string]: unknown };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCompanySpendingSummaryResponse"];
                 };
             };
         };
