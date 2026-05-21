@@ -4065,6 +4065,7 @@ export interface components {
             shippingRequirements?: string;
             customerNotes?: string;
             staffNotes?: string;
+            rejectionReason?: string;
             /** Format: date-time */
             expiresAt?: string;
             /** Format: uuid */
@@ -8290,7 +8291,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: { "application/json": { reason?: string } };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -8312,7 +8315,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: { "application/json": { reason?: string } };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -8334,7 +8339,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: { "application/json": { reason?: string } };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -9326,7 +9333,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: { "application/json": { reason?: string } };
+        };
         responses: {
             /** @description OK */
             200: {

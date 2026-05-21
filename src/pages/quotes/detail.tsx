@@ -328,6 +328,7 @@ export function QuoteDetailPage({ id }: { id: string }) {
   const [sendOpen, setSendOpen] = useState(false)
   const [assignOpen, setAssignOpen] = useState(false)
   const [cancelOpen, setCancelOpen] = useState(false)
+  const [cancelReason, setCancelReason] = useState("")
   const [staffNotes, setStaffNotes] = useState("")
   const [notesEdited, setNotesEdited] = useState(false)
 
@@ -379,10 +380,11 @@ export function QuoteDetailPage({ id }: { id: string }) {
     mutationFn: async () => {
       const { error } = await apiClient.POST("/api/v1/admin/quotes/{id}/cancel", {
         params: { path: { id } },
+        body: cancelReason.trim() ? { reason: cancelReason.trim() } : undefined,
       })
       if (error) throw error
     },
-    onSuccess: () => { toast.success("Quote cancelled"); setCancelOpen(false); invalidate() },
+    onSuccess: () => { toast.success("Quote cancelled"); setCancelOpen(false); setCancelReason(""); invalidate() },
     onError: () => toast.error("Failed to cancel quote"),
   })
 
@@ -578,6 +580,15 @@ export function QuoteDetailPage({ id }: { id: string }) {
               </div>
             </div>
           )}
+
+          {quote.rejectionReason && (
+            <div className="space-y-2" data-testid="rejection-reason">
+              <h2 className="text-base font-semibold">Rejection reason</h2>
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+                <p className="text-sm text-destructive whitespace-pre-wrap">{quote.rejectionReason}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right: metadata + actions */}
@@ -681,7 +692,7 @@ export function QuoteDetailPage({ id }: { id: string }) {
         isPending={assignMutation.isPending}
       />
 
-      <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
+      <AlertDialog open={cancelOpen} onOpenChange={(open) => { setCancelOpen(open); if (!open) setCancelReason("") }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel this quote?</AlertDialogTitle>
@@ -689,6 +700,14 @@ export function QuoteDetailPage({ id }: { id: string }) {
               This will cancel the quote. The customer will no longer be able to accept it.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <textarea
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-ring"
+            rows={3}
+            placeholder="Reason for cancellation (optional)"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            data-testid="cancel-reason-input"
+          />
           <AlertDialogFooter>
             <AlertDialogCancel>Keep quote</AlertDialogCancel>
             <AlertDialogAction
