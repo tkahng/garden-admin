@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Link } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient } from "@/api/client"
@@ -34,6 +34,13 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { CountrySelect } from "@/components/CountrySelect"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ArrowLeft, ChevronDown, ChevronRight, Plus, Pencil, Trash2, ShieldCheck, UserCheck, X } from "lucide-react"
 import { toast } from "sonner"
 
@@ -1632,6 +1639,317 @@ function CatalogSection({ companyId }: { companyId: string }) {
   )
 }
 
+// ─── Approval rules section ───────────────────────────────────────────────────
+
+type ApprovalRule = components["schemas"]["CompanyApprovalRuleResponse"]
+type ApprovalRuleReq = components["schemas"]["CompanyApprovalRuleRequest"]
+
+export function ApprovalRulesSection({ companyId }: { companyId: string }) {
+  const qc = useQueryClient()
+  const [editRule, setEditRule] = useState<ApprovalRule | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  const [name, setName] = useState("")
+  const [threshold, setThreshold] = useState("")
+  const [requiredRole, setRequiredRole] = useState<"MANAGER" | "OWNER">("MANAGER")
+  const fmtCur = (v: number | undefined) =>
+    v != null ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v) : "—"
+
+  const { data: rules = [], isLoading } = useQuery<ApprovalRule[]>({
+    queryKey: ["admin", "approval-rules", companyId],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET(
+        "/api/v1/admin/companies/{companyId}/approval-rules",
+        { params: { path: { companyId } } },
+      )
+      if (error) return []
+      return (data as { data?: ApprovalRule[] } | undefined)?.data ?? []
+    },
+  })
+
+  function invalidate() { void qc.invalidateQueries({ queryKey: ["admin", "approval-rules", companyId] }) }
+
+  const saveMutation = useMutation({
+    mutationFn: async (body: ApprovalRuleReq) => {
+      if (editRule?.id) {
+        const { error } = await apiClient.PUT("/api/v1/admin/companies/{companyId}/approval-rules/{ruleId}", {
+          params: { path: { companyId, ruleId: editRule.id } },
+          body,
+        })
+        if (error) throw error
+      } else {
+        const { error } = await apiClient.POST("/api/v1/admin/companies/{companyId}/approval-rules", {
+          params: { path: { companyId } },
+          body,
+        })
+        if (error) throw error
+      }
+    },
+    onSuccess: () => { toast.success(editRule ? "Rule updated" : "Rule created"); setShowForm(false); setEditRule(null); invalidate() },
+    onError: () => toast.error("Failed to save rule"),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (ruleId: string) => {
+      const { error } = await apiClient.DELETE("/api/v1/admin/companies/{companyId}/approval-rules/{ruleId}", {
+        params: { path: { companyId, ruleId } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => { toast.success("Rule deleted"); invalidate() },
+    onError: () => toast.error("Failed to delete rule"),
+  })
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ ruleId, active }: { ruleId: string; active: boolean }) => {
+      const { error } = await apiClient.PATCH(
+        "/api/v1/admin/companies/{companyId}/approval-rules/{ruleId}/toggle" as "/api/v1/admin/companies/{companyId}/approval-rules/{ruleId}/toggle",
+        { params: { path: { companyId, ruleId }, query: { active } } },
+      )
+      if (error) throw error
+    },
+    onSuccess: () => { toast.success("Rule updated"); invalidate() },
+    onError: () => toast.error("Failed to toggle rule"),
+  })
+
+  function openCreate() { setEditRule(null); setName(""); setThreshold(""); setRequiredRole("MANAGER"); setShowForm(true) }
+  function openEdit(rule: ApprovalRule) { setEditRule(rule); setName(rule.name ?? ""); setThreshold(String(rule.thresholdAmount ?? "")); setRequiredRole((rule.requiredRole as "MANAGER" | "OWNER") ?? "MANAGER"); setShowForm(true) }
+
+  return (
+    <div className="space-y-3" data-testid="approval-rules-section">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">Approval rules</h2>
+        <Button size="sm" onClick={openCreate}>
+          <Plus className="size-4 mr-2" />
+          Add rule
+        </Button>
+      </div>
+
+      {showForm && (
+        <div className="rounded-lg border bg-card p-4 space-y-3">
+          <p className="text-sm font-medium">{editRule ? "Edit rule" : "New approval rule"}</p>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Rule name</Label>
+              <Input placeholder="Manager approval" value={name} onChange={(e) => setName(e.target.value)} className="h-8 text-sm" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Order total exceeds</Label>
+              <Input type="number" min="0.01" step="0.01" placeholder="500.00" value={threshold} onChange={(e) => setThreshold(e.target.value)} className="h-8 text-sm" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Requires approval from</Label>
+              <Select value={requiredRole} onValueChange={(v) => setRequiredRole(v as "MANAGER" | "OWNER")}>
+                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MANAGER">Manager or above</SelectItem>
+                  <SelectItem value="OWNER">Owner only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => saveMutation.mutate({ name, thresholdAmount: parseFloat(threshold), requiredRole })} disabled={saveMutation.isPending || !name || !threshold}>
+              {editRule ? "Update" : "Create"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => { setShowForm(false); setEditRule(null) }}>Cancel</Button>
+          </div>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="h-16 bg-muted animate-pulse rounded-lg" />
+      ) : rules.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No approval rules configured. Orders will not require approval beyond per-member spending limits.</p>
+      ) : (
+        <div className="rounded-lg border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Threshold</TableHead>
+                <TableHead>Required approver</TableHead>
+                <TableHead className="w-20">Active</TableHead>
+                <TableHead className="w-20" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rules.map((rule) => (
+                <TableRow key={rule.id}>
+                  <TableCell className="text-sm font-medium">{rule.name}</TableCell>
+                  <TableCell className="text-sm">{fmtCur(rule.thresholdAmount)}+</TableCell>
+                  <TableCell>
+                    <Badge variant={rule.requiredRole === "OWNER" ? "default" : "secondary"} className="text-xs">
+                      {rule.requiredRole === "OWNER" ? "Owner" : "Manager+"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${rule.active ? "bg-primary" : "bg-muted"}`}
+                      onClick={() => rule.id && toggleMutation.mutate({ ruleId: rule.id, active: !rule.active })}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${rule.active ? "translate-x-4" : "translate-x-0"}`} />
+                    </button>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 justify-end">
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEdit(rule)}>
+                        <Pencil className="size-3.5" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => rule.id && deleteMutation.mutate(rule.id)}>
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Departments section ──────────────────────────────────────────────────────
+
+type Department = components["schemas"]["DepartmentResponse"]
+
+export function DepartmentsSection({ companyId }: { companyId: string }) {
+  const qc = useQueryClient()
+  const [showForm, setShowForm] = useState(false)
+  const [editDept, setEditDept] = useState<Department | null>(null)
+  const [deptName, setDeptName] = useState("")
+  const [parentId, setParentId] = useState<string | null>(null)
+
+  const { data: tree = [], isLoading } = useQuery<Department[]>({
+    queryKey: ["admin", "departments", companyId],
+    queryFn: async () => {
+      const { data, error } = await apiClient.GET(
+        "/api/v1/admin/companies/{companyId}/departments",
+        { params: { path: { companyId } } },
+      )
+      if (error) return []
+      return (data as { data?: Department[] } | undefined)?.data ?? []
+    },
+  })
+
+  function invalidate() { void qc.invalidateQueries({ queryKey: ["admin", "departments", companyId] }) }
+
+  const saveMutation = useMutation({
+    mutationFn: async (body: { name: string; parentId?: string }) => {
+      if (editDept?.id) {
+        const { error } = await apiClient.PUT("/api/v1/admin/companies/{companyId}/departments/{deptId}", {
+          params: { path: { companyId, deptId: editDept.id } },
+          body,
+        })
+        if (error) throw error
+      } else {
+        const { error } = await apiClient.POST("/api/v1/admin/companies/{companyId}/departments", {
+          params: { path: { companyId } },
+          body,
+        })
+        if (error) throw error
+      }
+    },
+    onSuccess: () => { toast.success(editDept ? "Department updated" : "Department created"); setShowForm(false); setEditDept(null); invalidate() },
+    onError: () => toast.error("Failed to save department"),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (deptId: string) => {
+      const { error } = await apiClient.DELETE("/api/v1/admin/companies/{companyId}/departments/{deptId}", {
+        params: { path: { companyId, deptId } },
+      })
+      if (error) throw error
+    },
+    onSuccess: () => { toast.success("Department deleted"); invalidate() },
+    onError: () => toast.error("Failed to delete department"),
+  })
+
+  function openCreate() { setEditDept(null); setDeptName(""); setParentId(null); setShowForm(true) }
+  function openEdit(d: Department) { setEditDept(d); setDeptName(d.name ?? ""); setParentId(d.parentId ?? null); setShowForm(true) }
+
+  function renderTree(depts: Department[], depth = 0): React.ReactNode {
+    return depts.map((dept) => (
+      <div key={dept.id}>
+        <div className={`flex items-center justify-between py-2 ${depth > 0 ? "pl-" + (depth * 4) : ""}`} style={{ paddingLeft: depth * 16 }}>
+          <div className="flex items-center gap-2">
+            {depth > 0 && <span className="text-muted-foreground text-xs">└</span>}
+            <span className="text-sm">{dept.name}</span>
+          </div>
+          <div className="flex gap-1">
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEdit(dept)}>
+              <Pencil className="size-3" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => dept.id && deleteMutation.mutate(dept.id)}>
+              <Trash2 className="size-3" />
+            </Button>
+          </div>
+        </div>
+        {(dept.children ?? []).length > 0 && renderTree(dept.children!, depth + 1)}
+      </div>
+    ))
+  }
+
+  // Flat list of all depts for parent selector
+  function flatten(depts: Department[]): Department[] {
+    return depts.flatMap((d) => [d, ...flatten(d.children ?? [])])
+  }
+  const allDepts = flatten(tree)
+
+  return (
+    <div className="space-y-3" data-testid="departments-section">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">Departments</h2>
+        <Button size="sm" onClick={openCreate}>
+          <Plus className="size-4 mr-2" />
+          Add department
+        </Button>
+      </div>
+
+      {showForm && (
+        <div className="rounded-lg border bg-card p-4 space-y-3">
+          <p className="text-sm font-medium">{editDept ? "Edit department" : "New department"}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Name</Label>
+              <Input placeholder="Engineering" value={deptName} onChange={(e) => setDeptName(e.target.value)} className="h-8 text-sm" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Parent department (optional)</Label>
+              <Select value={parentId ?? "none"} onValueChange={(v) => setParentId(v === "none" ? null : v)}>
+                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Top level" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Top level</SelectItem>
+                  {allDepts.filter((d) => d.id !== editDept?.id).map((d) => (
+                    <SelectItem key={d.id} value={d.id!}>{d.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => saveMutation.mutate({ name: deptName, parentId: parentId ?? undefined })} disabled={saveMutation.isPending || !deptName.trim()}>
+              {editDept ? "Update" : "Create"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => { setShowForm(false); setEditDept(null) }}>Cancel</Button>
+          </div>
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="h-16 bg-muted animate-pulse rounded-lg" />
+      ) : tree.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No departments configured.</p>
+      ) : (
+        <div className="rounded-lg border bg-card divide-y divide-border px-3">
+          {renderTree(tree)}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Company detail page ──────────────────────────────────────────────────────
 
 export function CompanyDetailPage({ id }: { id: string }) {
@@ -1738,6 +2056,12 @@ export function CompanyDetailPage({ id }: { id: string }) {
 
       {/* Members */}
       <MembersSection companyId={id} />
+
+      {/* Departments */}
+      <DepartmentsSection companyId={id} />
+
+      {/* Approval rules */}
+      <ApprovalRulesSection companyId={id} />
 
       {/* Shipping addresses */}
       <ShippingAddressSection companyId={id} />

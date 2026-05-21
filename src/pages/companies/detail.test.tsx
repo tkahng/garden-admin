@@ -1,15 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen, waitFor, fireEvent } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { http, HttpResponse } from "msw"
 import { server } from "@/test/server"
 import { mockSpendingSummary } from "@/test/handlers/companies"
 
-vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn(), info: vi.fn() } }))
 
-// Test the SpendingSummarySection in isolation via the full CompanyDetailPage
-// The detail page needs many handlers — we stub the heavy ones to avoid noise.
+// Test sections in isolation
 import { SpendingSummarySection } from "./detail"
+
+// We need to also export these for testing
+import { ApprovalRulesSection, DepartmentsSection } from "./detail"
 
 function renderSection(companyId = "comp-1") {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -89,5 +91,107 @@ describe("SpendingSummarySection", () => {
       expect(zeros.length).toBe(3) // pending, overdue, paid all zero
     })
     expect(screen.getByText("Pending")).toBeInTheDocument()
+  })
+})
+
+// ─── ApprovalRulesSection ────────────────────────────────────────────────────
+
+function renderApprovalRules(companyId = "comp-1") {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={qc}>
+      <ApprovalRulesSection companyId={companyId} />
+    </QueryClientProvider>,
+  )
+}
+
+describe("ApprovalRulesSection", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it("renders Approval rules heading", async () => {
+    renderApprovalRules()
+    expect(screen.getByText("Approval rules")).toBeInTheDocument()
+  })
+
+  it("shows rule name, threshold and role", async () => {
+    renderApprovalRules()
+    await waitFor(() => expect(screen.getByText("Manager approval")).toBeInTheDocument())
+    // threshold cell contains formatted amount + "+"
+    const thresholdCell = screen.getByText(/\$500/)
+    expect(thresholdCell.closest("td")).toHaveTextContent(/\$500.*\+/)
+    expect(screen.getByText("Manager+")).toBeInTheDocument()
+  })
+
+  it("shows empty state when no rules", async () => {
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/companies/:companyId/approval-rules", () =>
+        HttpResponse.json({ data: [] })
+      ),
+    )
+    renderApprovalRules("comp-empty-rules")
+    await waitFor(() =>
+      expect(screen.getByText(/no approval rules configured/i)).toBeInTheDocument(),
+    )
+  })
+
+  it("shows Add rule button", async () => {
+    renderApprovalRules()
+    expect(screen.getByRole("button", { name: /add rule/i })).toBeInTheDocument()
+  })
+
+  it("opens create form when Add rule is clicked", async () => {
+    renderApprovalRules()
+    fireEvent.click(screen.getByRole("button", { name: /add rule/i }))
+    await waitFor(() => expect(screen.getByText("New approval rule")).toBeInTheDocument())
+    expect(screen.getByPlaceholderText("Manager approval")).toBeInTheDocument()
+  })
+})
+
+// ─── DepartmentsSection ──────────────────────────────────────────────────────
+
+function renderDepartments(companyId = "comp-1") {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  render(
+    <QueryClientProvider client={qc}>
+      <DepartmentsSection companyId={companyId} />
+    </QueryClientProvider>,
+  )
+}
+
+describe("DepartmentsSection", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it("renders Departments heading", async () => {
+    renderDepartments()
+    expect(screen.getByText("Departments")).toBeInTheDocument()
+  })
+
+  it("shows department name from API", async () => {
+    renderDepartments()
+    await waitFor(() => expect(screen.getByText("Engineering")).toBeInTheDocument())
+  })
+
+  it("shows empty state when no departments", async () => {
+    server.use(
+      http.get("http://localhost:8080/api/v1/admin/companies/:companyId/departments", () =>
+        HttpResponse.json({ data: [] })
+      ),
+    )
+    renderDepartments("comp-nodepts")
+    await waitFor(() =>
+      expect(screen.getByText(/no departments configured/i)).toBeInTheDocument(),
+    )
+  })
+
+  it("shows Add department button", async () => {
+    renderDepartments()
+    expect(screen.getByRole("button", { name: /add department/i })).toBeInTheDocument()
+  })
+
+  it("opens create form when Add department is clicked", async () => {
+    renderDepartments()
+    fireEvent.click(screen.getByRole("button", { name: /add department/i }))
+    await waitFor(() => expect(screen.getByText("New department")).toBeInTheDocument())
+    expect(screen.getByPlaceholderText("Engineering")).toBeInTheDocument()
   })
 })

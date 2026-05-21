@@ -304,6 +304,25 @@ export function CustomerDetailPage({ id }: { id: string }) {
     onError: () => toast.error("Failed to reactivate user"),
   })
 
+  const impersonateMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await apiClient.POST("/api/v1/admin/users/{id}/impersonate", {
+        params: { path: { id: id! } },
+      })
+      if (error) throw error
+      return (data as { data?: { accessToken?: string; targetEmail?: string } } | undefined)?.data
+    },
+    onSuccess: (result) => {
+      if (result?.accessToken) {
+        navigator.clipboard.writeText(result.accessToken)
+          .then(() => toast.success(`Impersonation token copied for ${result.targetEmail}. Expires in 30 min.`))
+          .catch(() => toast.info(`Token generated for ${result.targetEmail}. Check console.`))
+        console.info("[Impersonation token]", result.accessToken)
+      }
+    },
+    onError: () => toast.error("Failed to generate impersonation token"),
+  })
+
   const tagsMutation = useMutation({
     mutationFn: async (tags: string[]) => {
       const { error } = await apiClient.PUT("/api/v1/admin/users/{id}/tags", {
@@ -361,6 +380,15 @@ export function CustomerDetailPage({ id }: { id: string }) {
           <p className="text-sm text-muted-foreground">{user?.email}</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => impersonateMutation.mutate()}
+            disabled={impersonateMutation.isPending}
+            data-testid="impersonate-btn"
+          >
+            {impersonateMutation.isPending ? "Generating…" : "Impersonate"}
+          </Button>
           {user?.status === "SUSPENDED" ? (
             <Button
               size="sm"

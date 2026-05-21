@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { render, screen, waitFor } from "@testing-library/react"
+import { render, screen, waitFor, fireEvent } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import {
   createRouter,
@@ -15,7 +15,9 @@ import { server } from "@/test/server"
 import { mockCustomer } from "@/test/handlers/customers"
 import { CustomerDetailPage } from "./detail"
 
-vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: vi.fn() } }))
+const mockToastSuccess = vi.fn()
+const mockToastInfo = vi.fn()
+vi.mock("sonner", () => ({ toast: { error: vi.fn(), success: (...a: unknown[]) => mockToastSuccess(...a), info: (...a: unknown[]) => mockToastInfo(...a) } }))
 
 function makeRouter(id = mockCustomer.id) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -224,6 +226,49 @@ describe("CustomerDetailPage", () => {
     await user.click(link)
     await waitFor(() => {
       expect(router.state.location.pathname).toBe(`/orders/${orderId}`)
+    })
+  })
+})
+
+describe("CustomerDetailPage — impersonation", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  function renderDetail(id = mockCustomer.id) {
+    const { router } = makeRouter(id)
+    render(<RouterProvider router={router} />)
+    return router
+  }
+
+  it("shows Impersonate button", async () => {
+    renderDetail()
+    await waitFor(() => expect(screen.getByTestId("impersonate-btn")).toBeInTheDocument())
+  })
+
+  it("calls impersonate endpoint and shows success or info toast", async () => {
+    vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue()
+    const impersonateSpy = vi.fn()
+    server.use(
+      http.post("http://localhost:8080/api/v1/admin/users/:id/impersonate", async () => {
+        impersonateSpy()
+        return HttpResponse.json({
+          data: {
+            accessToken: "eyJhbGci.test",
+            targetUserId: mockCustomer.id,
+            targetEmail: mockCustomer.email,
+            expiresAt: "2026-05-21T14:00:00.000Z",
+          },
+        })
+      }),
+    )
+    renderDetail()
+    await waitFor(() => screen.getByTestId("impersonate-btn"))
+    fireEvent.click(screen.getByTestId("impersonate-btn"))
+    await waitFor(() => expect(impersonateSpy).toHaveBeenCalled())
+    await waitFor(() => {
+      const called = mockToastSuccess.mock.calls.length > 0 || mockToastInfo.mock.calls.length > 0
+      expect(called).toBe(true)
     })
   })
 })
