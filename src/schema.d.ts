@@ -1892,6 +1892,99 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/companies/{companyId}/approval-rules": {
+        parameters: { query?: never; header?: never; path: { companyId: string }; cookie?: never };
+        get: operations["listApprovalRules"];
+        put?: never;
+        post: operations["createApprovalRule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/companies/{companyId}/approval-rules/{ruleId}": {
+        parameters: { query?: never; header?: never; path: { companyId: string; ruleId: string }; cookie?: never };
+        get?: never;
+        put: operations["updateApprovalRule"];
+        post?: never;
+        delete: operations["deleteApprovalRule"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/companies/{companyId}/approval-rules/{ruleId}/toggle": {
+        parameters: { query?: never; header?: never; path: { companyId: string; ruleId: string }; cookie?: never };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["toggleApprovalRule"];
+        trace?: never;
+    };
+    "/api/v1/admin/companies/{companyId}/departments": {
+        parameters: { query?: never; header?: never; path: { companyId: string }; cookie?: never };
+        get: operations["listDepartments"];
+        put?: never;
+        post: operations["createDepartment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/companies/{companyId}/departments/{deptId}": {
+        parameters: { query?: never; header?: never; path: { companyId: string; deptId: string }; cookie?: never };
+        get?: never;
+        put: operations["updateDepartment"];
+        post?: never;
+        delete: operations["deleteDepartment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/companies/{companyId}/departments/members/{userId}/department": {
+        parameters: { query?: never; header?: never; path: { companyId: string; userId: string }; cookie?: never };
+        get?: never;
+        put: operations["assignMemberDepartment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{id}/impersonate": {
+        parameters: { query?: never; header?: never; path: { id: string }; cookie?: never };
+        get?: never;
+        put?: never;
+        post: operations["impersonate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/companies/{id}/spending-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: { id: string };
+            cookie?: never;
+        };
+        get: operations["spendingSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/companies/{id}/catalog": {
         parameters: {
             query?: never;
@@ -3805,6 +3898,37 @@ export interface components {
             billingCountry?: string;
             taxExempt?: boolean;
         };
+        ApiResponseCompanySpendingSummaryResponse: {
+            data?: components["schemas"]["CompanySpendingSummaryResponse"];
+            meta?: unknown;
+        };
+        CompanySpendingSummaryResponse: {
+            /** Format: int64 */
+            totalOrders?: number;
+            totalSpend?: number;
+            invoiceSummary?: components["schemas"]["CompanySpendingSummaryInvoiceSummary"];
+            memberSpending?: components["schemas"]["CompanySpendingSummaryMemberSpend"][];
+        };
+        CompanySpendingSummaryInvoiceSummary: {
+            /** Format: int64 */
+            pendingCount?: number;
+            pendingAmount?: number;
+            /** Format: int64 */
+            overdueCount?: number;
+            overdueAmount?: number;
+            /** Format: int64 */
+            paidCount?: number;
+            paidAmount?: number;
+        };
+        CompanySpendingSummaryMemberSpend: {
+            /** Format: uuid */
+            userId?: string;
+            email?: string;
+            totalSpend?: number;
+            spendingLimit?: number;
+            /** Format: int32 */
+            utilizationPercent?: number;
+        };
         ApiResponseCompanyResponse: {
             data?: components["schemas"]["CompanyResponse"];
             meta?: unknown;
@@ -3850,8 +3974,77 @@ export interface components {
             /** @enum {string} */
             role?: "OWNER" | "MANAGER" | "MEMBER";
             spendingLimit?: number;
+            /** Format: uuid */
+            departmentId?: string;
             /** Format: date-time */
             joinedAt?: string;
+        };
+        ApiResponseCompanyApprovalRuleResponse: {
+            data?: components["schemas"]["CompanyApprovalRuleResponse"];
+            meta?: unknown;
+        };
+        ApiResponseListCompanyApprovalRuleResponse: {
+            data?: components["schemas"]["CompanyApprovalRuleResponse"][];
+            meta?: unknown;
+        };
+        CompanyApprovalRuleResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            companyId?: string;
+            name?: string;
+            thresholdAmount?: number;
+            /** @enum {string} */
+            requiredRole?: "MANAGER" | "OWNER";
+            active?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        CompanyApprovalRuleRequest: {
+            name: string;
+            thresholdAmount: number;
+            requiredRole: "MANAGER" | "OWNER";
+        };
+        ApiResponseDepartmentResponse: {
+            data?: components["schemas"]["DepartmentResponse"];
+            meta?: unknown;
+        };
+        ApiResponseListDepartmentResponse: {
+            data?: components["schemas"]["DepartmentResponse"][];
+            meta?: unknown;
+        };
+        DepartmentResponse: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            companyId?: string;
+            /** Format: uuid */
+            parentId?: string;
+            name?: string;
+            children?: components["schemas"]["DepartmentResponse"][];
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        DepartmentRequest: {
+            name: string;
+            /** Format: uuid */
+            parentId?: string;
+        };
+        AssignDepartmentRequest: {
+            /** Format: uuid */
+            departmentId?: string;
+        };
+        ApiResponseImpersonateResponse: {
+            data?: components["schemas"]["ImpersonateResponse"];
+            meta?: unknown;
+        };
+        ImpersonateResponse: {
+            accessToken?: string;
+            /** Format: uuid */
+            targetUserId?: string;
+            targetEmail?: string;
+            /** Format: date-time */
+            expiresAt?: string;
         };
         UpdateMemberRoleRequest: {
             /** @enum {string} */
@@ -4065,6 +4258,7 @@ export interface components {
             shippingRequirements?: string;
             customerNotes?: string;
             staffNotes?: string;
+            rejectionReason?: string;
             /** Format: date-time */
             expiresAt?: string;
             /** Format: uuid */
@@ -8290,7 +8484,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: { "application/json": { reason?: string } };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -8312,7 +8508,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: { "application/json": { reason?: string } };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -8334,7 +8532,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: { "application/json": { reason?: string } };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -9326,7 +9526,9 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: { "application/json": { reason?: string } };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -10281,6 +10483,79 @@ export interface operations {
                 };
             };
         };
+    };
+    spendingSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: { id: string };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: { [name: string]: unknown };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCompanySpendingSummaryResponse"];
+                };
+            };
+        };
+    };
+    listApprovalRules: {
+        parameters: { query?: never; header?: never; path: { companyId: string }; cookie?: never };
+        requestBody?: never;
+        responses: { 200: { headers: { [name: string]: unknown }; content: { "*/*": components["schemas"]["ApiResponseListCompanyApprovalRuleResponse"] } } };
+    };
+    createApprovalRule: {
+        parameters: { query?: never; header?: never; path: { companyId: string }; cookie?: never };
+        requestBody: { content: { "application/json": components["schemas"]["CompanyApprovalRuleRequest"] } };
+        responses: { 200: { headers: { [name: string]: unknown }; content: { "*/*": components["schemas"]["ApiResponseCompanyApprovalRuleResponse"] } } };
+    };
+    updateApprovalRule: {
+        parameters: { query?: never; header?: never; path: { companyId: string; ruleId: string }; cookie?: never };
+        requestBody: { content: { "application/json": components["schemas"]["CompanyApprovalRuleRequest"] } };
+        responses: { 200: { headers: { [name: string]: unknown }; content: { "*/*": components["schemas"]["ApiResponseCompanyApprovalRuleResponse"] } } };
+    };
+    deleteApprovalRule: {
+        parameters: { query?: never; header?: never; path: { companyId: string; ruleId: string }; cookie?: never };
+        requestBody?: never;
+        responses: { 204: { headers: { [name: string]: unknown }; content?: never } };
+    };
+    toggleApprovalRule: {
+        parameters: { query: { active: boolean }; header?: never; path: { companyId: string; ruleId: string }; cookie?: never };
+        requestBody?: never;
+        responses: { 204: { headers: { [name: string]: unknown }; content?: never } };
+    };
+    listDepartments: {
+        parameters: { query?: never; header?: never; path: { companyId: string }; cookie?: never };
+        requestBody?: never;
+        responses: { 200: { headers: { [name: string]: unknown }; content: { "*/*": components["schemas"]["ApiResponseListDepartmentResponse"] } } };
+    };
+    createDepartment: {
+        parameters: { query?: never; header?: never; path: { companyId: string }; cookie?: never };
+        requestBody: { content: { "application/json": components["schemas"]["DepartmentRequest"] } };
+        responses: { 200: { headers: { [name: string]: unknown }; content: { "*/*": components["schemas"]["ApiResponseDepartmentResponse"] } } };
+    };
+    updateDepartment: {
+        parameters: { query?: never; header?: never; path: { companyId: string; deptId: string }; cookie?: never };
+        requestBody: { content: { "application/json": components["schemas"]["DepartmentRequest"] } };
+        responses: { 200: { headers: { [name: string]: unknown }; content: { "*/*": components["schemas"]["ApiResponseDepartmentResponse"] } } };
+    };
+    deleteDepartment: {
+        parameters: { query?: never; header?: never; path: { companyId: string; deptId: string }; cookie?: never };
+        requestBody?: never;
+        responses: { 204: { headers: { [name: string]: unknown }; content?: never } };
+    };
+    assignMemberDepartment: {
+        parameters: { query?: never; header?: never; path: { companyId: string; userId: string }; cookie?: never };
+        requestBody: { content: { "application/json": components["schemas"]["AssignDepartmentRequest"] } };
+        responses: { 204: { headers: { [name: string]: unknown }; content?: never } };
+    };
+    impersonate: {
+        parameters: { query?: never; header?: never; path: { id: string }; cookie?: never };
+        requestBody?: never;
+        responses: { 200: { headers: { [name: string]: unknown }; content: { "*/*": components["schemas"]["ApiResponseImpersonateResponse"] } } };
     };
     getCatalog: {
         parameters: {

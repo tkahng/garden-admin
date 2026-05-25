@@ -12,6 +12,8 @@ import { companyHandlers } from "./handlers/companies"
 import { invoiceHandlers } from "./handlers/invoices"
 import { collectionHandlers } from "./handlers/collections"
 import { blogHandlers } from "./handlers/blogs"
+import { inventoryHandlers } from "./handlers/inventory"
+import { returnHandlers } from "./handlers/returns"
 
 export const server = setupServer(
   ...authHandlers,
@@ -27,4 +29,6 @@ export const server = setupServer(
   ...invoiceHandlers,
   ...collectionHandlers,
   ...blogHandlers,
+  ...inventoryHandlers,
+  ...returnHandlers,
 )
