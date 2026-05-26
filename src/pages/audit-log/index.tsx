@@ -85,7 +85,11 @@ function DetailDrawer({
             <div>
               <p className="font-medium text-muted-foreground mb-1">Before</p>
               <pre className="rounded bg-muted p-3 text-xs overflow-auto max-h-48">
-                {JSON.stringify(JSON.parse(entry.beforeJson), null, 2)}
+                {(() => {
+                  let parsed;
+                  try { parsed = JSON.parse(entry.beforeJson); } catch { parsed = entry.beforeJson; }
+                  return typeof parsed === "string" ? parsed : JSON.stringify(parsed, null, 2);
+                })()}
               </pre>
             </div>
           )}
@@ -93,7 +97,11 @@ function DetailDrawer({
             <div>
               <p className="font-medium text-muted-foreground mb-1">After</p>
               <pre className="rounded bg-muted p-3 text-xs overflow-auto max-h-48">
-                {JSON.stringify(JSON.parse(entry.afterJson), null, 2)}
+                {(() => {
+                  let parsed;
+                  try { parsed = JSON.parse(entry.afterJson); } catch { parsed = entry.afterJson; }
+                  return typeof parsed === "string" ? parsed : JSON.stringify(parsed, null, 2);
+                })()}
               </pre>
             </div>
           )}
