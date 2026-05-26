@@ -207,8 +207,10 @@ export function MediaPickerDialog({
   })
 
   const uploadMutation = useMutation({
-    mutationFn: async (files: File[]) => {
+    onMutate: () => {
       setUploading(true)
+    },
+    mutationFn: async (files: File[]) => {
       let ok = 0
       let fail = 0
       for (const file of files) {
@@ -227,13 +229,21 @@ export function MediaPickerDialog({
           fail++
         }
       }
-      setUploading(false)
+      return { ok, fail }
+    },
+    onSuccess: ({ ok, fail }) => {
       if (ok > 0) {
         toast.success(`Uploaded ${ok} file${ok > 1 ? "s" : ""}`)
         void qc.invalidateQueries({ queryKey: ["admin", "blobs"] })
         setPage(0)
       }
       if (fail > 0) toast.error(`${fail} upload${fail > 1 ? "s" : ""} failed`)
+    },
+    onError: () => {
+      toast.error("Upload failed unexpectedly. Please try again.")
+    },
+    onSettled: () => {
+      setUploading(false)
     },
   })
 
