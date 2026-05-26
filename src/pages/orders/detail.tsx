@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 import { apiClient, getAuthToken } from "@/api/client"
+import { API_URL } from "@/lib/config"
 import type { components } from "@/schema"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -418,9 +419,8 @@ export function OrderDetailPage({ id }: { id: string }) {
 
   const syncPaymentMutation = useMutation({
     mutationFn: async () => {
-      const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
       const token = getAuthToken()
-      const res = await fetch(`${baseUrl}/api/v1/admin/orders/${id}/sync-payment`, {
+      const res = await fetch(`${API_URL}/api/v1/admin/orders/${id}/sync-payment`, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         credentials: "include",

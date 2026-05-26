@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import { Link } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiClient, getAuthToken } from "@/api/client"
+import { API_URL } from "@/lib/config"
 import type { components } from "@/schema"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -1706,9 +1707,8 @@ export function ApprovalRulesSection({ companyId }: { companyId: string }) {
     mutationFn: async ({ ruleId, active }: { ruleId: string; active: boolean }) => {
       // This endpoint exists on the backend but is not yet in the OpenAPI schema,
       // so we use a raw fetch with the admin auth token instead of the typed client.
-      const base = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
       const res = await fetch(
-        `${base}/api/v1/admin/companies/${companyId}/approval-rules/${ruleId}/toggle?active=${active}`,
+        `${API_URL}/api/v1/admin/companies/${companyId}/approval-rules/${ruleId}/toggle?active=${active}`,
         { method: "PATCH", headers: { Authorization: `Bearer ${getAuthToken()}` } },
       )
       if (!res.ok) throw new Error(String(res.status))
