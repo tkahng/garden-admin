@@ -72,7 +72,7 @@ export function InvoicesPage() {
   })
   const companies: Company[] = companiesData ?? []
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["admin", "invoices", page, status, companyId],
     queryFn: async () => {
       const { data, error } = await apiClient.GET("/api/v1/admin/invoices", {
@@ -171,7 +171,14 @@ export function InvoicesPage() {
                 </TableCell>
               </TableRow>
             )}
-            {!isLoading && invoices.length === 0 && (
+            {isError && !isLoading && (
+              <TableRow>
+                <TableCell colSpan={7} className="py-12 text-center text-destructive">
+                  Failed to load invoices. Please refresh the page.
+                </TableCell>
+              </TableRow>
+            )}
+            {!isLoading && !isError && invoices.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
                   No invoices found.
