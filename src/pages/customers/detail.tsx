@@ -316,8 +316,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
       if (result?.accessToken) {
         navigator.clipboard.writeText(result.accessToken)
           .then(() => toast.success(`Impersonation token copied for ${result.targetEmail}. Expires in 30 min.`))
-          .catch(() => toast.info(`Token generated for ${result.targetEmail}. Check console.`))
-        console.info("[Impersonation token]", result.accessToken)
+          .catch(() => toast.info(`Token generated for ${result.targetEmail}. Copy from clipboard failed.`))
       }
     },
     onError: () => toast.error("Failed to generate impersonation token"),
