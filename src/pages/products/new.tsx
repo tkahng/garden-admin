@@ -87,7 +87,13 @@ export function NewProductPage() {
       toast.success("Product created")
       void navigate({ to: "/products/$productId", params: { productId } })
     },
-    onError: () => toast.error("Failed to create product"),
+    onError: (err) => {
+      const msg =
+        (err as { message?: string } | null)?.message ??
+        ((err as { title?: string } | null)?.title) ??
+        "Failed to create product"
+      toast.error(msg)
+    },
   })
 
   function addTag(tag: string) {

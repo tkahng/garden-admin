@@ -122,7 +122,7 @@ export function ProductDetailPage({ id }: { id: string }) {
       if (error) throw error
     },
     onSuccess: () => { toast.success("Product updated"); invalidate(); setEditInfo(false) },
-    onError: () => toast.error("Failed to update product"),
+    onError: (err) => toast.error((err as { message?: string } | null)?.message ?? "Failed to update product"),
   })
 
   const statusMutation = useMutation({

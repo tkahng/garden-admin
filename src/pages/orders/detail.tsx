@@ -397,7 +397,7 @@ export function OrderDetailPage({ id }: { id: string }) {
       void qc.invalidateQueries({ queryKey: ["admin", "orders", id, "events"] })
       setCancelOpen(false)
     },
-    onError: () => toast.error("Failed to cancel order"),
+    onError: (err) => toast.error((err as { message?: string } | null)?.message ?? "Failed to cancel order"),
   })
 
   const refundMutation = useMutation({
@@ -413,7 +413,7 @@ export function OrderDetailPage({ id }: { id: string }) {
       void qc.invalidateQueries({ queryKey: ["admin", "orders", id, "events"] })
       setRefundOpen(false)
     },
-    onError: () => toast.error("Failed to issue refund"),
+    onError: (err) => toast.error((err as { message?: string } | null)?.message ?? "Failed to issue refund"),
   })
 
   const syncPaymentMutation = useMutation({
@@ -433,7 +433,7 @@ export function OrderDetailPage({ id }: { id: string }) {
       void qc.invalidateQueries({ queryKey: ["admin", "orders", id, "events"] })
       setSyncPaymentOpen(false)
     },
-    onError: () => toast.error("Failed to sync payment status"),
+    onError: (err) => toast.error((err as { message?: string } | null)?.message ?? "Failed to sync payment status"),
   })
 
   const updateOrderMutation = useMutation({
