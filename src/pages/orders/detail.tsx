@@ -1466,6 +1466,9 @@ export function OrderDetailPage({ id }: { id: string }) {
                   />
                 </div>
               </div>
+              {updateOrderMutation.isError && (
+                <p className="text-sm text-destructive">Failed to update order. Please try again.</p>
+              )}
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setEditNotes(false)}>Cancel</Button>
                 <Button type="submit" disabled={updateOrderMutation.isPending}>

@@ -772,6 +772,9 @@ export function ProductDetailPage({ id }: { id: string }) {
               />
             </div>
           </div>
+          {updateMutation.isError && (
+            <p className="text-sm text-destructive">Failed to update product. Please try again.</p>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditInfo(false)}>Cancel</Button>
             <Button onClick={() => updateMutation.mutate(infoForm)} disabled={updateMutation.isPending}>Save</Button>
@@ -1117,6 +1120,9 @@ export function ProductDetailPage({ id }: { id: string }) {
               </div>
             )}
           </div>
+          {(createVariantMutation.isError || updateVariantMutation.isError) && (
+            <p className="text-sm text-destructive">Failed to save variant. Please try again.</p>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setVariantOpen(false)}>Cancel</Button>
             <Button

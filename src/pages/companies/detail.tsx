@@ -189,6 +189,9 @@ function CreditAccountDialog({
             </div>
           </div>
         </div>
+        {(createMutation.isError || updateMutation.isError) && (
+          <p className="text-sm text-destructive">Failed to save credit account. Please try again.</p>
+        )}
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={isPending}>
