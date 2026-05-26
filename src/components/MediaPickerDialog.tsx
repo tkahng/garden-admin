@@ -216,8 +216,9 @@ export function MediaPickerDialog({
       for (const file of files) {
         try {
           const { error } = await apiClient.POST("/api/v1/admin/blobs", {
+            // openapi-fetch schema types binary fields as `string`; bodySerializer sends the actual File
             body: { file: file as unknown as string },
-            bodySerializer: () => {
+            bodySerializer: (_body) => {
               const fd = new FormData()
               fd.append("file", file)
               return fd
