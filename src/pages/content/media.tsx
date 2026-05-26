@@ -204,8 +204,9 @@ function DetailPanel({ blob, onClose, onDeleted }: {
     mutationFn: async (file: File) => {
       const { data, error } = await apiClient.PUT("/api/v1/admin/blobs/{id}/replace", {
         params: { path: { id: blob.id! } },
+        // openapi-fetch schema types binary fields as `string`; bodySerializer sends the actual File
         body: { file: file as unknown as string },
-        bodySerializer: () => {
+        bodySerializer: (_body) => {
           const fd = new FormData()
           fd.append("file", file)
           return fd
@@ -1021,8 +1022,9 @@ export function MediaPage() {
     for (const file of files) {
       try {
         const { error } = await apiClient.POST("/api/v1/admin/blobs", {
+          // openapi-fetch schema types binary fields as `string`; bodySerializer sends the actual File
           body: { file: file as unknown as string },
-          bodySerializer: () => {
+          bodySerializer: (_body) => {
             const fd = new FormData()
             fd.append("file", file)
             return fd

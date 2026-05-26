@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 import { apiClient, getAuthToken } from "@/api/client"
+import { API_URL } from "@/lib/config"
 import type { components } from "@/schema"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -155,7 +156,7 @@ function parseShippingAddress(value?: string | null): ShippingAddressFormInput {
     const parsed = storedShippingAddressSchema.safeParse(JSON.parse(value))
     if (parsed.success) {
       const address = parsed.data
-      return {
+      const result: ShippingAddressFormInput = {
         firstName: address.firstName ?? "",
         lastName: address.lastName ?? "",
         company: address.company ?? "",
@@ -166,6 +167,11 @@ function parseShippingAddress(value?: string | null): ShippingAddressFormInput {
         zip: address.zip ?? "",
         country: address.country ?? "US",
       }
+      // Validate required fields are present
+      if (!result.firstName && !result.lastName && !result.address1) {
+        return { ...EMPTY_SHIPPING_ADDRESS }
+      }
+      return result
     }
   } catch {
     // Legacy orders may have a plain multi-line address string.
@@ -179,6 +185,16 @@ function parseShippingAddress(value?: string | null): ShippingAddressFormInput {
     address1: lines[1] ?? value,
     city: lines[2] ?? "",
     country: lines[3] ?? "US",
+  }
+}
+
+function isLegacyShippingAddress(value?: string | null): boolean {
+  if (!value?.trim()) return false
+  try {
+    const parsed = storedShippingAddressSchema.safeParse(JSON.parse(value))
+    return !parsed.success
+  } catch {
+    return true
   }
 }
 
@@ -382,7 +398,7 @@ export function OrderDetailPage({ id }: { id: string }) {
       void qc.invalidateQueries({ queryKey: ["admin", "orders", id, "events"] })
       setCancelOpen(false)
     },
-    onError: () => toast.error("Failed to cancel order"),
+    onError: (err) => toast.error((err as { message?: string } | null)?.message ?? "Failed to cancel order"),
   })
 
   const refundMutation = useMutation({
@@ -398,14 +414,13 @@ export function OrderDetailPage({ id }: { id: string }) {
       void qc.invalidateQueries({ queryKey: ["admin", "orders", id, "events"] })
       setRefundOpen(false)
     },
-    onError: () => toast.error("Failed to issue refund"),
+    onError: (err) => toast.error((err as { message?: string } | null)?.message ?? "Failed to issue refund"),
   })
 
   const syncPaymentMutation = useMutation({
     mutationFn: async () => {
-      const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
       const token = getAuthToken()
-      const res = await fetch(`${baseUrl}/api/v1/admin/orders/${id}/sync-payment`, {
+      const res = await fetch(`${API_URL}/api/v1/admin/orders/${id}/sync-payment`, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         credentials: "include",
@@ -418,7 +433,7 @@ export function OrderDetailPage({ id }: { id: string }) {
       void qc.invalidateQueries({ queryKey: ["admin", "orders", id, "events"] })
       setSyncPaymentOpen(false)
     },
-    onError: () => toast.error("Failed to sync payment status"),
+    onError: (err) => toast.error((err as { message?: string } | null)?.message ?? "Failed to sync payment status"),
   })
 
   const updateOrderMutation = useMutation({
@@ -599,6 +614,7 @@ export function OrderDetailPage({ id }: { id: string }) {
   const fulfillableRows = fulfillmentProgress.rows.filter((row) => row.item.id && row.remaining > 0)
   const shipmentStatus = deriveShipmentStatus(fulfillments)
   const shippingAddress = shippingAddressLines(o.shippingAddress)
+  const isLegacyAddress = isLegacyShippingAddress(o.shippingAddress)
   const isDraft = o.status === "DRAFT"
   const canCancel = o.status !== "CANCELLED" && o.status !== "REFUNDED"
   const canRefund = o.status === "PAID" || o.status === "PARTIALLY_FULFILLED" || o.status === "FULFILLED"
@@ -1038,7 +1054,17 @@ export function OrderDetailPage({ id }: { id: string }) {
             </CardHeader>
             <CardContent className="text-sm space-y-2">
               <div>
-                <p className="text-muted-foreground text-xs mb-0.5">Address</p>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="text-muted-foreground text-xs">Address</p>
+                  {isLegacyAddress && (
+                    <span
+                      title="Address was stored in a legacy plain-text format and may be incomplete"
+                      className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                    >
+                      Legacy format
+                    </span>
+                  )}
+                </div>
                 {shippingAddress.length > 0 ? (
                   <div className="space-y-0.5">
                     {shippingAddress.map((line, index) => (
@@ -1440,6 +1466,9 @@ export function OrderDetailPage({ id }: { id: string }) {
                   />
                 </div>
               </div>
+              {updateOrderMutation.isError && (
+                <p className="text-sm text-destructive">Failed to update order. Please try again.</p>
+              )}
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setEditNotes(false)}>Cancel</Button>
                 <Button type="submit" disabled={updateOrderMutation.isPending}>

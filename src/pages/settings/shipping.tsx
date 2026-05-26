@@ -164,7 +164,7 @@ function ZoneCard({ zone, onEdit, onDelete }: {
     queryFn: async () => {
       const { data, error } = await apiClient.GET(
         "/api/v1/admin/shipping/zones/{zoneId}/rates",
-        { params: { path: { zoneId: zone.id! } } }
+        { params: { path: { zoneId: zone.id ?? '' } } }
       )
       if (error) throw error
       return data
@@ -181,7 +181,7 @@ function ZoneCard({ zone, onEdit, onDelete }: {
   const createRateMutation = useMutation({
     mutationFn: async (body: CreateRate) => {
       const { error } = await apiClient.POST("/api/v1/admin/shipping/zones/{zoneId}/rates", {
-        params: { path: { zoneId: zone.id! } },
+        params: { path: { zoneId: zone.id ?? '' } },
         body,
       })
       if (error) throw error
@@ -198,7 +198,7 @@ function ZoneCard({ zone, onEdit, onDelete }: {
     mutationFn: async ({ rateId, body }: { rateId: string; body: UpdateRate }) => {
       const { error } = await apiClient.PUT(
         "/api/v1/admin/shipping/zones/{zoneId}/rates/{rateId}",
-        { params: { path: { zoneId: zone.id!, rateId } }, body }
+        { params: { path: { zoneId: zone.id ?? '', rateId } }, body }
       )
       if (error) throw error
     },
@@ -214,7 +214,7 @@ function ZoneCard({ zone, onEdit, onDelete }: {
     mutationFn: async (rateId: string) => {
       const { error } = await apiClient.DELETE(
         "/api/v1/admin/shipping/zones/{zoneId}/rates/{rateId}",
-        { params: { path: { zoneId: zone.id!, rateId } } }
+        { params: { path: { zoneId: zone.id ?? '', rateId } } }
       )
       if (error) throw error
     },
@@ -255,7 +255,7 @@ function ZoneCard({ zone, onEdit, onDelete }: {
                 variant="ghost"
                 size="icon"
                 className="size-7 text-destructive"
-                onClick={(e) => { e.stopPropagation(); onDelete(zone.id!) }}
+                onClick={(e) => { e.stopPropagation(); onDelete(zone.id ?? '') }}
               >
                 <Trash2 className="size-3.5" />
               </Button>
@@ -311,7 +311,7 @@ function ZoneCard({ zone, onEdit, onDelete }: {
                       variant="ghost"
                       size="icon"
                       className="size-7 text-destructive"
-                      onClick={() => deleteRateMutation.mutate(r.id!)}
+                      onClick={() => deleteRateMutation.mutate(r.id ?? '')}
                     >
                       <Trash2 className="size-3.5" />
                     </Button>
@@ -337,7 +337,7 @@ function ZoneCard({ zone, onEdit, onDelete }: {
         zoneName={zone.name ?? ""}
         existing={editRate}
         onSave={(form) =>
-          updateRateMutation.mutate({ rateId: editRate!.id!, body: form as UpdateRate })
+          updateRateMutation.mutate({ rateId: editRate?.id ?? '', body: form as UpdateRate })
         }
         isPending={updateRateMutation.isPending}
       />
@@ -582,7 +582,7 @@ export function ShippingPage() {
         open={!!editZone}
         onClose={() => setEditZone(null)}
         existing={editZone}
-        onSave={(form) => updateMutation.mutate({ id: editZone!.id!, body: form as UpdateZone })}
+        onSave={(form) => updateMutation.mutate({ id: editZone?.id ?? '', body: form as UpdateZone })}
         isPending={updateMutation.isPending}
       />
     </div>

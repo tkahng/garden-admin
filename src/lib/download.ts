@@ -1,6 +1,7 @@
 import { getAuthToken } from "@/api/client"
+import { API_URL } from "@/lib/config"
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
+const BASE_URL = API_URL
 
 async function downloadFile(path: string, filename: string): Promise<void> {
   const token = getAuthToken()

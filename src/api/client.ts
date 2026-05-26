@@ -1,14 +1,15 @@
 import createClient from "openapi-fetch"
 import type { paths } from "@/schema"
+import { API_URL } from "@/lib/config"
 
 export const apiClient = createClient<paths>({
-  baseUrl: import.meta.env.VITE_API_URL ?? "http://localhost:8080",
+  baseUrl: API_URL,
   credentials: "include",
   fetch: (...args) => globalThis.fetch(...args),
 })
 
 const publicApiClient = createClient<paths>({
-  baseUrl: import.meta.env.VITE_API_URL ?? "http://localhost:8080",
+  baseUrl: API_URL,
   credentials: "include",
   fetch: (...args) => globalThis.fetch(...args),
 })

@@ -110,7 +110,7 @@ function OrderHistory({ userId }: { userId: string }) {
                       params={{ orderId: order.id ?? "" }}
                       className="font-mono text-xs text-primary hover:underline"
                     >
-                      #{order.id?.slice(0, 8).toUpperCase()}
+                      #{order.id?.slice(0, 8).toUpperCase() ?? ''}
                     </Link>
                   </TableCell>
                   <TableCell>
@@ -274,7 +274,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
     enabled: !!id,
   })
 
-  const user = data as User | undefined
+  const user = data ?? undefined
 
   const suspendMutation = useMutation({
     mutationFn: async () => {
@@ -316,8 +316,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
       if (result?.accessToken) {
         navigator.clipboard.writeText(result.accessToken)
           .then(() => toast.success(`Impersonation token copied for ${result.targetEmail}. Expires in 30 min.`))
-          .catch(() => toast.info(`Token generated for ${result.targetEmail}. Check console.`))
-        console.info("[Impersonation token]", result.accessToken)
+          .catch(() => toast.info(`Token generated for ${result.targetEmail}. Copy from clipboard failed.`))
       }
     },
     onError: () => toast.error("Failed to generate impersonation token"),
