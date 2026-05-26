@@ -110,7 +110,7 @@ function OrderHistory({ userId }: { userId: string }) {
                       params={{ orderId: order.id ?? "" }}
                       className="font-mono text-xs text-primary hover:underline"
                     >
-                      #{order.id?.slice(0, 8).toUpperCase()}
+                      #{order.id?.slice(0, 8).toUpperCase() ?? ''}
                     </Link>
                   </TableCell>
                   <TableCell>
@@ -274,7 +274,7 @@ export function CustomerDetailPage({ id }: { id: string }) {
     enabled: !!id,
   })
 
-  const user = data as User | undefined
+  const user = data ?? undefined
 
   const suspendMutation = useMutation({
     mutationFn: async () => {
