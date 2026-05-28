@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { Link } from "@tanstack/react-router"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiClient, getAuthToken } from "@/api/client"
+import { apiClient, authenticatedFetch } from "@/api/client"
 import { API_URL } from "@/lib/config"
 import type { components } from "@/schema"
 import { Button } from "@/components/ui/button"
@@ -962,6 +962,65 @@ function TaxExemptSection({ company, onUpdated }: { company: Company; onUpdated:
       >
         {exempt ? "Remove exemption" : "Mark exempt"}
       </Button>
+    </div>
+  )
+}
+
+// ─── TaxCertificateSection ────────────────────────────────────────────────────
+
+function TaxCertificateSection({ company, onUpdated }: { company: Company; onUpdated: () => void }) {
+  const fileRef = React.useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false)
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !company.id) return
+    setIsUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await authenticatedFetch(
+        `${API_URL}/api/v1/admin/companies/${company.id}/tax-certificate`,
+        { method: 'POST', body: formData },
+      )
+      if (!res.ok) throw new Error('Upload failed')
+      toast.success('Certificate uploaded.')
+      onUpdated()
+    } catch {
+      toast.error('Failed to upload certificate.')
+    } finally {
+      setIsUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  return (
+    <div className="flex items-center justify-between rounded-lg border px-4 py-3">
+      <div className="flex flex-col gap-0.5">
+        <p className="text-sm font-medium">Tax exemption certificate</p>
+        {company.taxCertificateUrl ? (
+          <a
+            href={company.taxCertificateUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary hover:underline"
+          >
+            View certificate
+          </a>
+        ) : (
+          <p className="text-xs text-muted-foreground">No certificate on file.</p>
+        )}
+      </div>
+      <Button size="sm" variant="outline" disabled={isUploading} onClick={() => fileRef.current?.click()}>
+        {isUploading ? 'Uploading…' : company.taxCertificateUrl ? 'Replace' : 'Upload'}
+      </Button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png"
+        className="hidden"
+        onChange={(e) => void handleFileChange(e)}
+      />
     </div>
   )
 }
@@ -2041,6 +2100,14 @@ export function CompanyDetailPage({ id }: { id: string }) {
       {/* Tax exemption */}
       {company && (
         <TaxExemptSection
+          company={company}
+          onUpdated={() => qc.invalidateQueries({ queryKey: ["company", id] })}
+        />
+      )}
+
+      {/* Tax certificate */}
+      {company && (
+        <TaxCertificateSection
           company={company}
           onUpdated={() => qc.invalidateQueries({ queryKey: ["company", id] })}
         />
