@@ -57,7 +57,7 @@ type CreateCreditAccount = components["schemas"]["CreateCreditAccountRequest"]
 type UpdateCreditAccount = components["schemas"]["UpdateCreditAccountRequest"]
 type AdminUser = components["schemas"]["AdminUserResponse"]
 type SpendingSummary = components["schemas"]["CompanySpendingSummaryResponse"]
-type MemberSpend = components["schemas"]["CompanySpendingSummaryMemberSpend"]
+type MemberSpend = components["schemas"]["MemberSpend"]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -1766,9 +1766,9 @@ export function ApprovalRulesSection({ companyId }: { companyId: string }) {
     mutationFn: async ({ ruleId, active }: { ruleId: string; active: boolean }) => {
       // This endpoint exists on the backend but is not yet in the OpenAPI schema,
       // so we use a raw fetch with the admin auth token instead of the typed client.
-      const res = await fetch(
+      const res = await authenticatedFetch(
         `${API_URL}/api/v1/admin/companies/${companyId}/approval-rules/${ruleId}/toggle?active=${active}`,
-        { method: "PATCH", headers: { Authorization: `Bearer ${getAuthToken()}` } },
+        { method: "PATCH" },
       )
       if (!res.ok) throw new Error(String(res.status))
     },
