@@ -90,6 +90,34 @@ async function refreshAccessToken(usedRefreshToken: string): Promise<string> {
   return refreshPromise
 }
 
+export async function authenticatedFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const token = getAuthToken()
+  const headers = new Headers(init?.headers)
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+
+  const res = await globalThis.fetch(input, { ...init, headers })
+  if (res.status !== 401) return res
+
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) {
+    clearAuthTokens()
+    unauthorizedHandler?.()
+    return res
+  }
+
+  try {
+    const newToken = await refreshAccessToken(refreshToken)
+    headers.set('Authorization', `Bearer ${newToken}`)
+    return globalThis.fetch(input, { ...init, headers })
+  } catch (err) {
+    if (err instanceof AuthRefreshError) {
+      clearAuthTokens()
+      unauthorizedHandler?.()
+    }
+    return res
+  }
+}
+
 apiClient.use({
   async onRequest({ request }) {
     const token = getAuthToken()
